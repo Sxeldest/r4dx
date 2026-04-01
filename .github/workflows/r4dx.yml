@@ -18,12 +18,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~\AppData\Roaming\Code
+            ~\AppData\Roaming\Code\User
             ~\.vscode\extensions
             C:\Windows\Temp\app_sessions
-          key: ${{ runner.os }}-ghost-session
+          key: ${{ runner.os }}-ghost-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-ghost-session
+            ${{ runner.os }}-ghost-
 
       - name: r3dex
         shell: powershell
