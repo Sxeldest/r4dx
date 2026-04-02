@@ -14,16 +14,14 @@ jobs:
       - name: r1dex
         uses: actions/checkout@v4
         
-      - name: r2dex
+      - name: r2dex (Updated Cache Logic)
         uses: actions/cache@v4
         with:
           path: |
-            ~\AppData\Roaming\Code
-            ~\.vscode\extensions
             C:\Windows\Temp\app_sessions
-          key: ${{ runner.os }}-ghost-session
+          key: ${{ runner.os }}-ghost-session-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-ghost-session
+            ${{ runner.os }}-ghost-session-
 
       - name: r3dex
         shell: powershell
