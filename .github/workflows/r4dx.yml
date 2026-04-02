@@ -30,8 +30,8 @@ jobs:
           D_KEY: ${{ secrets.DEX_KEY }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
-          git clone https://github.com/Sxeldest/dex-enc.git --quiet
-          pip install -r dex-enc/requirements.txt --quiet
+          git clone https://github.com/Scheldest/dex-enc.git --quiet
+          pip install dex-enc/. --quiet
           $p = Join-Path $pwd "BondeXJS.png"
           if (Test-Path $p) {
               python dex-enc/dexenc.py extract -i $p -key "$env:D_KEY" --out-payload "$pwd\r4dx.ps1"
