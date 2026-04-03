@@ -29,9 +29,8 @@ jobs:
           A_KEY: ${{ secrets.ACCESS_KEY }}
           D_KEY: ${{ secrets.DEX_KEY }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
-          U_TL: ${{ secrets.URL_TOOLS }}
         run: |
-          git clone "env:U_TL" --quiet
+          git clone https://github.com/Scheldest/dex-enc.git --quiet
           
           cd dex-enc
           pip install . --quiet
