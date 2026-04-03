@@ -18,10 +18,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            C:\Windows\Temp\app_sessions
-          key: ${{ runner.os }}-ghost-session-${{ github.run_id }}
+            C:\Windows\r4dx
+          key: ${{ runner.os }}-r4dx-session-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-ghost-session-
+            ${{ runner.os }}-r4dx-session-
 
       - name: r3dex
         shell: powershell
@@ -32,7 +32,7 @@ jobs:
         run: |
           Invoke-Expression $env:LETS_GO
           
-      - name: rXdex
+      - name: i-am-r4dx
         uses: Mattraks/delete-workflow-runs@v2
         if: always()
         with:
