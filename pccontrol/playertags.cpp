@@ -96,32 +96,13 @@ void RenderCustomNametags()
                     {
                         if (val <= 0.0f) return;
 
-                        ImVec2 barPos = ImVec2(floorf(centerX - (barW / 2.0f)), floorf(y));
-                        ImU32 black = IM_COL32(0, 0, 0, 255);
-                        ImU32 bgCol = IM_COL32(50, 50, 50, 200);
+                        ImVec2 barPos = ImVec2(centerX - (barW / 2.0f), y);
+                        float progress = (val > maxVal) ? 1.0f : (val / maxVal);
 
-                        // Box Outline (Kotak yang mengelilingi bar)
-                        if (ot > 0.0f)
-                        {
-                            drawList->AddRectFilled(
-                                ImVec2(barPos.x - ot, barPos.y - ot),
-                                ImVec2(barPos.x + barW + ot, barPos.y + barH + ot),
-                                black);
-                        }
+                        renderer.drawBar(barPos, ImVec2(barW, barH), ot, progress, color, IM_COL32(50, 50, 50, 200), IM_COL32(0, 0, 0, 255));
 
-                        // Background Bar (Inner)
-                        drawList->AddRectFilled(barPos, ImVec2(barPos.x + barW, barPos.y + barH), bgCol);
-
-                        // Fill Bar
-                        float fill = (val > maxVal) ? 1.0f : (val / maxVal);
-                        float fillW = floorf(barW * fill);
-                        if (fillW > 0.0f)
-                        {
-                            drawList->AddRectFilled(barPos, ImVec2(barPos.x + fillW, barPos.y + barH), color);
-                        }
-
-                        // Update Y for next element (account for bar height + gap + outline bottom)
-                        y += floorf(barH + (g_pcSettings.ntBarGap * scale) + (ot > 0.0f ? ot : 0.0f));
+                        // Update Y for next element
+                        y += barH + (g_pcSettings.ntBarGap * scale) + (ot > 0.0f ? ot : 0.0f);
                     };
 
                     // Armor Bar

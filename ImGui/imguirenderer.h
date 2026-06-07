@@ -13,6 +13,8 @@ public:
     void drawText(const ImVec2& pos, const ImColor& color, const std::string& text, bool outlined = false, float font_size = 0.0f);
     ImVec2 calculateTextSize(const std::string& text, float font_size = 0.0f);
 
+    void drawBar(const ImVec2& pos, const ImVec2& size, float outline, float progress, const ImColor& color, const ImColor& bgColor, const ImColor& outlineColor);
+
 private:
     void drawText(const ImVec2& pos, const ImColor& color, const char* begin, const char* end = nullptr, bool outlined = false, float font_size = 0.0f);
     ImVec2 calculateTextSize(const char* begin, const char* end, float font_size = 0.0f);

@@ -118,3 +118,33 @@ bool ImGuiRenderer::processInlineHexColor(const char* start, const char* end, Im
     }
     return false;
 }
+
+void ImGuiRenderer::drawBar(const ImVec2& pos, const ImVec2& size, float outline, float progress, const ImColor& color, const ImColor& bgColor, const ImColor& outlineColor)
+{
+    // Snap posisi ke integer agar tetap tajam
+    ImVec2 p;
+    p.x = (float)(int)pos.x;
+    p.y = (float)(int)pos.y;
+
+    // Size tetap float sesuai permintaan
+    float w = size.x;
+    float h = size.y;
+
+    if (outline > 0.0f)
+    {
+        m_drawList->AddRectFilled(
+            ImVec2(p.x - outline, p.y - outline),
+            ImVec2(p.x + w + outline, p.y + h + outline),
+            outlineColor);
+    }
+
+    // Background
+    m_drawList->AddRectFilled(p, ImVec2(p.x + w, p.y + h), bgColor);
+
+    // Fill (Progress)
+    float fillW = w * progress;
+    if (fillW > 0.0f)
+    {
+        m_drawList->AddRectFilled(p, ImVec2(p.x + fillW, p.y + h), color);
+    }
+}
