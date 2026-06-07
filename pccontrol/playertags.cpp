@@ -83,9 +83,9 @@ void RenderCustomNametags()
 
                     renderer.drawText(textDrawPos, ImColor(r, g, b, a), tag.name, true, fontSize);
 
-                    // Health & Armor Bars
-                    float barW = floorf(g_pcSettings.ntBarWidth * scale);
-                    float barH = floorf(g_pcSettings.ntBarHeight * scale);
+                    // Health & Armor Bars (Gunakan float untuk size agar scaling halus)
+                    float barW = g_pcSettings.ntBarWidth * scale;
+                    float barH = g_pcSettings.ntBarHeight * scale;
                     float ot = g_pcSettings.ntBarOutline * scale;
                     float currentY = floorf(centerY + (g_pcSettings.ntNameBarGap * scale));
 

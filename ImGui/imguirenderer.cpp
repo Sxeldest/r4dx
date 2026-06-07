@@ -121,30 +121,34 @@ bool ImGuiRenderer::processInlineHexColor(const char* start, const char* end, Im
 
 void ImGuiRenderer::drawBar(const ImVec2& pos, const ImVec2& size, float outline, float progress, const ImColor& color, const ImColor& bgColor, const ImColor& outlineColor)
 {
-    // Snap posisi ke integer agar tetap tajam
+    // Snap posisi ke integer agar tetap tajam (mencegah blur pada posisi awal)
     ImVec2 p;
-    p.x = (float)(int)pos.x;
-    p.y = (float)(int)pos.y;
+    p.x = floorf(pos.x);
+    p.y = floorf(pos.y);
 
-    // Size tetap float sesuai permintaan
+    // Size tetap float untuk mendukung ketebalan presisi
     float w = size.x;
     float h = size.y;
 
-    if (outline > 0.0f)
-    {
-        m_drawList->AddRectFilled(
-            ImVec2(p.x - outline, p.y - outline),
-            ImVec2(p.x + w + outline, p.y + h + outline),
-            outlineColor);
-    }
-
-    // Background
+    // 1. Background (Inner)
     m_drawList->AddRectFilled(p, ImVec2(p.x + w, p.y + h), bgColor);
 
-    // Fill (Progress)
+    // 2. Fill (Progress)
     float fillW = w * progress;
     if (fillW > 0.0f)
     {
         m_drawList->AddRectFilled(p, ImVec2(p.x + fillW, p.y + h), color);
+    }
+
+    // 3. Outline (Border)
+    if (outline > 0.0f)
+    {
+        // Menggunakan AddRect (Line) alih-alih RectFilled agar ketebalan float (misal 1.3f)
+        // diproses oleh Anti-Aliasing ImGui secara halus.
+        // Path digeser setengah thickness ke luar agar garis membungkus box dengan pas.
+        m_drawList->AddRect(
+            ImVec2(p.x - outline * 0.5f, p.y - outline * 0.5f),
+            ImVec2(p.x + w + outline * 0.5f, p.y + h + outline * 0.5f),
+            outlineColor, 0.0f, 0, outline);
     }
 }
