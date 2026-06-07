@@ -37,25 +37,20 @@ void RenderCustomNametags()
 
             for (const auto& tag : g_customNametags)
             {
-                if (tag.dist > g_pcSettings.ntDrawDistance) continue;
-
                 CVector pos2D;
                 float w, h;
 
-                // 1. Posisi sudah dihitung di Lua (termasuk bone position)
+                // 1. Posisi dari Lua (Bone position) + Offset dari AML Menu
                 CVector vWorldPos = { tag.pos3D[0], tag.pos3D[1], tag.pos3D[2] };
+
+                // Tambahkan offset (dalam CM dikonversi ke Meter)
+                vWorldPos.x += (g_pcSettings.ntPosXOffset * 0.01f);
+                vWorldPos.z += (g_pcSettings.ntPosYOffset * 0.01f);
 
                 if (CSprite::CalcScreenCoors(vWorldPos, &pos2D, &w, &h, true, true))
                 {
-                    // Scaling tetap ditangani AML sebagai bagian dari "Style"
-                    float scale = 1.0f;
-                    if (g_pcSettings.ntEnableScaling)
-                    {
-                        scale = 1.0f / (1.0f + (tag.dist * 0.04f * g_pcSettings.ntScaleMultiplier));
-                        if (scale < 0.35f) scale = 0.35f;
-                    }
-
-                    float fontSize = g_pcSettings.ntFontSize * scale;
+                    // Scaling dihapus (Ukuran tetap sesuai setting)
+                    float fontSize = g_pcSettings.ntFontSize;
 
                     // Gunakan renderer untuk menghitung ukuran teks agar support color tags {RRGGBB}
                     ImVec2 textSize = renderer.calculateTextSize(tag.name, fontSize);
@@ -77,11 +72,11 @@ void RenderCustomNametags()
 
                     renderer.drawText(textDrawPos, ImColor(r, g, b, a), tag.name, true, fontSize);
 
-                    // Health & Armor Bars (Gunakan float untuk size agar scaling halus)
-                    float barW = g_pcSettings.ntBarWidth * scale;
-                    float barH = g_pcSettings.ntBarHeight * scale;
-                    float ot = g_pcSettings.ntBarOutline * scale;
-                    float currentY = floorf(centerY + (g_pcSettings.ntNameBarGap * scale));
+                    // Health & Armor Bars (Gunakan float untuk size sesuai setting)
+                    float barW = g_pcSettings.ntBarWidth;
+                    float barH = g_pcSettings.ntBarHeight;
+                    float ot = g_pcSettings.ntBarOutline;
+                    float currentY = floorf(centerY + g_pcSettings.ntNameBarGap);
 
                     // Jika ada outline, geser dikit agar tidak menabrak teks jika gap kecil
                     if (ot > 0.0f) currentY += ot;
@@ -96,7 +91,7 @@ void RenderCustomNametags()
                         renderer.drawBar(barPos, ImVec2(barW, barH), ot, progress, color, IM_COL32(50, 50, 50, 200), IM_COL32(0, 0, 0, 255));
 
                         // Update Y for next element
-                        y += barH + (g_pcSettings.ntBarGap * scale) + (ot > 0.0f ? ot : 0.0f);
+                        y += barH + g_pcSettings.ntBarGap + (ot > 0.0f ? ot : 0.0f);
                     };
 
                     // Armor Bar

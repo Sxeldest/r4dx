@@ -579,27 +579,18 @@ void RenderPCControlMenu()
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Nametag Appearance");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Enable Custom Nametags", &g_pcSettings.enableCustomNametags);
-                ImGui::SameLine();
-                changed |= ImGui::Checkbox("Use Lua Data Source", &g_pcSettings.ntLuaSource);
 
                 ImGui::Text("Font Size");
-                changed |= SliderFloatWithButtons("ntFontSize", &g_pcSettings.ntFontSize, 5.0f, 100.0f);
-
-                changed |= ImGui::Checkbox("Enable Distance Scaling", &g_pcSettings.ntEnableScaling);
-                changed |= ImGui::SliderFloat("Scale Multiplier", &g_pcSettings.ntScaleMultiplier, 0.1f, 3.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Auto-Lift Factor", &g_pcSettings.ntDistanceYOffset, 0.0f, 10.0f, "%.2f");
-
-                ImGui::Text("Draw Distance");
-                changed |= SliderFloatWithButtons("ntDrawDistance", &g_pcSettings.ntDrawDistance, 1.0f, 500.0f);
+                changed |= SliderFloatWithButtons("ntFontSize", &g_pcSettings.ntFontSize, 5.0f, 100.0f, "%.1f", 0.1f);
 
                 ImGui::Text("3D Offset X (cm)");
-                changed |= SliderFloatWithButtons("ntPosXOffset", &g_pcSettings.ntPosXOffset, -200.0f, 200.0f);
+                changed |= SliderFloatWithButtons("ntPosXOffset", &g_pcSettings.ntPosXOffset, -200.0f, 200.0f, "%.1f", 0.1f);
 
                 ImGui::Text("3D Offset Y (cm)");
-                changed |= SliderFloatWithButtons("ntPosYOffset", &g_pcSettings.ntPosYOffset, -200.0f, 200.0f);
+                changed |= SliderFloatWithButtons("ntPosYOffset", &g_pcSettings.ntPosYOffset, -200.0f, 200.0f, "%.1f", 0.1f);
 
                 ImGui::Text("Name-Bar Gap");
-                changed |= SliderFloatWithButtons("ntNameBarGap", &g_pcSettings.ntNameBarGap, -50.0f, 50.0f);
+                changed |= SliderFloatWithButtons("ntNameBarGap", &g_pcSettings.ntNameBarGap, -50.0f, 50.0f, "%.1f", 0.1f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Bar Settings");
@@ -609,16 +600,16 @@ void RenderPCControlMenu()
                 changed |= ImGui::Checkbox("Show Armor Bar", &g_pcSettings.ntShowAP);
 
                 ImGui::Text("Bar Width");
-                changed |= SliderFloatWithButtons("ntBarWidth", &g_pcSettings.ntBarWidth, 10.0f, 300.0f);
+                changed |= SliderFloatWithButtons("ntBarWidth", &g_pcSettings.ntBarWidth, 10.0f, 300.0f, "%.1f", 0.1f);
 
                 ImGui::Text("Bar Height");
-                changed |= SliderFloatWithButtons("ntBarHeight", &g_pcSettings.ntBarHeight, 1.0f, 50.0f);
+                changed |= SliderFloatWithButtons("ntBarHeight", &g_pcSettings.ntBarHeight, 1.0f, 50.0f, "%.1f", 0.1f);
 
                 ImGui::Text("Bar Outline");
-                changed |= SliderFloatWithButtons("ntBarOutline", &g_pcSettings.ntBarOutline, 0.0f, 20.0f, "%.1f");
+                changed |= SliderFloatWithButtons("ntBarOutline", &g_pcSettings.ntBarOutline, 0.0f, 20.0f, "%.1f", 0.1f);
 
                 ImGui::Text("Armor-HP Gap");
-                changed |= SliderFloatWithButtons("ntBarGap", &g_pcSettings.ntBarGap, -20.0f, 50.0f);
+                changed |= SliderFloatWithButtons("ntBarGap", &g_pcSettings.ntBarGap, -20.0f, 50.0f, "%.1f", 0.1f);
 
                 ImGui::Spacing();
                 ImGui::Text("Health Bar Color");
