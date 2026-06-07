@@ -130,25 +130,25 @@ void ImGuiRenderer::drawBar(const ImVec2& pos, const ImVec2& size, float outline
     float w = size.x;
     float h = size.y;
 
-    // 1. Background (Inner)
-    m_drawList->AddRectFilled(p, ImVec2(p.x + w, p.y + h), bgColor);
-
-    // 2. Fill (Progress)
-    float fillW = w * progress;
-    if (fillW > 0.0f)
-    {
-        m_drawList->AddRectFilled(p, ImVec2(p.x + fillW, p.y + h), color);
-    }
-
-    // 3. Outline (Border)
+    // 1. Outline (Border) - Digambar paling bawah agar tidak menutupi isi bar (mencegah "outline di dalam")
     if (outline > 0.0f)
     {
         // Menggunakan AddRect (Line) alih-alih RectFilled agar ketebalan float (misal 1.3f)
         // diproses oleh Anti-Aliasing ImGui secara halus.
-        // Path digeser setengah thickness ke luar agar garis membungkus box dengan pas.
+        // Path digeser setengah thickness ke luar agar garis membungkus box dengan pas di sisi LUAR.
         m_drawList->AddRect(
             ImVec2(p.x - outline * 0.5f, p.y - outline * 0.5f),
             ImVec2(p.x + w + outline * 0.5f, p.y + h + outline * 0.5f),
             outlineColor, 0.0f, 0, outline);
+    }
+
+    // 2. Background (Inner)
+    m_drawList->AddRectFilled(p, ImVec2(p.x + w, p.y + h), bgColor);
+
+    // 3. Fill (Progress)
+    float fillW = w * progress;
+    if (fillW > 0.0f)
+    {
+        m_drawList->AddRectFilled(p, ImVec2(p.x + fillW, p.y + h), color);
     }
 }

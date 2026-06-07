@@ -76,14 +76,19 @@ void RenderCustomNametags()
                     // HITUNG TOTAL TINGGI (Agar semua digambar ke ATAS dari titik proyeksi)
                     float barsHeight = 0.0f;
                     int visibleBars = 0;
-                    if (g_pcSettings.ntShowAP && tag.armor > 0.0f) { barsHeight += barH + (ot > 0.0f ? ot : 0.0f); visibleBars++; }
-                    if (g_pcSettings.ntShowHP && tag.health > 0.0f) { barsHeight += barH + (ot > 0.0f ? ot : 0.0f); visibleBars++; }
+                    // Setiap bar mengambil ruang: barH + (2 * ot jika ada outline)
+                    float barSpacing = barH + (ot > 0.0f ? ot * 2.0f : 0.0f);
+
+                    if (g_pcSettings.ntShowAP && tag.armor > 0.0f) { barsHeight += barSpacing; visibleBars++; }
+                    if (g_pcSettings.ntShowHP && tag.health > 0.0f) { barsHeight += barSpacing; visibleBars++; }
                     if (visibleBars > 1) barsHeight += barGap;
 
                     float totalHeight = fontSize + (visibleBars > 0 ? nameBarGap + barsHeight : 0.0f);
 
                     // Posisi awal (paling atas)
                     float currentY = floorf(centerY - totalHeight);
+                    // Beri ruang untuk outline bar pertama agar tidak menempel ke nama
+                    if (visibleBars > 0 && ot > 0.0f) currentY += ot;
 
                     // Render Nama menggunakan ImGuiRenderer (Fixed 4-way 1px outline)
                     uint8_t a = (tag.color >> 24) & 0xFF;
@@ -104,8 +109,8 @@ void RenderCustomNametags()
 
                         renderer.drawBar(barPos, ImVec2(barW, barH), ot, progress, color, IM_COL32(50, 50, 50, 200), IM_COL32(0, 0, 0, 255));
 
-                        // Update Y for next element
-                        y += barH + barGap + (ot > 0.0f ? ot : 0.0f);
+                        // Update Y for next element (tambahkan barH + barGap + 2*ot untuk spacing yang benar)
+                        y += barH + barGap + (ot > 0.0f ? ot * 2.0f : 0.0f);
                     };
 
                     // Armor Bar
