@@ -30,13 +30,13 @@ bool PCControlGUI::initialize()
 
     ImGuiIO& io = ImGui::GetIO();
     ImFontConfig fontCfg;
-    fontCfg.OversampleH = 3;
-    fontCfg.OversampleV = 2;
+    fontCfg.OversampleH = 4;
+    fontCfg.OversampleV = 4;
     fontCfg.PixelSnapH = true;
 
     char path[512];
     snprintf(path, sizeof(path), "%s/fonts/verdana.ttf", aml->GetAndroidDataPath());
-    this->g_fontArial = io.Fonts->AddFontFromFileTTF(path, 40.0f, &fontCfg);
+    this->g_fontArial = io.Fonts->AddFontFromFileTTF(path, 20.0f, &fontCfg);
     ::g_fontArial = this->g_fontArial; // Set global font for deathlist (explicit global scope)
 
     snprintf(path, sizeof(path), "%s/fonts/gtaweap3.ttf", aml->GetAndroidDataPath());
