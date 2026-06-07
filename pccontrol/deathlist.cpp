@@ -173,12 +173,27 @@ void RenderCustomDeathWindow()
         // 6. RENDER NAMA (Killer di kiri, Victim di kanan)
         if (!msg.killer.empty()) {
             ImVec2 kPos = ImVec2(boxPos.x - itemSpacing - kSize.x, boxPos.y + ((boxSize - kSize.y) / 2.0f));
-            rendererArial.drawText(kPos, ImColor(msg.killerColor), msg.killer, true, arialSize);
+            
+            // --- FAKE BOLD SIMETRIS (KILLER) ---
+            // Teks 1: Geser sedikit ke kiri
+            ImVec2 kPosLeft = ImVec2(kPos.x - 0.25f, kPos.y);
+            rendererArial.drawText(kPosLeft, ImColor(msg.killerColor), msg.killer, true, arialSize);
+            
+            // Teks 2: Geser sedikit ke kanan
+            ImVec2 kPosRight = ImVec2(kPos.x + 0.25f, kPos.y);
+            rendererArial.drawText(kPosRight, ImColor(msg.killerColor), msg.killer, true, arialSize);
         }
-
+        
         ImVec2 vPos = ImVec2(boxPos.x + boxSize + itemSpacing, boxPos.y + ((boxSize - vSize.y) / 2.0f));
-        rendererArial.drawText(vPos, ImColor(msg.victimColor), msg.victim, true, arialSize);
-
+        
+        // --- FAKE BOLD SIMETRIS (VICTIM) ---
+        // Teks 1: Geser sedikit ke kiri
+        ImVec2 vPosLeft = ImVec2(vPos.x - 0.25f, vPos.y);
+        rendererArial.drawText(vPosLeft, ImColor(msg.victimColor), msg.victim, true, arialSize);
+        
+        // Teks 2: Geser sedikit ke kanan
+        ImVec2 vPosRight = ImVec2(vPos.x + 0.25f, vPos.y);
+        rendererArial.drawText(vPosRight, ImColor(msg.victimColor), msg.victim, true, arialSize);
         currentY += boxSize + listSpacing;
     }
 }
