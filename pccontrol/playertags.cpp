@@ -42,18 +42,12 @@ void RenderCustomNametags()
                 CVector pos2D;
                 float w, h;
 
-                // 1. Ambil posisi dasar dari SAMP
+                // 1. Posisi sudah dihitung di Lua (termasuk bone position)
                 CVector vWorldPos = { tag.pos3D[0], tag.pos3D[1], tag.pos3D[2] };
-
-                // 2. TERAPKAN OFFSET DI DUNIA 3D (Meter)
-                vWorldPos.x += (g_pcSettings.ntPosXOffset * 0.01f);
-                vWorldPos.z += (g_pcSettings.ntPosYOffset * 0.01f);
-
-                // 3. KOREKSI JARAK (Auto-Lift)
-                vWorldPos.z += (tag.dist * 0.01f * g_pcSettings.ntDistanceYOffset);
 
                 if (CSprite::CalcScreenCoors(vWorldPos, &pos2D, &w, &h, true, true))
                 {
+                    // Scaling tetap ditangani AML sebagai bagian dari "Style"
                     float scale = 1.0f;
                     if (g_pcSettings.ntEnableScaling)
                     {
