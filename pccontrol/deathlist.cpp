@@ -161,7 +161,7 @@ void RenderCustomDeathWindow()
         ImVec2 boxPos = ImVec2(centerX - (boxSize / 2.0f), currentY);
 
         // 4. RENDER BOX
-        dl->AddRectFilled(boxPos, ImVec2(boxPos.x + boxSize, boxPos.y + boxSize), 0xFF000000, 4.0f * scale);
+        dl->AddRectFilled(boxPos, ImVec2(boxPos.x + boxSize, boxPos.y + boxSize), 0xFF000000, 6.0f * scale);
 
         // 5. RENDER ICON (Dipaksa Center murni mengabaikan whitespace bawaan font)
         ImVec2 iPos = ImVec2(

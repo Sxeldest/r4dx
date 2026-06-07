@@ -35,7 +35,7 @@ bool PCControlGUI::initialize()
     fontCfg.PixelSnapH = true;
 
     char path[512];
-    snprintf(path, sizeof(path), "%s/fonts/arial_bold.ttf", aml->GetAndroidDataPath());
+    snprintf(path, sizeof(path), "%s/fonts/verdana.ttf", aml->GetAndroidDataPath());
     this->g_fontArial = io.Fonts->AddFontFromFileTTF(path, 40.0f, &fontCfg);
     ::g_fontArial = this->g_fontArial; // Set global font for deathlist (explicit global scope)
 
