@@ -37,6 +37,9 @@ void RenderCustomNametags()
 
             for (const auto& tag : g_customNametags)
             {
+                // Cek jarak render
+                if (tag.dist > g_pcSettings.ntDrawDistance) continue;
+
                 CVector pos2D;
                 float w, h;
 
@@ -47,10 +50,20 @@ void RenderCustomNametags()
                 vWorldPos.x += (g_pcSettings.ntPosXOffset * 0.01f);
                 vWorldPos.z += (g_pcSettings.ntPosYOffset * 0.01f);
 
+                // Perspective Compensation: Mencegah nametag "tenggelam" saat menjauh
+                if (g_pcSettings.ntDistanceYOffset > 0.0f)
+                {
+                    vWorldPos.z += (tag.dist * g_pcSettings.ntDistanceYOffset * 0.015f);
+                }
+
                 if (CSprite::CalcScreenCoors(vWorldPos, &pos2D, &w, &h, true, true))
                 {
-                    // Scaling dihapus (Ukuran tetap sesuai setting)
                     float fontSize = g_pcSettings.ntFontSize;
+                    float barW = g_pcSettings.ntBarWidth;
+                    float barH = g_pcSettings.ntBarHeight;
+                    float ot = g_pcSettings.ntBarOutline;
+                    float nameBarGap = g_pcSettings.ntNameBarGap;
+                    float barGap = g_pcSettings.ntBarGap;
 
                     // Gunakan renderer untuk menghitung ukuran teks agar support color tags {RRGGBB}
                     ImVec2 textSize = renderer.calculateTextSize(tag.name, fontSize);
@@ -60,8 +73,17 @@ void RenderCustomNametags()
                     float centerX = floorf(pos2D.x);
                     float centerY = floorf(pos2D.y);
 
-                    // Posisi baseline teks (snapping dilakukan di dalam renderer)
-                    ImVec2 textDrawPos = ImVec2(centerX - (textWidth / 2.0f), centerY - fontSize);
+                    // HITUNG TOTAL TINGGI (Agar semua digambar ke ATAS dari titik proyeksi)
+                    float barsHeight = 0.0f;
+                    int visibleBars = 0;
+                    if (g_pcSettings.ntShowAP && tag.armor > 0.0f) { barsHeight += barH + (ot > 0.0f ? ot : 0.0f); visibleBars++; }
+                    if (g_pcSettings.ntShowHP && tag.health > 0.0f) { barsHeight += barH + (ot > 0.0f ? ot : 0.0f); visibleBars++; }
+                    if (visibleBars > 1) barsHeight += barGap;
+
+                    float totalHeight = fontSize + (visibleBars > 0 ? nameBarGap + barsHeight : 0.0f);
+
+                    // Posisi awal (paling atas)
+                    float currentY = floorf(centerY - totalHeight);
 
                     // Render Nama menggunakan ImGuiRenderer (Fixed 4-way 1px outline)
                     uint8_t a = (tag.color >> 24) & 0xFF;
@@ -70,16 +92,8 @@ void RenderCustomNametags()
                     uint8_t b = tag.color & 0xFF;
                     if (a == 0) a = 255;
 
-                    renderer.drawText(textDrawPos, ImColor(r, g, b, a), tag.name, true, fontSize);
-
-                    // Health & Armor Bars (Gunakan float untuk size sesuai setting)
-                    float barW = g_pcSettings.ntBarWidth;
-                    float barH = g_pcSettings.ntBarHeight;
-                    float ot = g_pcSettings.ntBarOutline;
-                    float currentY = floorf(centerY + g_pcSettings.ntNameBarGap);
-
-                    // Jika ada outline, geser dikit agar tidak menabrak teks jika gap kecil
-                    if (ot > 0.0f) currentY += ot;
+                    renderer.drawText(ImVec2(centerX - (textWidth / 2.0f), currentY), ImColor(r, g, b, a), tag.name, true, fontSize);
+                    currentY += fontSize + nameBarGap;
 
                     auto drawBarWithRectOutline = [&](float& y, float val, float maxVal, ImU32 color)
                     {
@@ -91,7 +105,7 @@ void RenderCustomNametags()
                         renderer.drawBar(barPos, ImVec2(barW, barH), ot, progress, color, IM_COL32(50, 50, 50, 200), IM_COL32(0, 0, 0, 255));
 
                         // Update Y for next element
-                        y += barH + g_pcSettings.ntBarGap + (ot > 0.0f ? ot : 0.0f);
+                        y += barH + barGap + (ot > 0.0f ? ot : 0.0f);
                     };
 
                     // Armor Bar

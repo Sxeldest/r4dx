@@ -583,6 +583,12 @@ void RenderPCControlMenu()
                 ImGui::Text("Font Size");
                 changed |= SliderFloatWithButtons("ntFontSize", &g_pcSettings.ntFontSize, 5.0f, 100.0f, "%.1f", 0.1f);
 
+                ImGui::Text("Draw Distance");
+                changed |= SliderFloatWithButtons("ntDrawDistance", &g_pcSettings.ntDrawDistance, 10.0f, 500.0f, "%.0f m", 1.0f);
+
+                ImGui::Text("3D Height Correction (Perspective)");
+                changed |= SliderFloatWithButtons("ntDistanceYOffset", &g_pcSettings.ntDistanceYOffset, 0.0f, 10.0f, "%.2f", 0.1f);
+
                 ImGui::Text("3D Offset X (cm)");
                 changed |= SliderFloatWithButtons("ntPosXOffset", &g_pcSettings.ntPosXOffset, -200.0f, 200.0f, "%.1f", 0.1f);
 
