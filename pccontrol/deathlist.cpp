@@ -107,7 +107,7 @@ void RenderCustomDeathWindow()
     float centerX = g_pcSettings.deathListPosX;
 
     float arialSize = 18.0f * scale;
-    float iconFontSize = 32.0f * scale; // Bisa dinaikkan karena sekarang box akan mengkerut pas di tepi icon
+    float iconFontSize = 35.0f * scale; // Bisa dinaikkan karena sekarang box akan mengkerut pas di tepi icon
     float listSpacing = g_pcSettings.deathListSpacing * scale;
     float itemSpacing = 10.0f * scale;
 
