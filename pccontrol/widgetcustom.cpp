@@ -454,28 +454,28 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
             float dy = y - state.currentPosY;
             float mag = sqrtf(dx * dx + dy * dy);
 
-            if (mag > 15.0f)
+            // Agar tidak "tiba-tiba berhenti", kita hilangkan reset ke 0 di titik tengah (deadzone).
+            // Arah akan tetap di nilai terakhir sampai jari bergerak cukup jauh ke arah lain.
+            if (mag > 10.0f)
             {
                 float angle = atan2f(dy, dx);
-                // PC-Style: Selalu gunakan 8 arah (45 derajat) baik saat aiming maupun lari
+                // PC-Style: 8 arah (45 derajat)
                 float step = (3.14159265f / 4.0f);
                 float snapped = roundf(angle / step) * step;
 
                 state.analogX = cosf(snapped) * 127.0f;
                 state.analogY = sinf(snapped) * 127.0f;
 
-                if (fabsf(state.analogX) < 1.0f) state.analogX = 0;
-                if (fabsf(state.analogY) < 1.0f) state.analogY = 0;
-                if (state.analogX > 120.0f) state.analogX = 127.0f;
-                if (state.analogX < -120.0f) state.analogX = -127.0f;
-                if (state.analogY > 120.0f) state.analogY = 127.0f;
-                if (state.analogY < -120.0f) state.analogY = -127.0f;
+                // Snap ke nilai ekstrim (-127, 0, 127) agar lebih responsif layaknya DPAD digital.
+                // Menggunakan threshold tinggi (60) agar tidak mudah "terpeleset" ke arah diagonal saat gerak lurus.
+                if (fabsf(state.analogX) < 60.0f) state.analogX = 0;
+                else state.analogX = (state.analogX > 0) ? 127.0f : -127.0f;
+
+                if (fabsf(state.analogY) < 60.0f) state.analogY = 0;
+                else state.analogY = (state.analogY > 0) ? 127.0f : -127.0f;
             }
-            else
-            {
-                state.analogX = 0;
-                state.analogY = 0;
-            }
+            // Note: Tidak ada 'else' reset ke 0 di sini.
+            // Analog hanya akan kembali ke 0 jika jari diangkat (event Up).
         }
     }
 
