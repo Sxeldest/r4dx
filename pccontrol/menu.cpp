@@ -312,8 +312,11 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 changed |= ImGui::SliderFloat("Horizontal Responsiveness", &g_pcSettings.dpadSensX, 0.1f, 2.0f, "%.2f");
                 changed |= ImGui::SliderFloat("Vertical Responsiveness", &g_pcSettings.dpadSensY, 0.1f, 2.0f, "%.2f");
-                changed |= ImGui::SliderFloat("Jiggle Smoothness (Direction Change)", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f");
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Low = Smooth direction change, High = Instant (Snap)");
+                changed |= ImGui::SliderFloat("Aim Jiggle Smoothness", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Only active when AIMING.\nLow = Smooth jiggle (Delay), High = Snap (Instant)");
+
+                changed |= ImGui::SliderFloat("Diagonal Resistance", &g_pcSettings.dpadDiagonalThreshold, 10.0f, 90.0f, "%.0f");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Higher = Harder to trigger diagonal movement (Stay straight).\nRecommended: 60-70");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Native Overrides");

@@ -20,6 +20,7 @@ PCControlSettings g_pcSettings = {
     1.0f, // dpadSensX
     1.0f, // dpadSensY
     0.5f, // dpadSmoothness
+    60.0f, // dpadDiagonalThreshold
     1.0f,
     1500.0f,
     350.0f,
@@ -87,6 +88,7 @@ static ConfigEntry* s_camAccel = nullptr;
 static ConfigEntry* s_dpadSensX = nullptr;
 static ConfigEntry* s_dpadSensY = nullptr;
 static ConfigEntry* s_dpadSmoothness = nullptr;
+static ConfigEntry* s_dpadDiagonalThreshold = nullptr;
 static ConfigEntry* s_deathListFontSize = nullptr;
 static ConfigEntry* s_deathListPosX = nullptr;
 static ConfigEntry* s_deathListPosY = nullptr;
@@ -181,6 +183,7 @@ void InitPCControlSettings()
     s_dpadSensX = cfg->Bind("DpadSensX", 1.0f, kSettingsSection);
     s_dpadSensY = cfg->Bind("DpadSensY", 1.0f, kSettingsSection);
     s_dpadSmoothness = cfg->Bind("DpadSmoothness", 0.5f, kSettingsSection);
+    s_dpadDiagonalThreshold = cfg->Bind("DpadDiagonalThreshold", 60.0f, kSettingsSection);
     s_deathListFontSize = cfg->Bind("DeathListFontSize", 1.0f, kSettingsSection);
     s_deathListPosX = cfg->Bind("DeathListPosX", 1500.0f, kSettingsSection);
     s_deathListPosY = cfg->Bind("DeathListPosY", 350.0f, kSettingsSection);
@@ -333,6 +336,7 @@ void InitPCControlSettings()
     g_pcSettings.dpadSensX = ClampSetting(s_dpadSensX->GetFloat(), 0.1f, 2.0f);
     g_pcSettings.dpadSensY = ClampSetting(s_dpadSensY->GetFloat(), 0.1f, 2.0f);
     g_pcSettings.dpadSmoothness = ClampSetting(s_dpadSmoothness->GetFloat(), 0.01f, 1.0f);
+    g_pcSettings.dpadDiagonalThreshold = ClampSetting(s_dpadDiagonalThreshold->GetFloat(), 10.0f, 90.0f);
     g_pcSettings.deathListFontSize = ClampSetting(s_deathListFontSize->GetFloat(), 0.1f, 3.0f);
     g_pcSettings.deathListPosX = ClampSetting(s_deathListPosX->GetFloat(), 0.0f, 3000.0f);
     g_pcSettings.deathListPosY = ClampSetting(s_deathListPosY->GetFloat(), 0.0f, 2000.0f);
@@ -496,6 +500,7 @@ void SavePCControlSettings()
     s_dpadSensX->SetFloat(g_pcSettings.dpadSensX);
     s_dpadSensY->SetFloat(g_pcSettings.dpadSensY);
     s_dpadSmoothness->SetFloat(g_pcSettings.dpadSmoothness);
+    s_dpadDiagonalThreshold->SetFloat(g_pcSettings.dpadDiagonalThreshold);
     s_deathListFontSize->SetFloat(g_pcSettings.deathListFontSize);
     s_deathListPosX->SetFloat(g_pcSettings.deathListPosX);
     s_deathListPosY->SetFloat(g_pcSettings.deathListPosY);
