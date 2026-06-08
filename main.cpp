@@ -295,39 +295,31 @@ static void UpdateMacroShoot()
         {
             g_macroHolding = true;
             g_macroStartTime = now;
-            if (aiming) g_macroAimTriggered = true;
+            // Kirim sinyal sprint selama masa transisi/tunggu
+            g_macroSprintTimer = now + entryDelayMs;
         }
 
         if (!aiming && !g_macroAimTriggered)
         {
             uint32_t elapsed = now - g_macroStartTime;
 
-            // Macro 1: Sprint dikirim selama masa tunggu (entryDelayMs) sebelum membidik
-            if (elapsed < entryDelayMs)
+            // Menunggu delay slider selesai (sambil VC Shoot + Sprint) baru membidik
+            if (elapsed >= entryDelayMs)
             {
-                g_macroSprintTimer = now + 50;
+                g_macroAimTriggered = true;
             }
-
-            if (elapsed >= entryDelayMs) g_macroAimTriggered = true;
         }
     }
     else if (macro2Pressed)
     {
         if (!g_macroAimTriggered)
         {
-            if (g_macroStartTime == 0) g_macroStartTime = now;
+            // Macro 2: INSTAN membidik seperti tombol Target manual
+            g_macroAimTriggered = true;
 
-            uint32_t elapsed = now - g_macroStartTime;
-
-            // Macro 2: Sprint dulu sesuai slider Entry Protect sebelum trigger aiming
-            if (elapsed < entryDelayMs)
-            {
-                g_macroSprintTimer = now + 50;
-            }
-            else
-            {
-                g_macroAimTriggered = true;
-            }
+            // Sambil mengirim sinyal sprint selama durasi slider
+            g_macroSprintTimer = now + entryDelayMs;
+            g_macroStartTime = now;
         }
         g_macroHolding = aiming;
     }
