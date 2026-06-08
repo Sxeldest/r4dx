@@ -1,0 +1,3 @@
+0x5e4e64: LDR             R0, =(off_6B2D74 - 0x5E4E6A)
+0x5e4e66: ADD             R0, PC; off_6B2D74
+0x5e4e68: BX              LR

@@ -1,0 +1,1 @@
+0xa98ffc: IMPORT __imp_ImmVibeInitialize2

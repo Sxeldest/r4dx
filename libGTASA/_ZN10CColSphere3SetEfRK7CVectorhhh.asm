@@ -1,0 +1,10 @@
+0x2e1c54: STR             R1, [R0,#0xC]
+0x2e1c56: LDR             R1, [R2,#8]
+0x2e1c58: VLDR            D16, [R2]
+0x2e1c5c: LDRD.W          R2, R12, [SP,#arg_0]
+0x2e1c60: STR             R1, [R0,#8]
+0x2e1c62: STRB            R3, [R0,#0x10]
+0x2e1c64: STRB            R2, [R0,#0x11]
+0x2e1c66: STRB.W          R12, [R0,#0x12]
+0x2e1c6a: VSTR            D16, [R0]
+0x2e1c6e: BX              LR

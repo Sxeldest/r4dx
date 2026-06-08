@@ -639,6 +639,38 @@ void RenderPCControlMenu()
                 ImGui::EndTabItem();
             }
 
+            // TAB: Crosshair
+            if (ImGui::BeginTabItem("Crosshair"))
+            {
+                ImGui::BeginChild("CrosshairScroll");
+
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Crosshair Customization");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Enable Custom Crosshair", &g_pcSettings.chEnabled);
+
+                ImGui::Text("Global Size Multiplier");
+                changed |= SliderFloatWithButtons("chSize", &g_pcSettings.chSize, 0.1f, 5.0f, "%.2f", 0.05f);
+
+                ImGui::Text("Horizontal Position Offset");
+                changed |= SliderFloatWithButtons("chPosX", &g_pcSettings.chPosX, -1000.0f, 1000.0f, "%.0f", 1.0f);
+
+                ImGui::Text("Vertical Position Offset");
+                changed |= SliderFloatWithButtons("chPosY", &g_pcSettings.chPosY, -1000.0f, 1000.0f, "%.0f", 1.0f);
+
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Dynamic Expansion");
+                ImGui::Separator();
+
+                ImGui::Text("Idle Size (Base Expansion)");
+                changed |= SliderFloatWithButtons("chExpansionIdle", &g_pcSettings.chExpansionIdle, 0.0f, 5.0f, "%.2f", 0.05f);
+
+                ImGui::Text("Expansion Multiplier (Firing/Moving)");
+                changed |= SliderFloatWithButtons("chExpansionMax", &g_pcSettings.chExpansionMax, 0.0f, 5.0f, "%.2f", 0.05f);
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
+
             // TAB 5: UI Settings
             if (ImGui::BeginTabItem("Settings"))
             {

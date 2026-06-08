@@ -1,0 +1,2 @@
+0x1954ac: ADRL            R12, 0x6714B4
+0x1954b4: LDR             PC, [R12,#(_ZN7CCamera16VectorMoveLinearEP7CVectorS1_fb_ptr - 0x6714B4)]!; CCamera::VectorMoveLinear(CVector *,CVector *,float,bool)

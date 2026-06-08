@@ -1,0 +1,10 @@
+0x212662: LDR             R0, [R0,#0x6C]
+0x212664: CMP             R0, #0
+0x212666: ITT NE
+0x212668: LDRNE           R0, [R0,#0x2C]
+0x21266a: CMPNE           R0, #0
+0x21266c: BEQ             loc_212672
+0x21266e: MOVS            R0, #8
+0x212670: BX              LR
+0x212672: MOVS            R0, #0
+0x212674: BX              LR

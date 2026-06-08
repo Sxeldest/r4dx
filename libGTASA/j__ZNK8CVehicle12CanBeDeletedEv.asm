@@ -1,0 +1,2 @@
+0x19cd1c: ADRL            R12, 0x673D24
+0x19cd24: LDR             PC, [R12,#(_ZNK8CVehicle12CanBeDeletedEv_ptr - 0x673D24)]!; CVehicle::CanBeDeleted(void)

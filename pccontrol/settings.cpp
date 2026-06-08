@@ -69,6 +69,14 @@ PCControlSettings g_pcSettings = {
     1.0f,   // ntDistanceYOffset (3D Height Correction)
     true,   // ntEnableScaling
     false,  // ntLuaSource
+
+    // Crosshair Settings
+    false,  // chEnabled
+    1.0f,   // chSize
+    0.0f,   // chPosX
+    0.0f,   // chPosY
+    1.0f,   // chExpansionMax
+    1.0f,   // chExpansionIdle
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -151,6 +159,13 @@ static ConfigEntry* s_ntScaleMultiplier = nullptr;
 static ConfigEntry* s_ntDistanceYOffset = nullptr;
 static ConfigEntry* s_ntEnableScaling = nullptr;
 static ConfigEntry* s_ntLuaSource = nullptr;
+
+static ConfigEntry* s_chEnabled = nullptr;
+static ConfigEntry* s_chSize = nullptr;
+static ConfigEntry* s_chPosX = nullptr;
+static ConfigEntry* s_chPosY = nullptr;
+static ConfigEntry* s_chExpansionMax = nullptr;
+static ConfigEntry* s_chExpansionIdle = nullptr;
 
 static ConfigEntry* s_patchEnabled[MAX_MEMORY_PATCHES];
 static ConfigEntry* s_patchOffset[MAX_MEMORY_PATCHES];
@@ -314,6 +329,13 @@ void InitPCControlSettings()
     s_ntEnableScaling = cfg->Bind("EnableScaling", true, kNametagSection);
     s_ntLuaSource = cfg->Bind("LuaSource", false, kNametagSection);
 
+    s_chEnabled = cfg->Bind("Enabled", false, "Crosshair");
+    s_chSize = cfg->Bind("Size", 1.0f, "Crosshair");
+    s_chPosX = cfg->Bind("PosX", 0.0f, "Crosshair");
+    s_chPosY = cfg->Bind("PosY", 0.0f, "Crosshair");
+    s_chExpansionMax = cfg->Bind("ExpansionMax", 1.0f, "Crosshair");
+    s_chExpansionIdle = cfg->Bind("ExpansionIdle", 1.0f, "Crosshair");
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -389,6 +411,13 @@ void InitPCControlSettings()
     g_pcSettings.ntDistanceYOffset = s_ntDistanceYOffset->GetFloat();
     g_pcSettings.ntEnableScaling = s_ntEnableScaling->GetBool();
     g_pcSettings.ntLuaSource = s_ntLuaSource->GetBool();
+
+    g_pcSettings.chEnabled = s_chEnabled->GetBool();
+    g_pcSettings.chSize = s_chSize->GetFloat();
+    g_pcSettings.chPosX = s_chPosX->GetFloat();
+    g_pcSettings.chPosY = s_chPosY->GetFloat();
+    g_pcSettings.chExpansionMax = s_chExpansionMax->GetFloat();
+    g_pcSettings.chExpansionIdle = s_chExpansionIdle->GetFloat();
 
     for (int i = 0; i < 4; ++i) {
         g_pcSettings.ntHPColor[i] = s_ntHPColor[i]->GetFloat();
@@ -543,6 +572,13 @@ void SavePCControlSettings()
     s_ntDistanceYOffset->SetFloat(g_pcSettings.ntDistanceYOffset);
     s_ntEnableScaling->SetBool(g_pcSettings.ntEnableScaling);
     s_ntLuaSource->SetBool(g_pcSettings.ntLuaSource);
+
+    s_chEnabled->SetBool(g_pcSettings.chEnabled);
+    s_chSize->SetFloat(g_pcSettings.chSize);
+    s_chPosX->SetFloat(g_pcSettings.chPosX);
+    s_chPosY->SetFloat(g_pcSettings.chPosY);
+    s_chExpansionMax->SetFloat(g_pcSettings.chExpansionMax);
+    s_chExpansionIdle->SetFloat(g_pcSettings.chExpansionIdle);
 
     for (int i = 0; i < 4; ++i) {
         s_ntHPColor[i]->SetFloat(g_pcSettings.ntHPColor[i]);

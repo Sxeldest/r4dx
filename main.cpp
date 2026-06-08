@@ -49,6 +49,9 @@ uintptr_t addrCalcTextSize = 0x12B090;
 uintptr_t addrProcessWeaponSwitch = 0x4C58A8;
 uintptr_t addrGetTaskUseGun = 0x4C0566;
 uintptr_t addrSAMP_RenderNametag = 0xF18C8;
+uintptr_t addrGetWeaponRadiusOnScreen = 0x4C6978;
+uintptr_t addrCPlayerCrossHair_Render = 0x40C2C8;
+uintptr_t addrCHud_DrawCrossHairs = 0x4371B0;
 
 DECL_HOOKi(GetPedWalkLeftRight, void* self);
 DECL_HOOKi(GetPedWalkUpDown, void* self);
@@ -72,6 +75,11 @@ DECL_HOOK(bool, InitRenderware);
 DECL_HOOKv(Render2DStuff);
 DECL_HOOKv(OnTouchEvent, int type, int fingerId, int x, int y);
 DECL_HOOKv(SAMP_RenderNametag, int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk);
+DECL_HOOK(float, GetWeaponRadiusOnScreen, void* self);
+DECL_HOOKv(CPlayerCrossHair_Render, void* self, int playerIdx);
+DECL_HOOKv(CHud_DrawCrossHairs);
+DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
+DECL_HOOKv(RenderOneXLUSprite_Rotate_Aspect, float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a);
 int (*GetTaskUseGun)(void* self);
 DECL_HOOK(int, ProcessWeaponSwitch, void* self, void* pad);
 DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
@@ -716,6 +724,91 @@ void HookOf_SAMP_RenderNametag(int** a1, int a2, float* pos3D, char* name, int c
     SAMP_RenderNametag(a1, a2, pos3D, name, color, dist, health, armor, afk);
 }
 
+float HookOf_GetWeaponRadiusOnScreen(void* self)
+{
+    float r = GetWeaponRadiusOnScreen(self);
+    if (g_pcSettings.chEnabled)
+    {
+        // GTA SA default min radius is usually 0.2
+        float minR = 0.2f;
+        if (r < minR) r = minR;
+
+        // Apply idle size to the base (minR)
+        // and expansion multiplier to the dynamic part (r - minR)
+        r = (minR * g_pcSettings.chExpansionIdle) + ((r - minR) * g_pcSettings.chExpansionMax);
+
+        // Apply global size
+        r *= g_pcSettings.chSize;
+    }
+    return r;
+}
+
+static bool g_inCrosshairRender = false;
+void HookOf_CPlayerCrossHair_Render(void* self, int playerIdx)
+{
+    if (g_pcSettings.chEnabled && self)
+    {
+        g_inCrosshairRender = true;
+        float* fSelf = (float*)self;
+        float oldX = fSelf[1]; // Offset 4
+        float oldY = fSelf[2]; // Offset 8
+
+        // The internal crosshair offsets are typically in a small range (-0.9 to 0.9)
+        // We scale our pixel-like offset to this range.
+        fSelf[1] += g_pcSettings.chPosX * 0.002f;
+        fSelf[2] += g_pcSettings.chPosY * 0.002f;
+
+        CPlayerCrossHair_Render(self, playerIdx);
+
+        fSelf[1] = oldX;
+        fSelf[2] = oldY;
+        g_inCrosshairRender = false;
+    }
+    else
+    {
+        CPlayerCrossHair_Render(self, playerIdx);
+    }
+}
+
+static bool g_inHudCrosshairDraw = false;
+void HookOf_CHud_DrawCrossHairs()
+{
+    g_inHudCrosshairDraw = true;
+    CHud_DrawCrossHairs();
+    g_inHudCrosshairDraw = false;
+}
+
+void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
+{
+    if (g_inHudCrosshairDraw && g_pcSettings.chEnabled && rect)
+    {
+        float* fRect = (float*)rect;
+        float w = fRect[2] - fRect[0];
+        float h = fRect[1] - fRect[3];
+        float centerX = (fRect[0] + fRect[2]) * 0.5f;
+        float centerY = (fRect[1] + fRect[3]) * 0.5f;
+        float newW = w * g_pcSettings.chSize;
+        float newH = h * g_pcSettings.chSize;
+        centerX += g_pcSettings.chPosX;
+        centerY += g_pcSettings.chPosY;
+        fRect[0] = centerX - newW * 0.5f;
+        fRect[2] = centerX + newW * 0.5f;
+        fRect[3] = centerY - newH * 0.5f;
+        fRect[1] = centerY + newH * 0.5f;
+    }
+    CSprite2d_Draw(self, rect, rgba);
+}
+
+void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a)
+{
+    if (g_inCrosshairRender && g_pcSettings.chEnabled)
+    {
+        w *= g_pcSettings.chSize;
+        h *= g_pcSettings.chSize;
+    }
+    RenderOneXLUSprite_Rotate_Aspect(x, y, z, w, h, r, g, b, intensity, rotation, aspect, a);
+}
+
 void HookOf_ButtonPanel_Render(void* self, void* a2){
     // Do nothing to hide the panel
 }
@@ -808,6 +901,12 @@ extern "C" void OnModLoad()
         ClearWeaponTarget = (void (*)(void*))(aml->GetSym(pGameHandle, "_ZN10CPlayerPed17ClearWeaponTargetEv"));
         if (!ClearWeaponTarget) ClearWeaponTarget = (void (*)(void*))(gtasa + addrClearWeaponTarget + 1);
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
+
+        HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
+        HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
+        HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
+        HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
+        HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));
 
         if (hSAMP_ORIG)
         {

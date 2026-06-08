@@ -1,0 +1,5 @@
+0x4ef470: PUSH            {R7,LR}
+0x4ef472: MOV             R7, SP
+0x4ef474: BLX             j__ZN12CTaskComplexD2Ev; CTaskComplex::~CTaskComplex()
+0x4ef478: POP.W           {R7,LR}
+0x4ef47c: B.W             j_j__ZN5CTaskdlEPv; j_CTask::operator delete(void *)

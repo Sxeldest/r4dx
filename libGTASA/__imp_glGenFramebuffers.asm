@@ -1,0 +1,1 @@
+0xa992f0: IMPORT __imp_glGenFramebuffers

@@ -1,0 +1,1 @@
+0xa99394: IMPORT __imp_glDeleteFramebuffers

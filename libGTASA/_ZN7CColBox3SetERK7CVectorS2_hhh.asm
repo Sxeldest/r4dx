@@ -1,0 +1,13 @@
+0x2d9632: VLDR            D16, [R1]
+0x2d9636: LDR             R1, [R1,#8]
+0x2d9638: STR             R1, [R0,#8]
+0x2d963a: VSTR            D16, [R0]
+0x2d963e: LDR             R1, [R2,#8]
+0x2d9640: VLDR            D16, [R2]
+0x2d9644: LDRD.W          R2, R12, [SP,#arg_0]
+0x2d9648: STR             R1, [R0,#0x14]
+0x2d964a: STRB            R3, [R0,#0x18]
+0x2d964c: STRB            R2, [R0,#0x19]
+0x2d964e: STRB.W          R12, [R0,#0x1A]
+0x2d9652: VSTR            D16, [R0,#0xC]
+0x2d9656: BX              LR

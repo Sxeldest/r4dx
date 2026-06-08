@@ -1,0 +1,1 @@
+0xa990f8: IMPORT __imp_ImmVibeGetIVTEffectIndexFromName

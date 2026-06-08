@@ -1,0 +1,1 @@
+0xa99390: IMPORT __imp_cloudGetBufferPtr

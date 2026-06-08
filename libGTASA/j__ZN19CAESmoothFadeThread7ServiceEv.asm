@@ -1,0 +1,2 @@
+0x195760: ADRL            R12, 0x671768
+0x195768: LDR             PC, [R12,#(_ZN19CAESmoothFadeThread7ServiceEv_ptr - 0x671768)]!; CAESmoothFadeThread::Service(void)

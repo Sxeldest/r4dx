@@ -1,0 +1,1 @@
+0xa993e8: IMPORT __imp_glDeleteProgram

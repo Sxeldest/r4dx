@@ -1,0 +1,3 @@
+0x221728: LDR             R0, =(off_683CBC - 0x22172E); "OpenGLWorldSectorAllInOne.csl" ...
+0x22172a: ADD             R0, PC; off_683CBC
+0x22172c: BX              LR

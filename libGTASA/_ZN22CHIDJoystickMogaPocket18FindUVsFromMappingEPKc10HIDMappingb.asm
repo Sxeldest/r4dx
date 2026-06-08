@@ -1,0 +1,124 @@
+0x28ec58: PUSH            {R4-R7,LR}
+0x28ec5a: ADD             R7, SP, #0xC
+0x28ec5c: PUSH.W          {R11}
+0x28ec60: LDR.W           R12, [R1,#8]
+0x28ec64: CMP.W           R12, #0
+0x28ec68: BEQ.W           loc_28ED12
+0x28ec6c: LDR             R1, [R1,#0xC]
+0x28ec6e: MOVS            R2, #0
+0x28ec70: MOV.W           LR, #0
+0x28ec74: MOVS            R4, #0
+0x28ec76: ADDS            R1, #4
+0x28ec78: LDR             R5, [R1]
+0x28ec7a: CMP             R5, R3
+0x28ec7c: BNE.W           def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ec80: LDR.W           R5, [R1,#-4]
+0x28ec84: CMP             R5, #0x43 ; 'C'; switch 68 cases
+0x28ec86: BHI.W           def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ec8a: TBB.W           [PC,R5]; switch jump
+0x28ec8e: DCB 0x22; jump table for switch statement
+0x28ec8f: DCB 0x22
+0x28ec90: DCB 0x22
+0x28ec91: DCB 0x22
+0x28ec92: DCB 0x2E
+0x28ec93: DCB 0x31
+0x28ec94: DCB 0x35
+0x28ec95: DCB 0x39
+0x28ec96: DCB 0x3C
+0x28ec97: DCB 0x3C
+0x28ec98: DCB 0x3C
+0x28ec99: DCB 0x3C
+0x28ec9a: DCB 0x3C
+0x28ec9b: DCB 0x3C
+0x28ec9c: DCB 0x3C
+0x28ec9d: DCB 0x3C
+0x28ec9e: DCB 0x3C
+0x28ec9f: DCB 0x3C
+0x28eca0: DCB 0x3C
+0x28eca1: DCB 0x3C
+0x28eca2: DCB 0x3C
+0x28eca3: DCB 0x3C
+0x28eca4: DCB 0x3C
+0x28eca5: DCB 0x3C
+0x28eca6: DCB 0x3C
+0x28eca7: DCB 0x3C
+0x28eca8: DCB 0x3C
+0x28eca9: DCB 0x3C
+0x28ecaa: DCB 0x3C
+0x28ecab: DCB 0x3C
+0x28ecac: DCB 0x3C
+0x28ecad: DCB 0x3C
+0x28ecae: DCB 0x3C
+0x28ecaf: DCB 0x3C
+0x28ecb0: DCB 0x3C
+0x28ecb1: DCB 0x3C
+0x28ecb2: DCB 0x3C
+0x28ecb3: DCB 0x3C
+0x28ecb4: DCB 0x3C
+0x28ecb5: DCB 0x3C
+0x28ecb6: DCB 0x3C
+0x28ecb7: DCB 0x3C
+0x28ecb8: DCB 0x3C
+0x28ecb9: DCB 0x3C
+0x28ecba: DCB 0x3C
+0x28ecbb: DCB 0x3C
+0x28ecbc: DCB 0x3C
+0x28ecbd: DCB 0x3C
+0x28ecbe: DCB 0x3C
+0x28ecbf: DCB 0x3C
+0x28ecc0: DCB 0x3C
+0x28ecc1: DCB 0x3C
+0x28ecc2: DCB 0x3C
+0x28ecc3: DCB 0x3C
+0x28ecc4: DCB 0x3C
+0x28ecc5: DCB 0x3C
+0x28ecc6: DCB 0x3C
+0x28ecc7: DCB 0x3C
+0x28ecc8: DCB 0x3C
+0x28ecc9: DCB 0x3C
+0x28ecca: DCB 0x3C
+0x28eccb: DCB 0x3C
+0x28eccc: DCB 0x3C
+0x28eccd: DCB 0x3C
+0x28ecce: DCB 0x26
+0x28eccf: DCB 0x26
+0x28ecd0: DCB 0x2A
+0x28ecd1: DCB 0x2A
+0x28ecd2: MOV.W           LR, #1; jumptable 0028EC8A cases 0-3
+0x28ecd6: MOV             R4, R5
+0x28ecd8: B               def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ecda: MOV.W           LR, #0; jumptable 0028EC8A cases 64,65
+0x28ecde: MOVS            R4, #2
+0x28ece0: B               def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ece2: MOV.W           LR, #0; jumptable 0028EC8A cases 66,67
+0x28ece6: MOVS            R4, #3
+0x28ece8: B               def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ecea: MOV.W           LR, #0; jumptable 0028EC8A case 4
+0x28ecee: B               loc_28ED04
+0x28ecf0: MOVS            R4, #0; jumptable 0028EC8A case 5
+0x28ecf2: MOV.W           LR, #0
+0x28ecf6: B               def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ecf8: MOV.W           LR, #2; jumptable 0028EC8A case 6
+0x28ecfc: MOVS            R4, #0
+0x28ecfe: B               def_28EC8A; jumptable 0028EC8A default case, cases 8-63
+0x28ed00: MOV.W           LR, #2; jumptable 0028EC8A case 7
+0x28ed04: MOVS            R4, #1
+0x28ed06: ADDS            R2, #1; jumptable 0028EC8A default case, cases 8-63
+0x28ed08: ADDS            R1, #0x14
+0x28ed0a: CMP             R2, R12
+0x28ed0c: BCC.W           loc_28EC78
+0x28ed10: B               loc_28ED18
+0x28ed12: MOVS            R4, #0
+0x28ed14: MOV.W           LR, #0
+0x28ed18: VMOV.32         D16[0], R4
+0x28ed1c: ADDS            R1, R4, #1
+0x28ed1e: VMOV.F32        Q9, #0.25
+0x28ed22: VMOV.32         D17[0], R1
+0x28ed26: ADD.W           R1, LR, #1
+0x28ed2a: VMOV.32         D16[1], R1
+0x28ed2e: VMOV.32         D17[1], LR
+0x28ed32: VCVT.F32.S32    Q8, Q8
+0x28ed36: VMUL.F32        Q8, Q8, Q9
+0x28ed3a: VST1.32         {D16-D17}, [R0]
+0x28ed3e: POP.W           {R11}
+0x28ed42: POP             {R4-R7,PC}

@@ -1,0 +1,1 @@
+0xa990f4: IMPORT __imp_glCompileShader

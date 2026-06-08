@@ -1,0 +1,2 @@
+0x198740: ADRL            R12, 0x672748
+0x198748: LDR             PC, [R12,#(_ZN17CAEPedAudioEntity7ServiceEv_ptr - 0x672748)]!; CAEPedAudioEntity::Service(void)

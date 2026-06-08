@@ -1,0 +1,1 @@
+0xa992c4: IMPORT __imp_pthread_getspecific

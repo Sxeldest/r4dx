@@ -165,6 +165,14 @@ struct PCControlSettings
     bool ntEnableScaling;
     bool ntLuaSource; // Use Lua as data source
 
+    // Crosshair Settings
+    bool chEnabled;
+    float chSize;
+    float chPosX;
+    float chPosY;
+    float chExpansionMax;
+    float chExpansionIdle;
+
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };
 

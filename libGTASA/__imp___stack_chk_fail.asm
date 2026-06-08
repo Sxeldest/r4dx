@@ -1,0 +1,1 @@
+0xa991cc: IMPORT __imp___stack_chk_fail

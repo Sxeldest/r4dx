@@ -1,0 +1,48 @@
+0x48aec4: PUSH            {R4,R5,R7,LR}
+0x48aec6: ADD             R7, SP, #8
+0x48aec8: MOV             R5, R1
+0x48aeca: MOV             R4, R0
+0x48aecc: LDRB.W          R0, [R5,#0x4C]
+0x48aed0: ADD.W           R1, R5, #0x44 ; 'D'; char *
+0x48aed4: STRB            R0, [R4]
+0x48aed6: LDRB.W          R0, [R5,#0x4D]
+0x48aeda: STRB            R0, [R4,#1]
+0x48aedc: LDRB.W          R0, [R5,#0x4E]
+0x48aee0: STRB            R0, [R4,#2]
+0x48aee2: LDR             R0, [R5]
+0x48aee4: STR             R0, [R4,#4]
+0x48aee6: LDR             R0, [R5,#4]
+0x48aee8: STR             R0, [R4,#8]
+0x48aeea: LDR             R0, [R5,#8]
+0x48aeec: STR             R0, [R4,#0xC]
+0x48aeee: LDR             R0, [R5,#0xC]
+0x48aef0: STR             R0, [R4,#0x10]
+0x48aef2: LDR             R0, [R5,#0x10]
+0x48aef4: STR             R0, [R4,#0x14]
+0x48aef6: LDR             R0, [R5,#0x14]
+0x48aef8: STR             R0, [R4,#0x18]
+0x48aefa: LDR             R0, [R5,#0x18]
+0x48aefc: STR             R0, [R4,#0x1C]
+0x48aefe: LDR             R0, [R5,#0x1C]
+0x48af00: STR             R0, [R4,#0x20]
+0x48af02: LDR             R0, [R5,#0x20]
+0x48af04: STR             R0, [R4,#0x24]
+0x48af06: LDR             R0, [R5,#0x24]
+0x48af08: STR             R0, [R4,#0x28]
+0x48af0a: LDR             R0, [R5,#0x28]
+0x48af0c: STR             R0, [R4,#0x2C]
+0x48af0e: LDR             R0, [R5,#0x2C]
+0x48af10: STR             R0, [R4,#0x30]
+0x48af12: LDR             R0, [R5,#0x30]
+0x48af14: STR             R0, [R4,#0x34]
+0x48af16: LDR             R0, [R5,#0x34]
+0x48af18: STR             R0, [R4,#0x38]
+0x48af1a: LDR             R0, [R5,#0x38]
+0x48af1c: STR             R0, [R4,#0x3C]
+0x48af1e: LDR             R0, [R5,#0x3C]
+0x48af20: STR             R0, [R4,#0x40]
+0x48af22: ADD.W           R0, R4, #0x44 ; 'D'; char *
+0x48af26: BLX             strcpy
+0x48af2a: LDRB.W          R0, [R5,#0x4F]
+0x48af2e: STRB.W          R0, [R4,#0x4C]
+0x48af32: POP             {R4,R5,R7,PC}

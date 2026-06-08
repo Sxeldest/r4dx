@@ -1,0 +1,44 @@
+0x263314: PUSH            {R4-R7,LR}
+0x263316: ADD             R7, SP, #0xC
+0x263318: PUSH.W          {R8}
+0x26331c: MOV             R4, R3
+0x26331e: MOV             R5, R1
+0x263320: MOV             R6, R0
+0x263322: CMP             R2, #0xE
+0x263324: BEQ             loc_26334A
+0x263326: CMP             R2, #0xB
+0x263328: BNE             loc_26337E
+0x26332a: LDR.W           R0, [R5,#0x88]
+0x26332e: MOV             R8, #0x161AC
+0x263336: LDR.W           R1, [R0,R8]
+0x26333a: LDR             R1, [R1,#0x2C]
+0x26333c: BLX             R1
+0x26333e: LDR             R0, [R6,#0x40]
+0x263340: STR             R0, [R4]
+0x263342: LDR             R0, [R6,#0x44]
+0x263344: STR             R0, [R4,#4]
+0x263346: LDR             R0, [R6,#0x48]
+0x263348: B               loc_263368
+0x26334a: LDR.W           R0, [R5,#0x88]
+0x26334e: MOV             R8, #0x161AC
+0x263356: LDR.W           R1, [R0,R8]
+0x26335a: LDR             R1, [R1,#0x2C]
+0x26335c: BLX             R1
+0x26335e: LDR             R0, [R6,#0x4C]
+0x263360: STR             R0, [R4]
+0x263362: LDR             R0, [R6,#0x50]
+0x263364: STR             R0, [R4,#4]
+0x263366: LDR             R0, [R6,#0x54]
+0x263368: STR             R0, [R4,#8]
+0x26336a: LDR.W           R0, [R5,#0x88]
+0x26336e: LDR.W           R1, [R0,R8]
+0x263372: LDR             R1, [R1,#0x30]
+0x263374: POP.W           {R8}
+0x263378: POP.W           {R4-R7,LR}
+0x26337c: BX              R1
+0x26337e: MOV             R0, R6
+0x263380: MOV             R1, R5
+0x263382: MOV             R3, R4
+0x263384: POP.W           {R8}
+0x263388: POP.W           {R4-R7,LR}
+0x26338c: B               sub_263234

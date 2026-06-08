@@ -1,0 +1,75 @@
+0x257288: PUSH            {R4-R7,LR}
+0x25728a: ADD             R7, SP, #0xC
+0x25728c: PUSH.W          {R8,R9,R11}
+0x257290: SUB             SP, SP, #0x10
+0x257292: MOV             R8, R3
+0x257294: MOV             R9, R2
+0x257296: MOV             R5, R1
+0x257298: MOV             R6, R0
+0x25729a: BLX             j_GetContextRef
+0x25729e: MOV             R4, R0
+0x2572a0: CMP             R4, #0
+0x2572a2: BEQ             loc_257352
+0x2572a4: ADD.W           R0, R4, #8
+0x2572a8: MOV             R1, R6
+0x2572aa: BLX             j_LookupUIntMapKey
+0x2572ae: CBZ             R0, loc_2572DE
+0x2572b0: MOVW            R1, #0x1004
+0x2572b4: SUBS            R1, R5, R1
+0x2572b6: CMP             R1, #3
+0x2572b8: BCS             loc_257312
+0x2572ba: VMOV            S2, R8
+0x2572be: VLDR            S0, [R7,#arg_0]
+0x2572c2: VMOV            S4, R9
+0x2572c6: ADD             R3, SP, #0x28+var_24
+0x2572c8: MOV             R1, R4
+0x2572ca: MOV             R2, R5
+0x2572cc: VSTR            S2, [SP,#0x28+var_20]
+0x2572d0: VSTR            S4, [SP,#0x28+var_24]
+0x2572d4: VSTR            S0, [SP,#0x28+var_1C]
+0x2572d8: BL              sub_256840
+0x2572dc: B               loc_25734C
+0x2572de: LDR             R0, =(TrapALError_ptr - 0x2572E4)
+0x2572e0: ADD             R0, PC; TrapALError_ptr
+0x2572e2: LDR             R0, [R0]; TrapALError
+0x2572e4: LDRB            R0, [R0]
+0x2572e6: CMP             R0, #0
+0x2572e8: ITT NE
+0x2572ea: MOVNE           R0, #5; sig
+0x2572ec: BLXNE           raise
+0x2572f0: LDREX.W         R0, [R4,#0x50]
+0x2572f4: CBNZ            R0, loc_257344
+0x2572f6: ADD.W           R0, R4, #0x50 ; 'P'
+0x2572fa: MOVW            R1, #0xA001
+0x2572fe: DMB.W           ISH
+0x257302: STREX.W         R2, R1, [R0]
+0x257306: CBZ             R2, loc_257348
+0x257308: LDREX.W         R2, [R0]
+0x25730c: CMP             R2, #0
+0x25730e: BEQ             loc_257302
+0x257310: B               loc_257344
+0x257312: LDR             R0, =(TrapALError_ptr - 0x257318)
+0x257314: ADD             R0, PC; TrapALError_ptr
+0x257316: LDR             R0, [R0]; TrapALError
+0x257318: LDRB            R0, [R0]
+0x25731a: CMP             R0, #0
+0x25731c: ITT NE
+0x25731e: MOVNE           R0, #5; sig
+0x257320: BLXNE           raise
+0x257324: LDREX.W         R0, [R4,#0x50]
+0x257328: CBNZ            R0, loc_257344
+0x25732a: ADD.W           R0, R4, #0x50 ; 'P'
+0x25732e: MOVW            R1, #0xA002
+0x257332: DMB.W           ISH
+0x257336: STREX.W         R2, R1, [R0]
+0x25733a: CBZ             R2, loc_257348
+0x25733c: LDREX.W         R2, [R0]
+0x257340: CMP             R2, #0
+0x257342: BEQ             loc_257336
+0x257344: CLREX.W
+0x257348: DMB.W           ISH
+0x25734c: MOV             R0, R4
+0x25734e: BLX             j_ALCcontext_DecRef
+0x257352: ADD             SP, SP, #0x10
+0x257354: POP.W           {R8,R9,R11}
+0x257358: POP             {R4-R7,PC}

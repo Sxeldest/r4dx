@@ -1,0 +1,1 @@
+0xa990b8: IMPORT __imp_glTexParameteri
