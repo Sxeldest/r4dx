@@ -325,6 +325,19 @@ void RenderPCControlMenu()
                 ImGui::SameLine();
                 changed |= ImGui::Checkbox("Disable Auto-Jump", &g_pcSettings.disableNativeJump);
                 changed |= ImGui::Checkbox("Sprint Double Tap Boost", &g_pcSettings.enableSprintDoubleTapBoost);
+                changed |= ImGui::Checkbox("Sprint Protected (Feinting Helper)", &g_pcSettings.sprintProtected);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Membantu feinting dengan menjaga sinyal lari saat transisi Aim.\nSangat berguna untuk gaya main lincah.");
+
+                if (g_pcSettings.sprintProtected)
+                {
+                    ImGui::Indent();
+                    changed |= ImGui::SliderInt("Entry Protect (Frames)", &g_pcSettings.sprintProtectEntryFrames, 1, 30);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi sinyal lari tetap ditahan saat Anda melepas sprint untuk membidik.");
+
+                    changed |= ImGui::SliderInt("Exit Protect (MS)", &g_pcSettings.sprintProtectExitMs, 50, 2000, "%d ms");
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi lari otomatis setelah keluar dari mode membidik.");
+                    ImGui::Unindent();
+                }
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");

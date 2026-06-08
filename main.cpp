@@ -101,6 +101,8 @@ static bool g_lastAimState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
+static uint32_t g_sprintProtectExitTimer = 0;
+static bool g_sprintProtectJustDownSent = false;
 
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
 const float Z_DEADZONE = 0.1f;
@@ -424,6 +426,37 @@ static bool IsCustomSprintTouched()
     return IsActionTouched(ACTION_SPRINT);
 }
 
+static bool IsSprintProtected()
+{
+    if (!g_pcSettings.sprintProtected) return false;
+
+    // 1. Exit Protection (Setelah lepas Aim)
+    if (g_sprintProtectExitTimer > 0)
+    {
+        if (GetTickMS() < g_sprintProtectExitTimer)
+        {
+            if (IsCustomSprintTouched())
+            {
+                g_sprintProtectExitTimer = 0; // User sudah pencet sendiri, hentikan proteksi
+                return false;
+            }
+            return true;
+        }
+        else g_sprintProtectExitTimer = 0;
+    }
+
+    // 2. Entry Protection (Saat mau masuk Aim)
+    // Jika tombol Target ditekan, tapi Sprint baru saja dilepas (kurang dari 10 frame)
+    // dan belum benar-benar masuk mode aiming kamera.
+    if (IsActionTouched(ACTION_TARGET) && !IsAimMode())
+    {
+        int relFrames = GetActionReleaseFrames(ACTION_SPRINT);
+        if (relFrames > 0 && relFrames < g_pcSettings.sprintProtectEntryFrames) return true;
+    }
+
+    return false;
+}
+
 static bool IsCustomTargetHeld()
 {
     if (IsActionTouched(ACTION_TARGET))
@@ -437,7 +470,7 @@ static bool IsCustomTargetHeld()
 
 int HookOf_GetSprint(void* self, int sprintType)
 {
-    if (IsCustomSprintTouched())
+    if (IsCustomSprintTouched() || IsSprintProtected())
     {
         void* player = FindPlayerPed(-1);
         if (player) SetMoveState(player, 7);
@@ -461,6 +494,13 @@ int HookOf_SprintJustDown(void* self)
     if (g_sprintJustDownFrames > 0)
     {
         g_sprintJustDownFrames--;
+        return 1;
+    }
+
+    // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
+    if (g_pcSettings.sprintProtected && g_sprintProtectExitTimer > 0 && !g_sprintProtectJustDownSent)
+    {
+        g_sprintProtectJustDownSent = true;
         return 1;
     }
 
@@ -603,6 +643,12 @@ void HookOf_Render2DStuff()
     {
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
+
+        if (g_pcSettings.sprintProtected)
+        {
+            g_sprintProtectExitTimer = GetTickMS() + g_pcSettings.sprintProtectExitMs;
+            g_sprintProtectJustDownSent = false;
+        }
 
         void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
         if (player)

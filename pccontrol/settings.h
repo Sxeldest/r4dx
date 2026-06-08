@@ -173,6 +173,10 @@ struct PCControlSettings
     float chExpansionMax;
     float chExpansionIdle;
 
+    bool sprintProtected;
+    int sprintProtectEntryFrames;
+    int sprintProtectExitMs;
+
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };
 
