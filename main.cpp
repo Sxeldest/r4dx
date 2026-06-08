@@ -101,6 +101,7 @@ static bool g_lastAimState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
+static uint32_t g_macroSprintTimer = 0;
 static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
@@ -282,30 +283,58 @@ static void UpdateMacroShoot()
     bool macro1Pressed = IsActionTouched(ACTION_MACRO_SHOOT);
     bool macro2Pressed = IsActionTouched(ACTION_MACRO_SHOOT_2);
     bool aiming = IsAimMode();
+    uint32_t now = GetTickMS();
+
+    // Konversi frame ke ms (asumsi 1 frame = 16.6ms @ 60fps)
+    uint32_t entryDelayMs = (uint32_t)(g_pcSettings.sprintProtectEntryFrames * 16.6f);
+    if (entryDelayMs < 50) entryDelayMs = 50; // Minimal delay agar sprint sempat terdeteksi
 
     if (macro1Pressed)
     {
         if (!g_macroHolding)
         {
             g_macroHolding = true;
-            g_macroStartTime = GetTickMS();
+            g_macroStartTime = now;
             if (aiming) g_macroAimTriggered = true;
         }
 
-        if (!aiming)
+        if (!aiming && !g_macroAimTriggered)
         {
-            uint32_t elapsed = GetTickMS() - g_macroStartTime;
-            if (!g_macroAimTriggered && elapsed >= 200) g_macroAimTriggered = true;
+            uint32_t elapsed = now - g_macroStartTime;
+
+            // Macro 1: Sprint dikirim selama masa tunggu (entryDelayMs) sebelum membidik
+            if (elapsed < entryDelayMs)
+            {
+                g_macroSprintTimer = now + 50;
+            }
+
+            if (elapsed >= entryDelayMs) g_macroAimTriggered = true;
         }
     }
     else if (macro2Pressed)
     {
-        g_macroAimTriggered = true; // Always targeting
-        g_macroHolding = aiming;     // Only shooting if camera is in aim mode
+        if (!g_macroAimTriggered)
+        {
+            if (g_macroStartTime == 0) g_macroStartTime = now;
+
+            uint32_t elapsed = now - g_macroStartTime;
+
+            // Macro 2: Sprint dulu sesuai slider Entry Protect sebelum trigger aiming
+            if (elapsed < entryDelayMs)
+            {
+                g_macroSprintTimer = now + 50;
+            }
+            else
+            {
+                g_macroAimTriggered = true;
+            }
+        }
+        g_macroHolding = aiming;
     }
     else
     {
         g_macroHolding = false;
+        g_macroStartTime = 0;
         if (!aiming) g_macroAimTriggered = false;
     }
 }
@@ -430,6 +459,9 @@ static bool IsCustomSprintTouched()
 static bool IsSprintProtected()
 {
     if (!g_pcSettings.sprintProtected) return false;
+
+    // 0. Macro Sprint Protection
+    if (g_macroSprintTimer > 0 && GetTickMS() < g_macroSprintTimer) return true;
 
     // 1. Exit Protection (Setelah lepas Aim)
     if (g_sprintProtectExitTimer > 0)
