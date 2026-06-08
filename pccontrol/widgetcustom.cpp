@@ -476,11 +476,19 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 float sensX = IsCameraInAimMode() ? g_pcSettings.dpadSensX : 1.0f;
                 float sensY = IsCameraInAimMode() ? g_pcSettings.dpadSensY : 1.0f;
 
-                if (fabsf(tx) < threshold) state.targetAnalogX = 0;
-                else state.targetAnalogX = (tx > 0) ? (127.0f * sensX) : (-127.0f * sensX);
+                float outX = 0, outY = 0;
+                if (fabsf(tx) >= threshold) outX = (tx > 0) ? 127.0f : -127.0f;
+                if (fabsf(ty) >= threshold) outY = (ty > 0) ? 127.0f : -127.0f;
 
-                if (fabsf(ty) < threshold) state.targetAnalogY = 0;
-                else state.targetAnalogY = (ty > 0) ? (127.0f * sensY) : (-127.0f * sensY);
+                // Normalisasi Diagonal: Agar lari serong tidak lebih cepat dari lari lurus
+                if (outX != 0 && outY != 0)
+                {
+                    outX *= 0.7071f; // 1 / sqrt(2)
+                    outY *= 0.7071f;
+                }
+
+                state.targetAnalogX = outX * sensX;
+                state.targetAnalogY = outY * sensY;
 
                 // Clamp to valid range (-128 to 127)
                 if (state.targetAnalogX > 127.0f) state.targetAnalogX = 127.0f;
