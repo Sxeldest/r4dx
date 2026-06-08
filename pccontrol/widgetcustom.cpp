@@ -49,6 +49,8 @@ struct WidgetState {
     int releaseFrames = 0;
     float analogX = 0.0f;
     float analogY = 0.0f;
+    float targetAnalogX = 0.0f;
+    float targetAnalogY = 0.0f;
     float currentPosX = 0.0f; // For DPAD dynamic movement
     float currentPosY = 0.0f;
     uint32_t lastActionTime = 0; // For macro delay
@@ -442,8 +444,8 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 state.touched = false;
                 state.activeFinger = -1;
                 if (fingerId >= 0 && fingerId < 15) s_fingerOwner[fingerId] = -1;
-                state.analogX = 0;
-                state.analogY = 0;
+                state.targetAnalogX = 0;
+                state.targetAnalogY = 0;
                 if (!isPassType) blocked = true;
             }
         }
@@ -463,16 +465,22 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 float step = (3.14159265f / 4.0f);
                 float snapped = roundf(angle / step) * step;
 
-                state.analogX = cosf(snapped) * 127.0f;
-                state.analogY = sinf(snapped) * 127.0f;
+                float tx = cosf(snapped) * 127.0f;
+                float ty = sinf(snapped) * 127.0f;
 
-                // Snap ke nilai ekstrim (-127, 0, 127) agar lebih responsif layaknya DPAD digital.
-                // Menggunakan threshold tinggi (60) agar tidak mudah "terpeleset" ke arah diagonal saat gerak lurus.
-                if (fabsf(state.analogX) < 60.0f) state.analogX = 0;
-                else state.analogX = (state.analogX > 0) ? 127.0f : -127.0f;
+                // Snap ke nilai ekstrim agar lebih responsif layaknya DPAD digital.
+                // Output dikalikan dengan sensitivity (SensX/SensY).
+                if (fabsf(tx) < 60.0f) state.targetAnalogX = 0;
+                else state.targetAnalogX = (tx > 0) ? (127.0f * g_pcSettings.dpadSensX) : (-127.0f * g_pcSettings.dpadSensX);
 
-                if (fabsf(state.analogY) < 60.0f) state.analogY = 0;
-                else state.analogY = (state.analogY > 0) ? 127.0f : -127.0f;
+                if (fabsf(ty) < 60.0f) state.targetAnalogY = 0;
+                else state.targetAnalogY = (ty > 0) ? (127.0f * g_pcSettings.dpadSensY) : (-127.0f * g_pcSettings.dpadSensY);
+
+                // Clamp to valid range (-128 to 127)
+                if (state.targetAnalogX > 127.0f) state.targetAnalogX = 127.0f;
+                if (state.targetAnalogX < -128.0f) state.targetAnalogX = -128.0f;
+                if (state.targetAnalogY > 127.0f) state.targetAnalogY = 127.0f;
+                if (state.targetAnalogY < -128.0f) state.targetAnalogY = -128.0f;
             }
             // Note: Tidak ada 'else' reset ke 0 di sini.
             // Analog hanya akan kembali ke 0 jika jari diangkat (event Up).
@@ -874,10 +882,18 @@ void UpdateWidgetReleaseFrames()
 
         if (s_widgetStates[i].releaseFrames > 0) s_widgetStates[i].releaseFrames--;
 
+        // Analog Smoothing (Jiggle Responsiveness)
+        float smooth = g_pcSettings.dpadSmoothness;
+        s_widgetStates[i].analogX = s_widgetStates[i].analogX * (1.0f - smooth) + s_widgetStates[i].targetAnalogX * smooth;
+        s_widgetStates[i].analogY = s_widgetStates[i].analogY * (1.0f - smooth) + s_widgetStates[i].targetAnalogY * smooth;
+
+        if (fabsf(s_widgetStates[i].analogX) < 0.1f) s_widgetStates[i].analogX = 0;
+        if (fabsf(s_widgetStates[i].analogY) < 0.1f) s_widgetStates[i].analogY = 0;
+
         if (!IsWidgetActive(i))
         {
-            s_widgetStates[i].analogX = 0;
-            s_widgetStates[i].analogY = 0;
+            s_widgetStates[i].targetAnalogX = 0;
+            s_widgetStates[i].targetAnalogY = 0;
         }
 
         // Handle Voice Fade Animation
@@ -961,6 +977,8 @@ void ResetWidgetToggle(eWidgetAction action)
             s_widgetStates[i].toggled = false;
             s_widgetStates[i].touched = false;
             s_widgetStates[i].releaseFrames = 0;
+            s_widgetStates[i].targetAnalogX = 0;
+            s_widgetStates[i].targetAnalogY = 0;
         }
     }
 
@@ -977,6 +995,8 @@ void ForceReleaseAction(eWidgetAction action)
             s_widgetStates[i].toggled = false;
             s_widgetStates[i].releaseFrames = 0;
             s_widgetStates[i].activeFinger = -1;
+            s_widgetStates[i].targetAnalogX = 0;
+            s_widgetStates[i].targetAnalogY = 0;
             for (int f = 0; f < 15; ++f) {
                 if (s_fingerOwner[f] == i) s_fingerOwner[f] = -1;
             }

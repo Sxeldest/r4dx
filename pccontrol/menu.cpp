@@ -308,6 +308,14 @@ void RenderPCControlMenu()
                 changed |= ImGui::SliderFloat("Camera Acceleration", &g_pcSettings.camAccel, 1.0f, 5.0f, "%.1f");
 
                 ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
+                ImGui::Separator();
+                changed |= ImGui::SliderFloat("Horizontal Responsiveness", &g_pcSettings.dpadSensX, 0.1f, 2.0f, "%.2f");
+                changed |= ImGui::SliderFloat("Vertical Responsiveness", &g_pcSettings.dpadSensY, 0.1f, 2.0f, "%.2f");
+                changed |= ImGui::SliderFloat("Jiggle Smoothness (Direction Change)", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Low = Smooth direction change, High = Instant (Snap)");
+
+                ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Native Overrides");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Disable Auto-Crouch", &g_pcSettings.disableNativeCrouch);
