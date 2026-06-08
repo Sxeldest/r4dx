@@ -336,6 +336,9 @@ void RenderPCControlMenu()
 
                     changed |= ImGui::SliderInt("Exit Protect (MS)", &g_pcSettings.sprintProtectExitMs, 50, 2000, "%d ms");
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi lari otomatis setelah keluar dari mode membidik.");
+
+                    changed |= ImGui::SliderInt("Exit Delay (MS)", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms");
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai setelah keluar dari mode membidik.");
                     ImGui::Unindent();
                 }
 

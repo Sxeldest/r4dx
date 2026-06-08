@@ -176,6 +176,7 @@ struct PCControlSettings
     bool sprintProtected;
     int sprintProtectEntryFrames;
     int sprintProtectExitMs;
+    int sprintProtectExitDelayMs;
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };

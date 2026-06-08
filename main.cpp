@@ -101,7 +101,8 @@ static bool g_lastAimState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
-static uint32_t g_sprintProtectExitTimer = 0;
+static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
+static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
 
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
@@ -433,14 +434,20 @@ static bool IsSprintProtected()
     // 1. Exit Protection (Setelah lepas Aim)
     if (g_sprintProtectExitTimer > 0)
     {
-        if (GetTickMS() < g_sprintProtectExitTimer)
+        uint32_t now = GetTickMS();
+        if (now < g_sprintProtectExitTimer)
         {
-            if (IsCustomSprintTouched())
+            // Hanya aktif jika sudah melewati masa delay
+            if (now >= g_sprintProtectExitStart)
             {
-                g_sprintProtectExitTimer = 0; // User sudah pencet sendiri, hentikan proteksi
-                return false;
+                if (IsCustomSprintTouched())
+                {
+                    g_sprintProtectExitTimer = 0;
+                    return false;
+                }
+                return true;
             }
-            return true;
+            return false; // Sedang dalam masa delay
         }
         else g_sprintProtectExitTimer = 0;
     }
@@ -498,7 +505,7 @@ int HookOf_SprintJustDown(void* self)
     }
 
     // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
-    if (g_pcSettings.sprintProtected && g_sprintProtectExitTimer > 0 && !g_sprintProtectJustDownSent)
+    if (g_pcSettings.sprintProtected && g_sprintProtectExitTimer > 0 && GetTickMS() >= g_sprintProtectExitStart && !g_sprintProtectJustDownSent)
     {
         g_sprintProtectJustDownSent = true;
         return 1;
@@ -646,7 +653,9 @@ void HookOf_Render2DStuff()
 
         if (g_pcSettings.sprintProtected)
         {
-            g_sprintProtectExitTimer = GetTickMS() + g_pcSettings.sprintProtectExitMs;
+            uint32_t now = GetTickMS();
+            g_sprintProtectExitStart = now + g_pcSettings.sprintProtectExitDelayMs;
+            g_sprintProtectExitTimer = g_sprintProtectExitStart + g_pcSettings.sprintProtectExitMs;
             g_sprintProtectJustDownSent = false;
         }
 
