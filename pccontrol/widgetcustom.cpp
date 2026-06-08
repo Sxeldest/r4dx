@@ -471,14 +471,16 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 // Snap ke nilai ekstrim agar lebih responsif layaknya DPAD digital.
                 // Output dikalikan dengan sensitivity (SensX/SensY).
 
-                // Gunakan Diagonal Resistance (Threshold)
+                // Gunakan Diagonal Resistance (Threshold) & Sensitivity hanya saat aiming
                 float threshold = IsCameraInAimMode() ? g_pcSettings.dpadDiagonalThreshold : 45.0f;
+                float sensX = IsCameraInAimMode() ? g_pcSettings.dpadSensX : 1.0f;
+                float sensY = IsCameraInAimMode() ? g_pcSettings.dpadSensY : 1.0f;
 
                 if (fabsf(tx) < threshold) state.targetAnalogX = 0;
-                else state.targetAnalogX = (tx > 0) ? (127.0f * g_pcSettings.dpadSensX) : (-127.0f * g_pcSettings.dpadSensX);
+                else state.targetAnalogX = (tx > 0) ? (127.0f * sensX) : (-127.0f * sensX);
 
                 if (fabsf(ty) < threshold) state.targetAnalogY = 0;
-                else state.targetAnalogY = (ty > 0) ? (127.0f * g_pcSettings.dpadSensY) : (-127.0f * g_pcSettings.dpadSensY);
+                else state.targetAnalogY = (ty > 0) ? (127.0f * sensY) : (-127.0f * sensY);
 
                 // Clamp to valid range (-128 to 127)
                 if (state.targetAnalogX > 127.0f) state.targetAnalogX = 127.0f;
