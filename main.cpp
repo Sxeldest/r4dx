@@ -448,26 +448,6 @@ static bool IsCustomSprintTouched()
     return IsActionTouched(ACTION_SPRINT);
 }
 
-static bool IsAutoRunActive()
-{
-    if (!g_pcSettings.autoRun) return false;
-    if (IsAimMode()) return false;
-    if (IsCustomTargetHeld()) return false;
-
-    float customX, customY;
-    GetCustomAnalogValues(customX, customY);
-    if (customX == 0.0f && customY == 0.0f) return false;
-
-    // Follow the same delay as sprintProtected when exiting aim
-    if (g_sprintProtectExitTimer > 0)
-    {
-        uint32_t now = GetTickMS();
-        if (now < g_sprintProtectExitStart) return false; // Sedang dalam masa delay
-    }
-
-    return true;
-}
-
 static bool IsSprintProtected()
 {
     if (!g_pcSettings.sprintProtected) return false;
@@ -517,6 +497,25 @@ static bool IsCustomTargetHeld()
         return true;
     
     return false;
+}
+
+static bool IsAutoRunActive()
+{
+    if (!g_pcSettings.autoRun) return false;
+    if (IsAimMode()) return false;
+
+    float customX, customY;
+    GetCustomAnalogValues(customX, customY);
+    if (customX == 0.0f && customY == 0.0f) return false;
+
+    // Follow the same delay as sprintProtected when exiting aim
+    if (g_sprintProtectExitTimer > 0)
+    {
+        uint32_t now = GetTickMS();
+        if (now < g_sprintProtectExitStart) return false; // Sedang dalam masa delay
+    }
+
+    return true;
 }
 
 int HookOf_GetSprint(void* self, int sprintType)
