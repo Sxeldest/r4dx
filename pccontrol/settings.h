@@ -173,6 +173,7 @@ struct PCControlSettings
     float chExpansionMax;
     float chExpansionIdle;
 
+    bool autoRun;
     bool sprintProtected;
     int sprintProtectEntryFrames;
     int sprintProtectExitMs;

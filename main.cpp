@@ -448,6 +448,26 @@ static bool IsCustomSprintTouched()
     return IsActionTouched(ACTION_SPRINT);
 }
 
+static bool IsAutoRunActive()
+{
+    if (!g_pcSettings.autoRun) return false;
+    if (IsAimMode()) return false;
+    if (IsCustomTargetHeld()) return false;
+
+    float customX, customY;
+    GetCustomAnalogValues(customX, customY);
+    if (customX == 0.0f && customY == 0.0f) return false;
+
+    // Follow the same delay as sprintProtected when exiting aim
+    if (g_sprintProtectExitTimer > 0)
+    {
+        uint32_t now = GetTickMS();
+        if (now < g_sprintProtectExitStart) return false; // Sedang dalam masa delay
+    }
+
+    return true;
+}
+
 static bool IsSprintProtected()
 {
     if (!g_pcSettings.sprintProtected) return false;
@@ -501,7 +521,7 @@ static bool IsCustomTargetHeld()
 
 int HookOf_GetSprint(void* self, int sprintType)
 {
-    if (IsCustomSprintTouched() || IsSprintProtected())
+    if (IsCustomSprintTouched() || IsSprintProtected() || IsAutoRunActive())
     {
         void* player = FindPlayerPed(-1);
         if (player) SetMoveState(player, 7);
@@ -675,11 +695,11 @@ void HookOf_Render2DStuff()
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
 
-        if (g_pcSettings.sprintProtected)
+        if (g_pcSettings.sprintProtected || g_pcSettings.autoRun)
         {
             uint32_t now = GetTickMS();
             g_sprintProtectExitStart = now + g_pcSettings.sprintProtectExitDelayMs;
-            g_sprintProtectExitTimer = g_sprintProtectExitStart + g_pcSettings.sprintProtectExitMs;
+            g_sprintProtectExitTimer = g_sprintProtectExitStart + (g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitMs : 100);
             g_sprintProtectJustDownSent = false;
         }
 

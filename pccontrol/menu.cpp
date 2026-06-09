@@ -325,6 +325,10 @@ void RenderPCControlMenu()
                 ImGui::SameLine();
                 changed |= ImGui::Checkbox("Disable Auto-Jump", &g_pcSettings.disableNativeJump);
                 changed |= ImGui::Checkbox("Sprint Double Tap Boost", &g_pcSettings.enableSprintDoubleTapBoost);
+                ImGui::SameLine();
+                changed |= ImGui::Checkbox("Auto Run", &g_pcSettings.autoRun);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Berlari secara otomatis saat analog digerakkan.");
+
                 changed |= ImGui::Checkbox("Sprint Protected (Feinting Helper)", &g_pcSettings.sprintProtected);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Membantu feinting dengan menjaga sinyal lari saat transisi Aim.\nSangat berguna untuk gaya main lincah.");
 
