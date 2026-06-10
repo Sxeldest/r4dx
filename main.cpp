@@ -105,6 +105,9 @@ static uint32_t g_macroSprintTimer = 0;
 static uint32_t g_aimEntryTime = 0;
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
+static uint32_t g_feintProtectTimer = 0;
+static int g_feintLastX = 0;
+static int g_feintLastY = 0;
 static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
@@ -211,47 +214,52 @@ void CalculateWASD(void* self, int& outX, int& outY)
 int HookOf_GetPedWalkLeftRight(void* self) {
     if (!self) return 0;
 
+    int outX = 0;
+    int outY = 0;
+
     float customX, customY;
     GetCustomAnalogValues(customX, customY);
     if (customX != 0.0f || customY != 0.0f) {
         if (IsActionTouched(ACTION_WALK)) { customX *= 0.45f; customY *= 0.45f; }
-        g_cachedX = (int)customX;
-        g_cachedY = (int)customY;
-        g_lastPed = self;
-        return g_cachedX;
+        outX = (int)customX;
+        outY = (int)customY;
+    }
+    else if (g_pcSettings.enableAnalogPatch)
+    {
+        CalculateWASD(self, outX, outY);
+        if (IsActionTouched(ACTION_WALK)) { outX = (int)((float)outX * 0.45f); outY = (int)((float)outY * 0.45f); }
+    }
+    else
+    {
+        outX = GetPedWalkLeftRight(self);
+        outY = GetPedWalkUpDown(self);
     }
 
-    if (!g_pcSettings.enableAnalogPatch) return GetPedWalkLeftRight(self);
-    CalculateWASD(self, g_cachedX, g_cachedY);
-    if (IsActionTouched(ACTION_WALK)) { g_cachedX = (int)((float)g_cachedX * 0.45f); g_cachedY = (int)((float)g_cachedY * 0.45f); }
+    if (g_pcSettings.enableFeintProtect && g_feintProtectTimer > 0)
+    {
+        if (GetTickMS() < g_feintProtectTimer)
+        {
+            if (outX == 0 && outY == 0)
+            {
+                outX = g_feintLastX;
+                outY = g_feintLastY;
+            }
+        }
+        else g_feintProtectTimer = 0;
+    }
+
+    g_cachedX = outX;
+    g_cachedY = outY;
     g_lastPed = self;
     return g_cachedX;
 }
 
 int HookOf_GetPedWalkUpDown(void* self) {
     if (!self) return 0;
+    if (self == g_lastPed) return g_cachedY;
 
-    float customX, customY;
-    GetCustomAnalogValues(customX, customY);
-    if (customX != 0.0f || customY != 0.0f) {
-        if (self == g_lastPed) {
-             if (IsActionTouched(ACTION_WALK)) return (int)(customY * 0.45f);
-             return g_cachedY;
-        }
-        if (IsActionTouched(ACTION_WALK)) { customX *= 0.45f; customY *= 0.45f; }
-        g_cachedX = (int)customX;
-        g_cachedY = (int)customY;
-        g_lastPed = self;
-        return g_cachedY;
-    }
-
-    if (!g_pcSettings.enableAnalogPatch) return GetPedWalkUpDown(self);
-    if (self == g_lastPed) {
-        if (IsActionTouched(ACTION_WALK)) return (int)((float)g_cachedY * 0.45f);
-        return g_cachedY;
-    }
-    CalculateWASD(self, g_cachedX, g_cachedY);
-    if (IsActionTouched(ACTION_WALK)) { g_cachedX = (int)((float)g_cachedX * 0.45f); g_cachedY = (int)((float)g_cachedY * 0.45f); }
+    // In case UpDown is called before LeftRight for a new ped
+    HookOf_GetPedWalkLeftRight(self);
     return g_cachedY;
 }
 
@@ -598,6 +606,13 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                 g_lastWeaponSwitchTime = now;
             }
 
+            if (g_pcSettings.enableFeintProtect && IsAimMode())
+            {
+                g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+                g_feintLastX = g_cachedX;
+                g_feintLastY = g_cachedY;
+            }
+
             g_prevWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle
         }
     }
@@ -631,6 +646,13 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                     return false;
                 }
                 g_lastWeaponSwitchTime = now;
+            }
+
+            if (g_pcSettings.enableFeintProtect && IsAimMode())
+            {
+                g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+                g_feintLastX = g_cachedX;
+                g_feintLastY = g_cachedY;
             }
 
             g_nextWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle

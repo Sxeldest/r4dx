@@ -398,6 +398,16 @@ void RenderPCControlMenu()
                     ImGui::Unindent();
                 }
 
+                changed |= ImGui::Checkbox("Feint Timing Protection", &g_pcSettings.enableFeintProtect);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menjaga pergerakan ped tetap berlanjut saat ganti senjata jika analog dilepas terlalu cepat.");
+                if (g_pcSettings.enableFeintProtect)
+                {
+                    ImGui::Indent();
+                    ImGui::Text("Protection Duration (MS)");
+                    changed |= SliderIntWithButtons("FeintProtectMs", &g_pcSettings.feintProtectMs, 0, 2000, "%d ms", 50);
+                    ImGui::Unindent();
+                }
+
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Settings");
                 ImGui::Separator();

@@ -183,6 +183,9 @@ struct PCControlSettings
     int sprintProtectExitMs;
     int sprintProtectExitDelayMs;
 
+    bool enableFeintProtect;
+    int feintProtectMs;
+
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };
 
