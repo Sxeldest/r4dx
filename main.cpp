@@ -330,6 +330,9 @@ static void UpdateMacroShoot()
             // Macro 2 juga menggunakan delay ms yang sama untuk bantuan lari
             if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
             g_macroStartTime = now;
+
+            // AKTIFKAN TIMER PROTEKSI SENJATA SAAT MACRO 2 DITEKAN
+            g_targetPressTime = now;
         }
         g_macroHolding = aiming;
     }
