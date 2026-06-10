@@ -1,4 +1,5 @@
 #include "timecyc.h"
+#include "menu.h"
 #include "ImGui/imgui.h"
 #include <mod/amlmod.h>
 #include <mod/config.h>
@@ -318,7 +319,9 @@ void RenderTimecycEditorTab()
     {
         if (ImGui::ColorEdit3("World Amb", &target->m_fAmbientRed, ImGuiColorEditFlags_Float)) changed = true;
         if (ImGui::ColorEdit3("Objects Amb", &target->m_fAmbientRed_Obj, ImGuiColorEditFlags_Float)) changed = true;
-        if (ImGui::SliderFloat("Dir Mult", &target->m_fIllumination, 0.0f, 2.0f)) changed = true;
+
+        ImGui::Text("Dir Mult");
+        if (SliderFloatWithButtons("DirMult", &target->m_fIllumination, 0.0f, 2.0f, "%.2f", 0.05f)) changed = true;
     }
 
     if (ImGui::CollapsingHeader("Sky & Clouds", ImGuiTreeNodeFlags_DefaultOpen))
@@ -329,7 +332,8 @@ void RenderTimecycEditorTab()
         if (ColorEdit3_U16("Bottom Cloud", &target->m_nFluffyCloudsBottomRed, &target->m_nFluffyCloudsBottomGreen, &target->m_nFluffyCloudsBottomBlue)) changed = true;
 
         float cloudAlpha = target->m_fCloudAlpha / 255.0f;
-        if (ImGui::SliderFloat("Cloud Alpha", &cloudAlpha, 0.0f, 1.0f))
+        ImGui::Text("Cloud Alpha");
+        if (SliderFloatWithButtons("CloudAlpha", &cloudAlpha, 0.0f, 1.0f, "%.2f", 0.05f))
         {
             target->m_fCloudAlpha = cloudAlpha * 255.0f;
             changed = true;
@@ -340,29 +344,40 @@ void RenderTimecycEditorTab()
     {
         if (ColorEdit3_U16("Sun Core", &target->m_nSunCoreRed, &target->m_nSunCoreGreen, &target->m_nSunCoreBlue)) changed = true;
         if (ColorEdit3_U16("Sun Corona", &target->m_nSunCoronaRed, &target->m_nSunCoronaGreen, &target->m_nSunCoronaBlue)) changed = true;
-        if (ImGui::SliderFloat("Sun Size", &target->m_fSunSize, 0.0f, 10.0f)) changed = true;
-        if (ImGui::SliderFloat("Sprite Size", &target->m_fSpriteSize, 0.0f, 10.0f)) changed = true;
-        if (ImGui::SliderFloat("Sprite Bright", &target->m_fSpriteBrightness, 0.0f, 5.0f)) changed = true;
+
+        ImGui::Text("Sun Size");
+        if (SliderFloatWithButtons("SunSize", &target->m_fSunSize, 0.0f, 10.0f, "%.2f", 0.1f)) changed = true;
+        ImGui::Text("Sprite Size");
+        if (SliderFloatWithButtons("SpriteSize", &target->m_fSpriteSize, 0.0f, 10.0f, "%.2f", 0.1f)) changed = true;
+        ImGui::Text("Sprite Bright");
+        if (SliderFloatWithButtons("SpriteBright", &target->m_fSpriteBrightness, 0.0f, 5.0f, "%.2f", 0.1f)) changed = true;
 
         ImGui::Separator();
-        if (ImGui::SliderFloat("Far Clip", &target->m_fFarClip, -100.0f, 3000.0f, "%.0f")) changed = true;
-        if (ImGui::SliderFloat("Fog Start", &target->m_fFogStart, -100.0f, 1000.0f, "%.0f")) changed = true;
-        if (ImGui::SliderFloat("Lights On Ground", &target->m_fLightsOnGroundBrightness, 0.0f, 5.0f)) changed = true;
+        ImGui::Text("Far Clip");
+        if (SliderFloatWithButtons("FarClip", &target->m_fFarClip, -100.0f, 3000.0f, "%.0f", 50.0f)) changed = true;
+        ImGui::Text("Fog Start");
+        if (SliderFloatWithButtons("FogStart", &target->m_fFogStart, -100.0f, 1000.0f, "%.0f", 20.0f)) changed = true;
+        ImGui::Text("Lights On Ground");
+        if (SliderFloatWithButtons("LightsOnGround", &target->m_fLightsOnGroundBrightness, 0.0f, 5.0f, "%.2f", 0.1f)) changed = true;
     }
 
     if (ImGui::CollapsingHeader("Shadows & Intensity", ImGuiTreeNodeFlags_DefaultOpen))
     {
         int shd = target->m_nShadowStrength;
-        if (ImGui::SliderInt("Shadow", &shd, 0, 255)) { target->m_nShadowStrength = (uint16_t)shd; changed = true; }
+        ImGui::Text("Shadow");
+        if (SliderIntWithButtons("Shadow", &shd, 0, 255)) { target->m_nShadowStrength = (uint16_t)shd; changed = true; }
 
         int lshd = target->m_nLightShadowStrength;
-        if (ImGui::SliderInt("Light Shd", &lshd, 0, 255)) { target->m_nLightShadowStrength = (uint16_t)lshd; changed = true; }
+        ImGui::Text("Light Shd");
+        if (SliderIntWithButtons("LightShd", &lshd, 0, 255)) { target->m_nLightShadowStrength = (uint16_t)lshd; changed = true; }
 
         int pshd = target->m_nPoleShadowStrength;
-        if (ImGui::SliderInt("Pole Shd", &pshd, 0, 255)) { target->m_nPoleShadowStrength = (uint16_t)pshd; changed = true; }
+        ImGui::Text("Pole Shd");
+        if (SliderIntWithButtons("PoleShd", &pshd, 0, 255)) { target->m_nPoleShadowStrength = (uint16_t)pshd; changed = true; }
 
         int intens = (int)target->m_nHighLightMinIntensity;
-        if (ImGui::SliderInt("Intensity Limit", &intens, 0, 255)) { target->m_nHighLightMinIntensity = (uint32_t)intens; changed = true; }
+        ImGui::Text("Intensity Limit");
+        if (SliderIntWithButtons("IntensLimit", &intens, 0, 255)) { target->m_nHighLightMinIntensity = (uint32_t)intens; changed = true; }
     }
 
     if (ImGui::CollapsingHeader("Water", ImGuiTreeNodeFlags_DefaultOpen))
@@ -370,7 +385,8 @@ void RenderTimecycEditorTab()
         if (ColorEdit4_F255("Water Color", &target->m_fWaterRed, &target->m_fWaterGreen, &target->m_fWaterBlue, &target->m_fWaterAlpha)) changed = true;
 
         int wfog = target->m_nWaterFogAlpha;
-        if (ImGui::SliderInt("Water Fog Alpha", &wfog, 0, 255)) { target->m_nWaterFogAlpha = (uint16_t)wfog; changed = true; }
+        ImGui::Text("Water Fog Alpha");
+        if (SliderIntWithButtons("WaterFog", &wfog, 0, 255)) { target->m_nWaterFogAlpha = (uint16_t)wfog; changed = true; }
     }
 
     if (ImGui::CollapsingHeader("PostFX (Color Filters)", ImGuiTreeNodeFlags_DefaultOpen))

@@ -174,7 +174,7 @@ static void RenderVirtualKeyboardOverlay()
     ImGui::End();
 }
 
-static float GetButtonHeight()
+float GetButtonHeight()
 {
     float scale = g_pcSettings.menuFontScale;
 
@@ -190,12 +190,12 @@ static float GetButtonHeight()
 static bool g_isWidgetsTabActive = false;
 bool IsWidgetsTabActive() { return g_isWidgetsTabActive && g_pcSettings.showMenu; }
 
-static float GetItemControlHeight()
+float GetItemControlHeight()
 {
     return ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
 }
 
-static bool SliderFloatWithButtons(const char* label, float* v, float v_min, float v_max, const char* format = "%.0f", float step = 1.0f)
+bool SliderFloatWithButtons(const char* label, float* v, float v_min, float v_max, const char* format, float step)
 {
     bool changed = false;
     ImGui::PushID(label);
@@ -214,6 +214,41 @@ static bool SliderFloatWithButtons(const char* label, float* v, float v_min, flo
         // Batasi agar tidak melampaui min/max akibat pembulatan
         if (*v < v_min) *v = v_min;
         if (*v > v_max) *v = v_max;
+        changed = true;
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("-", ImVec2(ctrlHeight, ctrlHeight)))
+    {
+        *v -= step;
+        if (*v < v_min) *v = v_min;
+        changed = true;
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("+", ImVec2(ctrlHeight, ctrlHeight)))
+    {
+        *v += step;
+        if (*v > v_max) *v = v_max;
+        changed = true;
+    }
+
+    ImGui::PopID();
+    return changed;
+}
+
+bool SliderIntWithButtons(const char* label, int* v, int v_min, int v_max, const char* format, int step)
+{
+    bool changed = false;
+    ImGui::PushID(label);
+
+    float ctrlHeight = GetItemControlHeight();
+    float slider_width = ImGui::GetContentRegionAvail().x - (ctrlHeight * 2.0f + ImGui::GetStyle().ItemSpacing.x * 2.0f);
+
+    ImGui::SetNextItemWidth(slider_width);
+
+    if (ImGui::SliderInt("##s", v, v_min, v_max, format))
+    {
         changed = true;
     }
 
@@ -300,22 +335,32 @@ void RenderPCControlMenu()
                 ImGui::SameLine();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
 
-                changed |= ImGui::SliderFloat("Horizontal Sensitivity", &g_pcSettings.camSensX, 1.0f, 100.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Vertical Sensitivity", &g_pcSettings.camSensY, 1.0f, 100.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Aim Sensitivity X", &g_pcSettings.aimSensX, 1.0f, 100.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Aim Sensitivity Y", &g_pcSettings.aimSensY, 1.0f, 100.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Camera Smoothness", &g_pcSettings.smoothness, 1.0f, 20.0f, "%.1f");
-                changed |= ImGui::SliderFloat("Camera Acceleration", &g_pcSettings.camAccel, 1.0f, 5.0f, "%.1f");
+                ImGui::Text("Horizontal Sensitivity");
+                changed |= SliderFloatWithButtons("camSensX", &g_pcSettings.camSensX, 1.0f, 100.0f, "%.1f", 0.5f);
+                ImGui::Text("Vertical Sensitivity");
+                changed |= SliderFloatWithButtons("camSensY", &g_pcSettings.camSensY, 1.0f, 100.0f, "%.1f", 0.5f);
+                ImGui::Text("Aim Sensitivity X");
+                changed |= SliderFloatWithButtons("aimSensX", &g_pcSettings.aimSensX, 1.0f, 100.0f, "%.1f", 0.5f);
+                ImGui::Text("Aim Sensitivity Y");
+                changed |= SliderFloatWithButtons("aimSensY", &g_pcSettings.aimSensY, 1.0f, 100.0f, "%.1f", 0.5f);
+                ImGui::Text("Camera Smoothness");
+                changed |= SliderFloatWithButtons("smoothness", &g_pcSettings.smoothness, 1.0f, 20.0f, "%.1f", 0.5f);
+                ImGui::Text("Camera Acceleration");
+                changed |= SliderFloatWithButtons("camAccel", &g_pcSettings.camAccel, 1.0f, 5.0f, "%.1f", 0.1f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
                 ImGui::Separator();
-                changed |= ImGui::SliderFloat("Horizontal Responsiveness", &g_pcSettings.dpadSensX, 0.1f, 2.0f, "%.2f");
-                changed |= ImGui::SliderFloat("Vertical Responsiveness", &g_pcSettings.dpadSensY, 0.1f, 2.0f, "%.2f");
-                changed |= ImGui::SliderFloat("Aim Jiggle Smoothness", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f");
+                ImGui::Text("Horizontal Responsiveness");
+                changed |= SliderFloatWithButtons("dpadSensX", &g_pcSettings.dpadSensX, 0.1f, 2.0f, "%.2f", 0.05f);
+                ImGui::Text("Vertical Responsiveness");
+                changed |= SliderFloatWithButtons("dpadSensY", &g_pcSettings.dpadSensY, 0.1f, 2.0f, "%.2f", 0.05f);
+                ImGui::Text("Aim Jiggle Smoothness");
+                changed |= SliderFloatWithButtons("dpadSmoothness", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f", 0.01f);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Only active when AIMING.\nLow = Smooth jiggle (Delay), High = Snap (Instant)");
 
-                changed |= ImGui::SliderFloat("Diagonal Resistance", &g_pcSettings.dpadDiagonalThreshold, 10.0f, 90.0f, "%.0f");
+                ImGui::Text("Diagonal Resistance");
+                changed |= SliderFloatWithButtons("dpadDiagonalThreshold", &g_pcSettings.dpadDiagonalThreshold, 10.0f, 90.0f, "%.0f", 1.0f);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Higher = Harder to trigger diagonal movement (Stay straight).\nRecommended: 60-70");
 
                 ImGui::Spacing();
@@ -335,16 +380,26 @@ void RenderPCControlMenu()
                 if (g_pcSettings.sprintProtected)
                 {
                     ImGui::Indent();
-                    changed |= ImGui::SliderInt("Entry Protect (Frames)", &g_pcSettings.sprintProtectEntryFrames, 1, 30);
+                    ImGui::Text("Entry Protect (Frames)");
+                    changed |= SliderIntWithButtons("EntryProtect", &g_pcSettings.sprintProtectEntryFrames, 0, 30);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi sinyal lari tetap ditahan saat Anda melepas sprint untuk membidik.");
 
-                    changed |= ImGui::SliderInt("Exit Protect (MS)", &g_pcSettings.sprintProtectExitMs, 50, 2000, "%d ms");
+                    ImGui::Text("Exit Protect (MS)");
+                    changed |= SliderIntWithButtons("ExitProtect", &g_pcSettings.sprintProtectExitMs, 0, 2000, "%d ms", 50);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi lari otomatis setelah keluar dari mode membidik.");
 
-                    changed |= ImGui::SliderInt("Exit Delay (MS)", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms");
+                    ImGui::Text("Exit Delay (MS)");
+                    changed |= SliderIntWithButtons("ExitDelay", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms", 50);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai setelah keluar dari mode membidik.");
                     ImGui::Unindent();
                 }
+
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Settings");
+                ImGui::Separator();
+                ImGui::Text("Macro 1 Delay (Frames)");
+                changed |= SliderIntWithButtons("Macro1Delay", &g_pcSettings.macro1DelayFrames, 0, 60);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Delay transisi dari VC Shoot ke Targeting pada Macro 1.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");
@@ -404,7 +459,8 @@ void RenderPCControlMenu()
                 }
                 ImGui::Spacing();
 
-                changed |= ImGui::SliderFloat("Global Opacity", &g_pcSettings.customWidgetOpacity, 0.0f, 1.0f, "%.2f");
+                ImGui::Text("Global Opacity");
+                changed |= SliderFloatWithButtons("customWidgetOpacity", &g_pcSettings.customWidgetOpacity, 0.0f, 1.0f, "%.2f", 0.05f);
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
@@ -582,7 +638,8 @@ void RenderPCControlMenu()
 
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Death List (Killfeed)");
                 ImGui::Separator();
-                changed |= ImGui::SliderFloat("Scale", &g_pcSettings.deathListFontSize, 0.1f, 3.0f, "%.2f");
+                ImGui::Text("Scale");
+                changed |= SliderFloatWithButtons("deathListScale", &g_pcSettings.deathListFontSize, 0.1f, 3.0f, "%.2f", 0.05f);
 
                 ImGui::Text("Screen X");
                 changed |= SliderFloatWithButtons("KillfeedX", &g_pcSettings.deathListPosX, 0.0f, 3000.0f, "%.0f", 1.0f);
@@ -703,29 +760,14 @@ void RenderPCControlMenu()
             
                 ImGui::Separator();
             
-                changed |= ImGui::SliderFloat(
-                    "Font Scale",
-                    &g_pcSettings.menuFontScale,
-                    0.5f,
-                    2.0f,
-                    "%.2f"
-                );
+                ImGui::Text("Font Scale");
+                changed |= SliderFloatWithButtons("menuFontScale", &g_pcSettings.menuFontScale, 0.5f, 2.0f, "%.2f", 0.05f);
             
-                changed |= ImGui::SliderFloat(
-                    "Background Opacity",
-                    &g_pcSettings.menuBgOpacity,
-                    0.1f,
-                    1.0f,
-                    "%.2f"
-                );
+                ImGui::Text("Background Opacity");
+                changed |= SliderFloatWithButtons("menuBgOpacity", &g_pcSettings.menuBgOpacity, 0.1f, 1.0f, "%.2f", 0.05f);
             
-                changed |= ImGui::SliderFloat(
-                    "Menu Rounding",
-                    &g_pcSettings.menuRounding,
-                    0.0f,
-                    20.0f,
-                    "%.1f"
-                );
+                ImGui::Text("Menu Rounding");
+                changed |= SliderFloatWithButtons("menuRounding", &g_pcSettings.menuRounding, 0.0f, 20.0f, "%.1f", 0.5f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Debug Tools");
@@ -735,27 +777,12 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
             
                 ImGui::Text("Accent Color");
-            
-                changed |= ImGui::SliderFloat(
-                    "Red",
-                    &g_pcSettings.menuAccentR,
-                    0.0f,
-                    1.0f
-                );
-            
-                changed |= ImGui::SliderFloat(
-                    "Green",
-                    &g_pcSettings.menuAccentG,
-                    0.0f,
-                    1.0f
-                );
-            
-                changed |= ImGui::SliderFloat(
-                    "Blue",
-                    &g_pcSettings.menuAccentB,
-                    0.0f,
-                    1.0f
-                );
+                ImGui::Text("Red");
+                changed |= SliderFloatWithButtons("accentR", &g_pcSettings.menuAccentR, 0.0f, 1.0f, "%.2f", 0.01f);
+                ImGui::Text("Green");
+                changed |= SliderFloatWithButtons("accentG", &g_pcSettings.menuAccentG, 0.0f, 1.0f, "%.2f", 0.01f);
+                ImGui::Text("Blue");
+                changed |= SliderFloatWithButtons("accentB", &g_pcSettings.menuAccentB, 0.0f, 1.0f, "%.2f", 0.01f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Memory Patch Manager");

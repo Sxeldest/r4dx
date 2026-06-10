@@ -286,7 +286,7 @@ static void UpdateMacroShoot()
     uint32_t now = GetTickMS();
 
     // Konversi frame ke ms (asumsi 1 frame = 16.6ms @ 60fps)
-    uint32_t entryDelayMs = (uint32_t)(g_pcSettings.sprintProtectEntryFrames * 16.6f);
+    uint32_t entryDelayMs = (uint32_t)(g_pcSettings.macro1DelayFrames * 16.6f);
     if (entryDelayMs < 50) entryDelayMs = 50; // Minimal delay agar sprint sempat terdeteksi
 
     if (macro1Pressed)

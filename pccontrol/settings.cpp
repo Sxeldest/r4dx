@@ -80,6 +80,7 @@ PCControlSettings g_pcSettings = {
     false,  // autoRun
     false,  // sprintProtected
     10,     // sprintProtectEntryFrames
+    10,     // macro1DelayFrames
     500,    // sprintProtectExitMs
     0,      // sprintProtectExitDelayMs
 };
@@ -174,6 +175,7 @@ static ConfigEntry* s_chExpansionIdle = nullptr;
 static ConfigEntry* s_autoRun = nullptr;
 static ConfigEntry* s_sprintProtected = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
+static ConfigEntry* s_macro1DelayFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitMs = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayMs = nullptr;
 
@@ -348,6 +350,7 @@ void InitPCControlSettings()
     s_autoRun = cfg->Bind("AutoRun", false, kSettingsSection);
     s_sprintProtected = cfg->Bind("SprintProtected", false, kSettingsSection);
     s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntry", 10, kSettingsSection);
+    s_macro1DelayFrames = cfg->Bind("Macro1DelayFrames", 10, kSettingsSection);
     s_sprintProtectExitMs = cfg->Bind("SprintProtectExit", 500, kSettingsSection);
     s_sprintProtectExitDelayMs = cfg->Bind("SprintProtectExitDelay", 0, kSettingsSection);
 
@@ -436,6 +439,7 @@ void InitPCControlSettings()
     g_pcSettings.autoRun = s_autoRun->GetBool();
     g_pcSettings.sprintProtected = s_sprintProtected->GetBool();
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
+    g_pcSettings.macro1DelayFrames = s_macro1DelayFrames->GetInt();
     g_pcSettings.sprintProtectExitMs = s_sprintProtectExitMs->GetInt();
     g_pcSettings.sprintProtectExitDelayMs = s_sprintProtectExitDelayMs->GetInt();
 
@@ -602,6 +606,7 @@ void SavePCControlSettings()
     s_autoRun->SetBool(g_pcSettings.autoRun);
     s_sprintProtected->SetBool(g_pcSettings.sprintProtected);
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
+    s_macro1DelayFrames->SetInt(g_pcSettings.macro1DelayFrames);
     s_sprintProtectExitMs->SetInt(g_pcSettings.sprintProtectExitMs);
     s_sprintProtectExitDelayMs->SetInt(g_pcSettings.sprintProtectExitDelayMs);
 

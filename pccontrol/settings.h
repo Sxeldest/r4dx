@@ -176,6 +176,7 @@ struct PCControlSettings
     bool autoRun;
     bool sprintProtected;
     int sprintProtectEntryFrames;
+    int macro1DelayFrames;
     int sprintProtectExitMs;
     int sprintProtectExitDelayMs;
 
