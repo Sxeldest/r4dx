@@ -415,22 +415,16 @@ void RenderPCControlMenu()
                 changed |= SliderIntWithButtons("Macro1Delay", &g_pcSettings.macro1DelayFrames, 0, 60);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Delay transisi dari VC Shoot ke Targeting pada Macro 1.");
 
+                ImGui::Text("Targeting Switch Protection (MS)");
+                changed |= SliderIntWithButtons("TargetSwitchProtect", &g_pcSettings.targetingSwitchProtectMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah/menunda ganti senjata saat baru masuk mode aiming (Macro 2).");
+
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Weapon Switch Protection");
                 ImGui::Separator();
-                changed |= ImGui::Checkbox("Buffer Switch on Aim Entry", &g_pcSettings.enableWeaponSwitchProtect);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah ganti senjata gagal saat baru masuk mode keker (Aim).\nSwitch akan disimpan dan dijalankan setelah delay selesai.");
-                if (g_pcSettings.enableWeaponSwitchProtect)
-                {
-                    ImGui::Indent();
-                    ImGui::Text("Aim Entry Delay (MS)");
-                    changed |= SliderIntWithButtons("WProtectMs", &g_pcSettings.weaponSwitchProtectMs, 0, 1000, "%d ms", 10);
-
-                    ImGui::Text("Double Tap Inter-Delay (MS)");
-                    changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 1000, "%d ms", 10);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak bentrok.\nJika menekan cepat, switch kedua akan antri.");
-                    ImGui::Unindent();
-                }
+                ImGui::Text("Spam Protection / Inter-Delay (MS)");
+                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak berganti terlalu cepat.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");
