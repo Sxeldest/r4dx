@@ -103,6 +103,8 @@ static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
 static uint32_t g_macroSprintTimer = 0;
 static uint32_t g_aimEntryTime = 0;
+static uint32_t g_targetPressTime = 0;
+static bool g_lastTargetState = false;
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
 static uint32_t g_feintProtectTimer = 0;
@@ -595,7 +597,8 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 uint32_t now = GetTickMS();
-                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
+                bool inAimEntry = (IsAimMode() || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
                 bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
                 if (inAimEntry || inInterDelay)
@@ -637,7 +640,8 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 uint32_t now = GetTickMS();
-                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
+                bool inAimEntry = (IsAimMode() || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
                 bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
                 if (inAimEntry || inInterDelay)
@@ -739,26 +743,49 @@ void HookOf_Render2DStuff()
     UpdateWidgetReleaseFrames();
     UpdateMacroShoot();
 
+    uint32_t now = GetTickMS();
+    bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
+    if (isTargeting && !g_lastTargetState)
+    {
+        g_targetPressTime = now;
+    }
+    g_lastTargetState = isTargeting;
+
     bool aimNow = IsAimMode();
 
     // Detect Aim Entry
     if (!g_lastAimState && aimNow)
     {
-        g_aimEntryTime = GetTickMS();
+        g_aimEntryTime = now;
         g_bufferedWeaponSwitch = 0; // Clear buffer on fresh aim
     }
 
     // Process Buffered Weapon Switch
     if (g_bufferedWeaponSwitch > 0)
     {
-        uint32_t now = GetTickMS();
-        bool inAimEntry = aimNow && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+        bool inAimEntry = (aimNow || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
         bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
         if (!inAimEntry && !inInterDelay)
         {
             if (g_bufferedWeaponSwitch == 1) g_prevWeaponFrames = 2;
             else if (g_bufferedWeaponSwitch == 2) g_nextWeaponFrames = 2;
+
+            // Force release target briefly so the switch actually goes through in game
+            if (FindPlayerPed)
+            {
+                void* player = FindPlayerPed(-1);
+                if (player)
+                {
+                    uintptr_t playerData = *(uintptr_t*)((uintptr_t)player + 0x444);
+                    if (playerData)
+                    {
+                        *(uint16_t*)(playerData + 0x34) &= ~0x0808;
+                        *(uint8_t*)(playerData + 0x85) = 0;
+                    }
+                    if (ClearWeaponTarget) ClearWeaponTarget(player);
+                }
+            }
 
             g_lastWeaponSwitchTime = now;
             g_bufferedWeaponSwitch = 0;
@@ -996,6 +1023,11 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 {
     if (IsActionTouched(ACTION_NEXT_WEAPON) || IsActionTouched(ACTION_PREV_WEAPON))
     {
+        if (g_pcSettings.enableWeaponSwitchProtect && g_bufferedWeaponSwitch > 0)
+        {
+            return ProcessWeaponSwitch(self, pad);
+        }
+
         ForceReleaseAction(ACTION_TARGET);
         ForceReleaseAction(ACTION_VC_SHOOT);
         ForceReleaseAction(ACTION_MACRO_SHOOT);
