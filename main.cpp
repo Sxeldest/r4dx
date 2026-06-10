@@ -590,6 +590,22 @@ bool HookOf_GetEnterTargeting(void* self)
 static int g_prevWeaponFrames = 0;
 static int g_nextWeaponFrames = 0;
 
+static bool IsInWeaponSwitchProtect()
+{
+    if (!g_pcSettings.enableWeaponSwitchProtect) return false;
+    uint32_t now = GetTickMS();
+    bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
+    bool aimNow = IsAimMode();
+
+    // Proteksi saat masuk Aim (delay setelah sinyal GetEnterTargeting diterima)
+    bool inAimEntry = (aimNow || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+
+    // Proteksi jeda minimal antar ganti senjata
+    bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+    return inAimEntry || inInterDelay;
+}
+
 bool HookOf_CycleWeaponLeftJustDown(void* self)
 {
     if (IsActionTouched(ACTION_PREV_WEAPON))
@@ -598,20 +614,12 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
         {
             g_prevWeaponPrevState = true;
 
-            if (g_pcSettings.enableWeaponSwitchProtect)
+            if (IsInWeaponSwitchProtect())
             {
-                uint32_t now = GetTickMS();
-                bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
-                bool inAimEntry = (IsAimMode() || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
-                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-                if (inAimEntry || inInterDelay)
-                {
-                    g_bufferedWeaponSwitch = 1;
-                    return false;
-                }
-                g_lastWeaponSwitchTime = now;
+                g_bufferedWeaponSwitch = 1;
+                return false;
             }
+            g_lastWeaponSwitchTime = GetTickMS();
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
@@ -641,20 +649,12 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
         {
             g_nextWeaponPrevState = true;
 
-            if (g_pcSettings.enableWeaponSwitchProtect)
+            if (IsInWeaponSwitchProtect())
             {
-                uint32_t now = GetTickMS();
-                bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
-                bool inAimEntry = (IsAimMode() || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
-                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-                if (inAimEntry || inInterDelay)
-                {
-                    g_bufferedWeaponSwitch = 2;
-                    return false;
-                }
-                g_lastWeaponSwitchTime = now;
+                g_bufferedWeaponSwitch = 2;
+                return false;
             }
+            g_lastWeaponSwitchTime = GetTickMS();
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
@@ -762,10 +762,7 @@ void HookOf_Render2DStuff()
     // Process Buffered Weapon Switch
     if (g_bufferedWeaponSwitch > 0)
     {
-        bool inAimEntry = (aimNow || isTargeting) && (now - g_targetPressTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
-        bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-        if (!inAimEntry && !inInterDelay)
+        if (!IsInWeaponSwitchProtect())
         {
             if (g_bufferedWeaponSwitch == 1) g_prevWeaponFrames = 2;
             else if (g_bufferedWeaponSwitch == 2) g_nextWeaponFrames = 2;
@@ -1020,11 +1017,16 @@ void HookOf_ButtonPanel_OnTouchEvent(void* self, int type, int x, int y) {
 
 int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 {
-    if (IsActionTouched(ACTION_NEXT_WEAPON) || IsActionTouched(ACTION_PREV_WEAPON))
+    // Cek apakah ada permintaan ganti senjata (dari input langsung atau dari buffer yang baru dilepas)
+    bool switchRequested = IsActionTouched(ACTION_NEXT_WEAPON) || IsActionTouched(ACTION_PREV_WEAPON) ||
+                           (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0);
+
+    if (switchRequested)
     {
-        if (g_pcSettings.enableWeaponSwitchProtect && g_bufferedWeaponSwitch > 0)
+        // TUNDA SEPENUHNYA jika masih dalam masa proteksi
+        if (IsInWeaponSwitchProtect() && g_bufferedWeaponSwitch > 0)
         {
-            return ProcessWeaponSwitch(self, pad);
+            return 0;
         }
 
         ForceReleaseAction(ACTION_TARGET);
