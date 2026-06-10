@@ -98,6 +98,7 @@ static int g_sprintDoubleTapBoost = 0;
 static int g_sprintJustDownFrames = 0;
 static bool g_customTargetWasHeld = false;
 static bool g_lastAimState = false;
+static bool g_lastTargetState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
