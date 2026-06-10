@@ -611,72 +611,70 @@ static bool IsInWeaponSwitchProtect()
 
 bool HookOf_CycleWeaponLeftJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_PREV_WEAPON))
+    bool native = CycleWeaponLeftJustDown(self);
+    bool requested = IsActionTouched(ACTION_PREV_WEAPON);
+
+    if (requested || native)
     {
-        if (!g_prevWeaponPrevState)
+        if (IsInWeaponSwitchProtect())
         {
-            g_prevWeaponPrevState = true;
-
-            if (IsInWeaponSwitchProtect())
-            {
-                g_bufferedWeaponSwitch = 1;
-                return false;
-            }
-            g_lastWeaponSwitchTime = GetTickMS();
-
-            if (g_pcSettings.enableFeintProtect && IsAimMode())
-            {
-                g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
-                g_feintLastX = g_cachedX;
-                g_feintLastY = g_cachedY;
-            }
-
-            g_prevWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle
+            g_bufferedWeaponSwitch = 1;
+            return false;
         }
+
+        g_lastWeaponSwitchTime = GetTickMS();
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        {
+            g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
+
+        g_prevWeaponFrames = 2;
+        return true;
     }
-    else g_prevWeaponPrevState = false;
 
     if (g_prevWeaponFrames > 0)
     {
         g_prevWeaponFrames--;
         return true;
     }
-    return CycleWeaponLeftJustDown(self);
+    return false;
 }
 
 bool HookOf_CycleWeaponRightJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_NEXT_WEAPON))
+    bool native = CycleWeaponRightJustDown(self);
+    bool requested = IsActionTouched(ACTION_NEXT_WEAPON);
+
+    if (requested || native)
     {
-        if (!g_nextWeaponPrevState)
+        if (IsInWeaponSwitchProtect())
         {
-            g_nextWeaponPrevState = true;
-
-            if (IsInWeaponSwitchProtect())
-            {
-                g_bufferedWeaponSwitch = 2;
-                return false;
-            }
-            g_lastWeaponSwitchTime = GetTickMS();
-
-            if (g_pcSettings.enableFeintProtect && IsAimMode())
-            {
-                g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
-                g_feintLastX = g_cachedX;
-                g_feintLastY = g_cachedY;
-            }
-
-            g_nextWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle
+            g_bufferedWeaponSwitch = 2;
+            return false;
         }
+
+        g_lastWeaponSwitchTime = GetTickMS();
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        {
+            g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
+
+        g_nextWeaponFrames = 2;
+        return true;
     }
-    else g_nextWeaponPrevState = false;
 
     if (g_nextWeaponFrames > 0)
     {
         g_nextWeaponFrames--;
         return true;
     }
-    return CycleWeaponRightJustDown(self);
+    return false;
 }
 
 void HookOf_CTimeCycle_Update(void* self)
@@ -791,8 +789,8 @@ void HookOf_Render2DStuff()
         }
     }
 
-    // Reset toggle target saat keluar aim mode
-    if (g_lastAimState && !aimNow)
+    // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
+    if (g_lastTargetState && !isTargeting)
     {
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
@@ -804,7 +802,11 @@ void HookOf_Render2DStuff()
             g_sprintProtectExitTimer = g_sprintProtectExitStart + (g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitMs : 100);
             g_sprintProtectJustDownSent = false;
         }
+    }
 
+    // Secondary cleanup when camera actually changes
+    if (g_lastAimState && !aimNow)
+    {
         void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
         if (player)
         {
@@ -824,6 +826,7 @@ void HookOf_Render2DStuff()
     }
 
     g_lastAimState = aimNow;
+    g_lastTargetState = isTargeting;
 
     // Existing custom target release logic
     if (g_customTargetWasHeld && !IsCustomTargetHeld())
