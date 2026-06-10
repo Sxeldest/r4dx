@@ -577,6 +577,10 @@ bool HookOf_GetEnterTargeting(void* self)
 {
     if (IsCustomTargetHeld())
     {
+        if (!g_customTargetWasHeld)
+        {
+            g_targetPressTime = GetTickMS();
+        }
         g_customTargetWasHeld = true;
         return true;
     }
@@ -745,11 +749,6 @@ void HookOf_Render2DStuff()
 
     uint32_t now = GetTickMS();
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
-    if (isTargeting && !g_lastTargetState)
-    {
-        g_targetPressTime = now;
-    }
-    g_lastTargetState = isTargeting;
 
     bool aimNow = IsAimMode();
 
