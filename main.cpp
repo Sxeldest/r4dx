@@ -102,6 +102,9 @@ static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
 static uint32_t g_macroSprintTimer = 0;
+static uint32_t g_aimEntryTime = 0;
+static uint32_t g_lastWeaponSwitchTime = 0;
+static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
 static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
@@ -285,9 +288,8 @@ static void UpdateMacroShoot()
     bool aiming = IsAimMode();
     uint32_t now = GetTickMS();
 
-    // Konversi frame ke ms (asumsi 1 frame = 16.6ms @ 60fps)
-    uint32_t entryDelayMs = (uint32_t)(g_pcSettings.macro1DelayFrames * 16.6f);
-    if (entryDelayMs < 50) entryDelayMs = 50; // Minimal delay agar sprint sempat terdeteksi
+    // Delay khusus Macro 1 (dalam ms)
+    uint32_t macroDelayMs = (uint32_t)(g_pcSettings.macro1DelayFrames * 16.6f);
 
     if (macro1Pressed)
     {
@@ -295,16 +297,16 @@ static void UpdateMacroShoot()
         {
             g_macroHolding = true;
             g_macroStartTime = now;
-            // Kirim sinyal sprint selama masa transisi/tunggu
-            g_macroSprintTimer = now + entryDelayMs;
+            // Gunakan timer terpisah untuk Macro agar tidak bentrok dengan Sprint Protect global
+            if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
         }
 
         if (!aiming && !g_macroAimTriggered)
         {
             uint32_t elapsed = now - g_macroStartTime;
 
-            // Menunggu delay slider selesai (sambil VC Shoot + Sprint) baru membidik
-            if (elapsed >= entryDelayMs)
+            // Menunggu delay macro selesai baru membidik
+            if (elapsed >= macroDelayMs)
             {
                 g_macroAimTriggered = true;
             }
@@ -314,11 +316,9 @@ static void UpdateMacroShoot()
     {
         if (!g_macroAimTriggered)
         {
-            // Macro 2: INSTAN membidik seperti tombol Target manual
             g_macroAimTriggered = true;
-
-            // Sambil mengirim sinyal sprint selama durasi slider
-            g_macroSprintTimer = now + entryDelayMs;
+            // Macro 2 juga menggunakan delay ms yang sama untuk bantuan lari
+            if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
             g_macroStartTime = now;
         }
         g_macroHolding = aiming;
@@ -327,6 +327,7 @@ static void UpdateMacroShoot()
     {
         g_macroHolding = false;
         g_macroStartTime = 0;
+        g_macroSprintTimer = 0; // Hapus timer macro saat dilepas agar tidak "mempengaruhi" global
         if (!aiming) g_macroAimTriggered = false;
     }
 }
@@ -450,10 +451,10 @@ static bool IsCustomSprintTouched()
 
 static bool IsSprintProtected()
 {
-    if (!g_pcSettings.sprintProtected) return false;
-
-    // 0. Macro Sprint Protection
+    // 0. Macro Sprint (Selalu aktif saat macro jalan, tidak peduli setting global)
     if (g_macroSprintTimer > 0 && GetTickMS() < g_macroSprintTimer) return true;
+
+    if (!g_pcSettings.sprintProtected) return false;
 
     // 1. Exit Protection (Setelah lepas Aim)
     if (g_sprintProtectExitTimer > 0)
@@ -582,6 +583,21 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
         if (!g_prevWeaponPrevState)
         {
             g_prevWeaponPrevState = true;
+
+            if (g_pcSettings.enableWeaponSwitchProtect)
+            {
+                uint32_t now = GetTickMS();
+                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+                if (inAimEntry || inInterDelay)
+                {
+                    g_bufferedWeaponSwitch = 1;
+                    return false;
+                }
+                g_lastWeaponSwitchTime = now;
+            }
+
             g_prevWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle
         }
     }
@@ -602,6 +618,21 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
         if (!g_nextWeaponPrevState)
         {
             g_nextWeaponPrevState = true;
+
+            if (g_pcSettings.enableWeaponSwitchProtect)
+            {
+                uint32_t now = GetTickMS();
+                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+                if (inAimEntry || inInterDelay)
+                {
+                    g_bufferedWeaponSwitch = 2;
+                    return false;
+                }
+                g_lastWeaponSwitchTime = now;
+            }
+
             g_nextWeaponFrames = 2; // Trigger for 2 frames to handle Aiming -> Clear -> Cycle
         }
     }
@@ -687,6 +718,30 @@ void HookOf_Render2DStuff()
     UpdateMacroShoot();
 
     bool aimNow = IsAimMode();
+
+    // Detect Aim Entry
+    if (!g_lastAimState && aimNow)
+    {
+        g_aimEntryTime = GetTickMS();
+        g_bufferedWeaponSwitch = 0; // Clear buffer on fresh aim
+    }
+
+    // Process Buffered Weapon Switch
+    if (g_bufferedWeaponSwitch > 0)
+    {
+        uint32_t now = GetTickMS();
+        bool inAimEntry = aimNow && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+        bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+        if (!inAimEntry && !inInterDelay)
+        {
+            if (g_bufferedWeaponSwitch == 1) g_prevWeaponFrames = 2;
+            else if (g_bufferedWeaponSwitch == 2) g_nextWeaponFrames = 2;
+
+            g_lastWeaponSwitchTime = now;
+            g_bufferedWeaponSwitch = 0;
+        }
+    }
 
     // Reset toggle target saat keluar aim mode
     if (g_lastAimState && !aimNow)

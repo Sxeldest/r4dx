@@ -177,6 +177,9 @@ struct PCControlSettings
     bool sprintProtected;
     int sprintProtectEntryFrames;
     int macro1DelayFrames;
+    bool enableWeaponSwitchProtect;
+    int weaponSwitchProtectMs;
+    int weaponSwitchInterDelayMs;
     int sprintProtectExitMs;
     int sprintProtectExitDelayMs;
 

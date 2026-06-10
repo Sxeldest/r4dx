@@ -205,10 +205,11 @@ bool SliderFloatWithButtons(const char* label, float* v, float v_min, float v_ma
 
     ImGui::SetNextItemWidth(slider_width);
 
-    // 1. Jalankan slider bawaan ImGui
-    if (ImGui::SliderFloat("##s", v, v_min, v_max, format))
+    char buf[64];
+    sprintf(buf, "##s_%s", label);
+    if (ImGui::SliderFloat(buf, v, v_min, v_max, format))
     {
-        // 2. Jika bar slider digeser, paksa nilainya bulat sesuai kelipatan step (step = 1.0f)
+        // 2. Jika bar slider digeser, paksa nilainya bulat sesuai kelipatan step
         *v = ImFloor((*v - v_min) / step + 0.5f) * step + v_min;
 
         // Batasi agar tidak melampaui min/max akibat pembulatan
@@ -247,7 +248,10 @@ bool SliderIntWithButtons(const char* label, int* v, int v_min, int v_max, const
 
     ImGui::SetNextItemWidth(slider_width);
 
-    if (ImGui::SliderInt("##s", v, v_min, v_max, format))
+    // Gunakan label sebagai ID internal agar tidak bentrok antar slider
+    char buf[64];
+    sprintf(buf, "##s_%s", label);
+    if (ImGui::SliderInt(buf, v, v_min, v_max, format))
     {
         changed = true;
     }
@@ -400,6 +404,23 @@ void RenderPCControlMenu()
                 ImGui::Text("Macro 1 Delay (Frames)");
                 changed |= SliderIntWithButtons("Macro1Delay", &g_pcSettings.macro1DelayFrames, 0, 60);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Delay transisi dari VC Shoot ke Targeting pada Macro 1.");
+
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Weapon Switch Protection");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Buffer Switch on Aim Entry", &g_pcSettings.enableWeaponSwitchProtect);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah ganti senjata gagal saat baru masuk mode keker (Aim).\nSwitch akan disimpan dan dijalankan setelah delay selesai.");
+                if (g_pcSettings.enableWeaponSwitchProtect)
+                {
+                    ImGui::Indent();
+                    ImGui::Text("Aim Entry Delay (MS)");
+                    changed |= SliderIntWithButtons("WProtectMs", &g_pcSettings.weaponSwitchProtectMs, 0, 1000, "%d ms", 10);
+
+                    ImGui::Text("Double Tap Inter-Delay (MS)");
+                    changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 1000, "%d ms", 10);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak bentrok.\nJika menekan cepat, switch kedua akan antri.");
+                    ImGui::Unindent();
+                }
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");
