@@ -408,6 +408,21 @@ void RenderPCControlMenu()
                     ImGui::Unindent();
                 }
 
+                changed |= ImGui::Checkbox("Analog Protection (Aim Switch)", &g_pcSettings.enableAnalogWeaponProtect);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menghindari ped mematung saat ganti senjata tepat setelah melepas analog di mode bidik.");
+                if (g_pcSettings.enableAnalogWeaponProtect)
+                {
+                    ImGui::Indent();
+                    ImGui::Text("Max Idle Delay (ms)");
+                    changed |= SliderIntWithButtons("AnalogProtectDelay", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda toleransi dari lepas analog sampai menekan switch agar proteksi aktif.");
+
+                    ImGui::Text("Forced Movement (Frames)");
+                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 10, "%d frames", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Berapa frame pergerakan analog dipaksa saat ganti senjata.");
+                    ImGui::Unindent();
+                }
+
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Settings");
                 ImGui::Separator();

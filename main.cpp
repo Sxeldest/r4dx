@@ -118,6 +118,12 @@ static bool g_sprintProtectJustDownSent = false;
 static uint32_t g_targetingSwitchProtectFrame = 0;
 static uint32_t g_internalFrameCount = 0;
 
+static uint32_t g_analogReleaseTime = 0;
+static int g_analogLastX = 0;
+static int g_analogLastY = 0;
+static int g_analogProtectFrameCount = 0;
+static int g_analogProtectWeaponDir = 0; // 0: none, 1: prev, 2: next
+
 uint32_t GetTickCountMs()
 {
     struct timespec res;
@@ -236,6 +242,32 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     {
         outX = GetPedWalkLeftRight(self);
         outY = GetPedWalkUpDown(self);
+    }
+
+    // FASE MONITORING (SAAT AIMING)
+    if (IsAimMode())
+    {
+        if (outX != 0 || outY != 0)
+        {
+            g_analogLastX = outX;
+            g_analogLastY = outY;
+            g_analogReleaseTime = 0;
+        }
+        else if (g_analogReleaseTime == 0)
+        {
+            g_analogReleaseTime = GetTickCountMs();
+        }
+    }
+    else
+    {
+        g_analogReleaseTime = 0;
+    }
+
+    // EKSEKUSI SEKUENS PROTEKSI (PROTEKSI AKTIF)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    {
+        outX = g_analogLastX;
+        outY = g_analogLastY;
     }
 
     if (g_pcSettings.enableFeintProtect && g_feintProtectFrame > 0)
@@ -625,12 +657,35 @@ static int g_nextWeaponFrames = 0;
 
 bool HookOf_CycleWeaponLeftJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1)
+    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1 || g_analogProtectWeaponDir == 1)
     {
         bool isBuffered = (g_bufferedWeaponSwitch == 1);
-        if (!g_prevWeaponPrevState || isBuffered)
+        bool isAnalogProtect = (g_analogProtectWeaponDir == 1);
+
+        if (!g_prevWeaponPrevState || isBuffered || isAnalogProtect)
         {
-            if(!isBuffered) g_prevWeaponPrevState = true;
+            if(!isBuffered && !isAnalogProtect) g_prevWeaponPrevState = true;
+
+            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && !isAnalogProtect)
+            {
+                if (g_cachedX == 0 && g_cachedY == 0)
+                {
+                    uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+                    if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+                    {
+                        g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                        g_analogProtectWeaponDir = 1;
+                        return false; // FRAME 1: Hold weapon switch
+                    }
+                }
+            }
+
+            if (isAnalogProtect)
+            {
+                if (g_analogProtectFrameCount > 1) return false;
+                g_analogProtectWeaponDir = 0;
+                g_analogReleaseTime = 0;
+            }
 
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
@@ -669,12 +724,35 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
 bool HookOf_CycleWeaponRightJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2)
+    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2 || g_analogProtectWeaponDir == 2)
     {
         bool isBuffered = (g_bufferedWeaponSwitch == 2);
-        if (!g_nextWeaponPrevState || isBuffered)
+        bool isAnalogProtect = (g_analogProtectWeaponDir == 2);
+
+        if (!g_nextWeaponPrevState || isBuffered || isAnalogProtect)
         {
-            if(!isBuffered) g_nextWeaponPrevState = true;
+            if(!isBuffered && !isAnalogProtect) g_nextWeaponPrevState = true;
+
+            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && !isAnalogProtect)
+            {
+                if (g_cachedX == 0 && g_cachedY == 0)
+                {
+                    uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+                    if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+                    {
+                        g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                        g_analogProtectWeaponDir = 2;
+                        return false; // FRAME 1: Hold weapon switch
+                    }
+                }
+            }
+
+            if (isAnalogProtect)
+            {
+                if (g_analogProtectFrameCount > 1) return false;
+                g_analogProtectWeaponDir = 0;
+                g_analogReleaseTime = 0;
+            }
 
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
@@ -778,6 +856,8 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     g_internalFrameCount++;
+    if (g_analogProtectFrameCount > 0) g_analogProtectFrameCount--;
+
     Render2DStuff();
     CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();

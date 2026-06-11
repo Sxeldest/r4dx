@@ -221,6 +221,10 @@ struct PCControlSettings
     int feintProtectFrames;
     int macro2ProtectMs;
 
+    bool enableAnalogWeaponProtect;
+    int analogWeaponProtectDelayMs;
+    int analogWeaponProtectFrames;
+
     CustomMacro macros[MAX_MACROS];
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];

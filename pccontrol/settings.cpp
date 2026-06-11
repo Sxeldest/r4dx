@@ -88,7 +88,10 @@ PCControlSettings g_pcSettings = {
     0,      // sprintProtectExitDelayFrames
     true,   // enableFeintProtect
     30,     // feintProtectFrames
-    600     // macro2ProtectMs
+    600,    // macro2ProtectMs
+    true,   // enableAnalogWeaponProtect
+    100,    // analogWeaponProtectDelayMs
+    2       // analogWeaponProtectFrames
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -190,6 +193,10 @@ static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectFrames = nullptr;
 static ConfigEntry* s_macro2ProtectMs = nullptr;
+
+static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
+static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
+static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -380,6 +387,10 @@ void InitPCControlSettings()
     s_feintProtectFrames = cfg->Bind("FeintProtectFrames", 30, kSettingsSection);
     s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 600, kSettingsSection);
 
+    s_enableAnalogWeaponProtect = cfg->Bind("AnalogWeaponProtect", true, kSettingsSection);
+    s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
+    s_analogWeaponProtectFrames = cfg->Bind("AnalogWeaponProtectFrames", 2, kSettingsSection);
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -474,6 +485,10 @@ void InitPCControlSettings()
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
     g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
+
+    g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
+    g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
+    g_pcSettings.analogWeaponProtectFrames = s_analogWeaponProtectFrames->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -680,6 +695,10 @@ void SavePCControlSettings()
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
     s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
+
+    s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
+    s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
+    s_analogWeaponProtectFrames->SetInt(g_pcSettings.analogWeaponProtectFrames);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
