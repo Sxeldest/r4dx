@@ -109,6 +109,7 @@ static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
 static uint32_t g_feintProtectTimer = 0;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
+static uint32_t g_macro2ProtectTimer = 0;
 static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
@@ -326,6 +327,8 @@ static void UpdateMacroShoot()
     }
     else if (macro2Pressed)
     {
+        if (now < g_macro2ProtectTimer) return; // Tunggu timer proteksi ganti senjata selesai
+
         if (!aiming && !g_macroAimTriggered)
         {
             g_macroAimTriggered = true;
@@ -602,10 +605,10 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 uint32_t now = GetTickMS();
-                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
                 bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
+                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
-                if (inAimEntry || inTargetingProtect)
+                if (inTargetingProtect || inInterDelay)
                 {
                     g_bufferedWeaponSwitch = 1;
                     return false;
@@ -617,6 +620,7 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+                g_macro2ProtectTimer = GetTickMS() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
@@ -646,10 +650,10 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 uint32_t now = GetTickMS();
-                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
                 bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
+                bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
-                if (inAimEntry || inTargetingProtect)
+                if (inTargetingProtect || inInterDelay)
                 {
                     g_bufferedWeaponSwitch = 2;
                     return false;
@@ -661,6 +665,7 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectTimer = GetTickMS() + g_pcSettings.feintProtectMs;
+                g_macro2ProtectTimer = GetTickMS() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
@@ -1008,10 +1013,10 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
         if (g_pcSettings.enableWeaponSwitchProtect)
         {
             uint32_t now = GetTickMS();
-            bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
             bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
+            bool inInterDelay = (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
-            if (inAimEntry || inTargetingProtect)
+            if (inTargetingProtect || inInterDelay)
             {
                 return 0;
             }

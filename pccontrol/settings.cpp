@@ -82,12 +82,13 @@ PCControlSettings g_pcSettings = {
     10,     // sprintProtectEntryFrames
     10,     // macro1DelayFrames
     true,   // enableWeaponSwitchProtect
-    200,    // weaponSwitchProtectMs
     200,    // targetingSwitchProtectMs
+    200,    // weaponSwitchInterDelayMs
     500,    // sprintProtectExitMs
     0,      // sprintProtectExitDelayMs
     true,   // enableFeintProtect
-    500     // feintProtectMs
+    500,    // feintProtectMs
+    300     // macro2ProtectMs
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -182,12 +183,13 @@ static ConfigEntry* s_sprintProtected = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
 static ConfigEntry* s_macro1DelayFrames = nullptr;
 static ConfigEntry* s_enableWeaponSwitchProtect = nullptr;
-static ConfigEntry* s_weaponSwitchProtectMs = nullptr;
 static ConfigEntry* s_targetingSwitchProtectMs = nullptr;
+static ConfigEntry* s_weaponSwitchInterDelayMs = nullptr;
 static ConfigEntry* s_sprintProtectExitMs = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayMs = nullptr;
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectMs = nullptr;
+static ConfigEntry* s_macro2ProtectMs = nullptr;
 
 static ConfigEntry* s_patchEnabled[MAX_MEMORY_PATCHES];
 static ConfigEntry* s_patchOffset[MAX_MEMORY_PATCHES];
@@ -362,12 +364,13 @@ void InitPCControlSettings()
     s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntry", 10, kSettingsSection);
     s_macro1DelayFrames = cfg->Bind("Macro1DelayFrames", 10, kSettingsSection);
     s_enableWeaponSwitchProtect = cfg->Bind("WeaponSwitchProtect", true, kSettingsSection);
-    s_weaponSwitchProtectMs = cfg->Bind("WeaponSwitchProtectMs", 200, kSettingsSection);
     s_targetingSwitchProtectMs = cfg->Bind("TargetingSwitchProtectMs", 200, kSettingsSection);
+    s_weaponSwitchInterDelayMs = cfg->Bind("WeaponSwitchInterDelayMs", 200, kSettingsSection);
     s_sprintProtectExitMs = cfg->Bind("SprintProtectExit", 500, kSettingsSection);
     s_sprintProtectExitDelayMs = cfg->Bind("SprintProtectExitDelay", 0, kSettingsSection);
     s_enableFeintProtect = cfg->Bind("FeintProtect", true, kSettingsSection);
     s_feintProtectMs = cfg->Bind("FeintProtectMs", 500, kSettingsSection);
+    s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 300, kSettingsSection);
 
     for (int i = 0; i < 4; ++i) {
         char key[32];
@@ -456,12 +459,13 @@ void InitPCControlSettings()
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
     g_pcSettings.macro1DelayFrames = s_macro1DelayFrames->GetInt();
     g_pcSettings.enableWeaponSwitchProtect = s_enableWeaponSwitchProtect->GetBool();
-    g_pcSettings.weaponSwitchProtectMs = s_weaponSwitchProtectMs->GetInt();
     g_pcSettings.targetingSwitchProtectMs = s_targetingSwitchProtectMs->GetInt();
+    g_pcSettings.weaponSwitchInterDelayMs = s_weaponSwitchInterDelayMs->GetInt();
     g_pcSettings.sprintProtectExitMs = s_sprintProtectExitMs->GetInt();
     g_pcSettings.sprintProtectExitDelayMs = s_sprintProtectExitDelayMs->GetInt();
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectMs = s_feintProtectMs->GetInt();
+    g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
 
     for (int i = 0; i < 4; ++i) {
         g_pcSettings.ntHPColor[i] = s_ntHPColor[i]->GetFloat();
@@ -628,12 +632,13 @@ void SavePCControlSettings()
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
     s_macro1DelayFrames->SetInt(g_pcSettings.macro1DelayFrames);
     s_enableWeaponSwitchProtect->SetBool(g_pcSettings.enableWeaponSwitchProtect);
-    s_weaponSwitchProtectMs->SetInt(g_pcSettings.weaponSwitchProtectMs);
     s_targetingSwitchProtectMs->SetInt(g_pcSettings.targetingSwitchProtectMs);
+    s_weaponSwitchInterDelayMs->SetInt(g_pcSettings.weaponSwitchInterDelayMs);
     s_sprintProtectExitMs->SetInt(g_pcSettings.sprintProtectExitMs);
     s_sprintProtectExitDelayMs->SetInt(g_pcSettings.sprintProtectExitDelayMs);
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectMs->SetInt(g_pcSettings.feintProtectMs);
+    s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
 
     for (int i = 0; i < 4; ++i) {
         s_ntHPColor[i]->SetFloat(g_pcSettings.ntHPColor[i]);
