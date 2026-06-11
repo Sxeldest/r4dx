@@ -101,6 +101,7 @@ static bool g_lastAimState = false;
 static bool g_lastTargetState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
+static bool g_macro2Buffered = false;
 static uint32_t g_macroStartFrame = 0;
 static uint32_t g_macroSprintFrame = 0;
 static uint32_t g_lastWeaponSwitchFrame = 0;
@@ -312,11 +313,16 @@ static void UpdateMacroShoot()
     }
     else if (macro2Pressed)
     {
-        if (g_internalFrameCount < g_macro2ProtectFrame) return; // Tunggu timer proteksi ganti senjata selesai
+        if (g_internalFrameCount < g_macro2ProtectFrame)
+        {
+            g_macro2Buffered = true;
+            return;
+        }
 
         if (!aiming && !g_macroAimTriggered)
         {
             g_macroAimTriggered = true;
+            g_macro2Buffered = false;
             // Macro 2 juga menggunakan delay frame yang sama untuk bantuan lari
             g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
             g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
@@ -325,6 +331,18 @@ static void UpdateMacroShoot()
     }
     else
     {
+        // Jika ada klik yang terbuffer dan proteksi sudah habis, eksekusi sekarang
+        if (g_macro2Buffered && g_internalFrameCount >= g_macro2ProtectFrame)
+        {
+            if (!aiming && !g_macroAimTriggered)
+            {
+                g_macroAimTriggered = true;
+                g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
+                g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
+            }
+            g_macro2Buffered = false;
+        }
+
         g_macroHolding = false;
         g_macroSprintFrame = 0; // Hapus timer macro saat dilepas agar tidak "mempengaruhi" global
         if (!aiming) g_macroAimTriggered = false;
