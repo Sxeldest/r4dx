@@ -58,7 +58,7 @@ struct WidgetState {
 };
 
 static WidgetState s_widgetStates[MAX_CUSTOM_WIDGETS];
-static uint32_t s_activeActionsMask = 0;
+static uint64_t s_activeActionsMask = 0;
 static int s_fingerOwner[15] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }; // Map fingerId to widget index
 
 static bool s_menuPreviewInVehicle = false;
@@ -176,7 +176,7 @@ static void RefreshActiveActionsMask()
         if (IsWidgetActive(i))
         {
             int action = g_pcSettings.widgets[i].action;
-            s_activeActionsMask |= (1 << action);
+            s_activeActionsMask |= (1ULL << action);
 
             // Map DPAD directions to vehicle actions
             if (action == ACTION_DPAD)
@@ -184,10 +184,10 @@ static void RefreshActiveActionsMask()
                 float ax = s_widgetStates[i].analogX;
                 float ay = s_widgetStates[i].analogY;
 
-                if (ax < -50.0f) s_activeActionsMask |= (1 << ACTION_STEER_LEFT);
-                if (ax > 50.0f) s_activeActionsMask |= (1 << ACTION_STEER_RIGHT);
-                if (ay < -50.0f) s_activeActionsMask |= (1 << ACTION_GAS);
-                if (ay > 50.0f) s_activeActionsMask |= (1 << ACTION_BRAKE);
+                if (ax < -50.0f) s_activeActionsMask |= (1ULL << ACTION_STEER_LEFT);
+                if (ax > 50.0f) s_activeActionsMask |= (1ULL << ACTION_STEER_RIGHT);
+                if (ay < -50.0f) s_activeActionsMask |= (1ULL << ACTION_GAS);
+                if (ay > 50.0f) s_activeActionsMask |= (1ULL << ACTION_BRAKE);
             }
 
             if (action == ACTION_LOOK)
@@ -227,6 +227,22 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
 
     if (w.action == ACTION_DPAD)
     {
+        state.touched = true;
+        return;
+    }
+
+    // Handle Custom Macros (Action 100+)
+    if (w.action >= ACTION_MACRO_1 && w.action <= ACTION_MACRO_10)
+    {
+        int macroIdx = w.action - ACTION_MACRO_1;
+        if (g_pcSettings.macros[macroIdx].enabled)
+        {
+            CustomMacro& m = g_pcSettings.macros[macroIdx];
+            m.active = true;
+            m.currentStep = 0;
+            m.currentFrame = 0;
+            m.isStepHolding = true;
+        }
         state.touched = true;
         return;
     }
@@ -629,7 +645,7 @@ void RenderCustomWidgets()
     bool playerInVehicle = FindPlayerVehicle && FindPlayerVehicle(-1, false) != 0;
     bool inVehicleContext = IsPCControlMenuVisible() ? s_menuPreviewInVehicle : playerInVehicle;
 
-    const char* actionLabels[] = { "NONE", "VCS", "TGT", "JMP", "CRH", "SPR", "DPD", "W-P", "W-N", "TOG", "WLK", "MS1", "MS2", "MIC", "LOK", "GAS", "BRK", "HBR", "STL", "STR", "ENT", "HRN", "Y", "N", "G", "H", "F", "TAB", "ALT", "ESC", "2", "SPC" };
+    const char* actionLabels[] = { "NONE", "VCS", "TGT", "JMP", "CRH", "SPR", "DPD", "W-P", "W-N", "TOG", "WLK", "MS1", "MS2", "MIC", "LOK", "GAS", "BRK", "HBR", "STL", "STR", "ENT", "HRN", "Y", "N", "G", "H", "F", "TAB", "ALT", "ESC", "2", "SPC", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10" };
 
     for (int i = 0; i < MAX_CUSTOM_WIDGETS; ++i)
     {
@@ -822,10 +838,77 @@ bool HandleWidgetDragging(int type, int fingerId, int x, int y)
     return false;
 }
 
+void UpdateMacroExecution()
+{
+    for (int i = 0; i < MAX_MACROS; ++i)
+    {
+        CustomMacro& m = g_pcSettings.macros[i];
+        if (!m.enabled || !m.active) continue;
+
+        if (m.currentStep >= m.stepCount)
+        {
+            if (m.loop && IsActionTouched((eWidgetAction)(ACTION_MACRO_1 + i)))
+            {
+                m.currentStep = 0;
+                m.currentFrame = 0;
+                m.isStepHolding = true;
+            }
+            else
+            {
+                m.active = false;
+                continue;
+            }
+        }
+
+        MacroStep& s = m.steps[m.currentStep];
+        m.currentFrame++;
+
+        if (m.isStepHolding)
+        {
+            if (m.currentFrame >= s.duration)
+            {
+                m.isStepHolding = false;
+                m.currentFrame = 0;
+                if (s.wait <= 0) // No wait, go to next step immediately
+                {
+                    m.currentStep++;
+                    m.isStepHolding = true;
+                }
+            }
+        }
+        else
+        {
+            if (m.currentFrame >= s.wait)
+            {
+                m.currentStep++;
+                m.currentFrame = 0;
+                m.isStepHolding = true;
+            }
+        }
+    }
+}
+
 bool IsActionTouched(eWidgetAction action)
 {
     if (g_pcSettings.hideCustomWidgets && action != ACTION_TOGGLE_HUD) return false;
-    return (s_activeActionsMask & (1 << (int)action)) != 0;
+
+    // Check direct touches
+    if ((s_activeActionsMask & (1ULL << (int)action)) != 0) return true;
+
+    // Check active macros
+    for (int i = 0; i < MAX_MACROS; ++i)
+    {
+        CustomMacro& m = g_pcSettings.macros[i];
+        if (m.enabled && m.active && m.currentStep < m.stepCount)
+        {
+            if (m.isStepHolding && m.steps[m.currentStep].action == (int)action)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 int GetActionReleaseFrames(eWidgetAction action)

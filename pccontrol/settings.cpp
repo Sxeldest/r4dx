@@ -191,6 +191,14 @@ static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectFrames = nullptr;
 static ConfigEntry* s_macro2ProtectMs = nullptr;
 
+static ConfigEntry* s_macroEnabled[MAX_MACROS];
+static ConfigEntry* s_macroName[MAX_MACROS];
+static ConfigEntry* s_macroStepCount[MAX_MACROS];
+static ConfigEntry* s_macroLoop[MAX_MACROS];
+static ConfigEntry* s_macroStepAction[MAX_MACROS][MAX_MACRO_STEPS];
+static ConfigEntry* s_macroStepDuration[MAX_MACROS][MAX_MACRO_STEPS];
+static ConfigEntry* s_macroStepWait[MAX_MACROS][MAX_MACRO_STEPS];
+
 static ConfigEntry* s_patchEnabled[MAX_MEMORY_PATCHES];
 static ConfigEntry* s_patchOffset[MAX_MEMORY_PATCHES];
 static ConfigEntry* s_patchBaseType[MAX_MEMORY_PATCHES];
@@ -467,6 +475,39 @@ void InitPCControlSettings()
     g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
     g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
 
+    for (int i = 0; i < MAX_MACROS; ++i)
+    {
+        char key[64];
+        sprintf(key, "Macro%d_Enabled", i);
+        s_macroEnabled[i] = cfg->Bind(key, false, "Macros");
+        sprintf(key, "Macro%d_Name", i);
+        s_macroName[i] = cfg->Bind(key, "", "Macros");
+        sprintf(key, "Macro%d_StepCount", i);
+        s_macroStepCount[i] = cfg->Bind(key, 0, "Macros");
+        sprintf(key, "Macro%d_Loop", i);
+        s_macroLoop[i] = cfg->Bind(key, false, "Macros");
+
+        g_pcSettings.macros[i].enabled = s_macroEnabled[i]->GetBool();
+        strncpy(g_pcSettings.macros[i].name, s_macroName[i]->GetString(), 31);
+        g_pcSettings.macros[i].stepCount = s_macroStepCount[i]->GetInt();
+        g_pcSettings.macros[i].loop = s_macroLoop[i]->GetBool();
+        g_pcSettings.macros[i].active = false;
+
+        for (int j = 0; j < MAX_MACRO_STEPS; ++j)
+        {
+            sprintf(key, "Macro%d_Step%d_Action", i, j);
+            s_macroStepAction[i][j] = cfg->Bind(key, 0, "Macros");
+            sprintf(key, "Macro%d_Step%d_Duration", i, j);
+            s_macroStepDuration[i][j] = cfg->Bind(key, 5, "Macros");
+            sprintf(key, "Macro%d_Step%d_Wait", i, j);
+            s_macroStepWait[i][j] = cfg->Bind(key, 5, "Macros");
+
+            g_pcSettings.macros[i].steps[j].action = s_macroStepAction[i][j]->GetInt();
+            g_pcSettings.macros[i].steps[j].duration = s_macroStepDuration[i][j]->GetInt();
+            g_pcSettings.macros[i].steps[j].wait = s_macroStepWait[i][j]->GetInt();
+        }
+    }
+
     for (int i = 0; i < 4; ++i) {
         g_pcSettings.ntHPColor[i] = s_ntHPColor[i]->GetFloat();
         g_pcSettings.ntAPColor[i] = s_ntAPColor[i]->GetFloat();
@@ -639,6 +680,21 @@ void SavePCControlSettings()
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
     s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
+
+    for (int i = 0; i < MAX_MACROS; ++i)
+    {
+        s_macroEnabled[i]->SetBool(g_pcSettings.macros[i].enabled);
+        s_macroName[i]->SetString(g_pcSettings.macros[i].name);
+        s_macroStepCount[i]->SetInt(g_pcSettings.macros[i].stepCount);
+        s_macroLoop[i]->SetBool(g_pcSettings.macros[i].loop);
+
+        for (int j = 0; j < MAX_MACRO_STEPS; ++j)
+        {
+            s_macroStepAction[i][j]->SetInt(g_pcSettings.macros[i].steps[j].action);
+            s_macroStepDuration[i][j]->SetInt(g_pcSettings.macros[i].steps[j].duration);
+            s_macroStepWait[i][j]->SetInt(g_pcSettings.macros[i].steps[j].wait);
+        }
+    }
 
     for (int i = 0; i < 4; ++i) {
         s_ntHPColor[i]->SetFloat(g_pcSettings.ntHPColor[i]);

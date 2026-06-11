@@ -13,6 +13,7 @@ void UpdateWidgetReleaseFrames();
 void ResetWidgetToggle(eWidgetAction action);
 void ForceReleaseAction(eWidgetAction action);
 void GetCustomAnalogValues(float& x, float& y);
+void UpdateMacroExecution();
 
 void SetWidgetMenuPreviewMode(bool inVehicle);
 bool IsWidgetMenuPreviewInVehicle();

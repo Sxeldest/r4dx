@@ -781,6 +781,7 @@ void HookOf_Render2DStuff()
     Render2DStuff();
     CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
+    UpdateMacroExecution();
     UpdateMacroShoot();
 
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;

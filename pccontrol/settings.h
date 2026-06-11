@@ -38,7 +38,17 @@ enum eWidgetAction
     ACTION_SAMP_ALT,
     ACTION_SAMP_ESC,
     ACTION_SAMP_2,
-    ACTION_SAMP_SPC
+    ACTION_SAMP_SPC,
+    ACTION_MACRO_1,
+    ACTION_MACRO_2,
+    ACTION_MACRO_3,
+    ACTION_MACRO_4,
+    ACTION_MACRO_5,
+    ACTION_MACRO_6,
+    ACTION_MACRO_7,
+    ACTION_MACRO_8,
+    ACTION_MACRO_9,
+    ACTION_MACRO_10
 };
 
 enum eWidgetType
@@ -84,6 +94,30 @@ struct CustomWidget
 #define MAX_CUSTOM_WIDGETS 30
 #define MAX_WIDGET_SLOTS 5
 #define MAX_MEMORY_PATCHES 20
+#define MAX_MACROS 10
+#define MAX_MACRO_STEPS 10
+
+struct MacroStep
+{
+    int action; // eWidgetAction
+    int duration; // frames
+    int wait; // frames
+};
+
+struct CustomMacro
+{
+    bool enabled;
+    char name[32];
+    MacroStep steps[MAX_MACRO_STEPS];
+    int stepCount;
+    bool loop;
+
+    // Runtime state
+    bool active;
+    int currentStep;
+    int currentFrame;
+    bool isStepHolding;
+};
 
 struct MemoryPatch
 {
@@ -186,6 +220,8 @@ struct PCControlSettings
     bool enableFeintProtect;
     int feintProtectFrames;
     int macro2ProtectMs;
+
+    CustomMacro macros[MAX_MACROS];
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };

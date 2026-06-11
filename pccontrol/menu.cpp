@@ -511,7 +511,7 @@ void RenderPCControlMenu()
                     if (g_pcSettings.widgets[i].enabled)
                     {
                         char label[64];
-                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC" };
+                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
                         int act = g_pcSettings.widgets[i].action;
                         if (act < 0 || act >= (int)(sizeof(actionNames) / sizeof(actionNames[0]))) act = 0;
 
@@ -559,7 +559,7 @@ void RenderPCControlMenu()
                     ImGui::TextColored(ImVec4(1, 1, 0, 1), "Editing Button %d", idx + 1);
                     ImGui::Separator();
 
-                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC" };
+                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
                     ImGui::Text("Action");
                     ImGui::SetNextItemWidth(-1.0f);
                     changed |= ImGui::Combo("##Action", &g_pcSettings.widgets[idx].action, actions, IM_ARRAYSIZE(actions));
@@ -656,6 +656,82 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
                 ImGui::Separator();
                 ImGui::Spacing();
+
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Manager");
+                ImGui::Separator();
+
+                static int selectedMacro = 0;
+                const char* macroListNames[MAX_MACROS];
+                char macroNamesBuf[MAX_MACROS][64];
+                for(int i=0; i<MAX_MACROS; ++i)
+                {
+                    if(g_pcSettings.macros[i].enabled)
+                        sprintf(macroNamesBuf[i], "%d: %s", i+1, g_pcSettings.macros[i].name[0] ? g_pcSettings.macros[i].name : "Unnamed Macro");
+                    else
+                        sprintf(macroNamesBuf[i], "%d: [Empty Slot]", i+1);
+                    macroListNames[i] = macroNamesBuf[i];
+                }
+
+                ImGui::SetNextItemWidth(-1.0f);
+                ImGui::Combo("##MacroSelector", &selectedMacro, macroListNames, MAX_MACROS);
+
+                CustomMacro& m = g_pcSettings.macros[selectedMacro];
+
+                if (!m.enabled)
+                {
+                    if (ImGui::Button("Create Macro", ImVec2(-1, GetButtonHeight() * 0.7f)))
+                    {
+                        m.enabled = true;
+                        strcpy(m.name, "New Macro");
+                        m.stepCount = 1;
+                        m.loop = false;
+                        for(int j=0; j<MAX_MACRO_STEPS; ++j) {
+                            m.steps[j].action = 0;
+                            m.steps[j].duration = 5;
+                            m.steps[j].wait = 5;
+                        }
+                        changed = true;
+                    }
+                }
+                else
+                {
+                    ImGui::InputText("Macro Name", m.name, 31);
+                    if (ImGui::IsItemDeactivatedAfterEdit()) changed = true;
+
+                    changed |= ImGui::Checkbox("Loop Macro", &m.loop);
+
+                    ImGui::Text("Step Count");
+                    changed |= SliderIntWithButtons("StepCount", &m.stepCount, 1, MAX_MACRO_STEPS);
+
+                    ImGui::Spacing();
+                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Steps Sequence:");
+
+                    for (int j = 0; j < m.stepCount; ++j)
+                    {
+                        ImGui::PushID(j);
+                        ImGui::Text("Step %d", j + 1);
+
+                        const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
+                        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
+                        if (ImGui::Combo("Action", &m.steps[j].action, actions, IM_ARRAYSIZE(actions))) changed = true;
+
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.3f);
+                        if (SliderIntWithButtons("Hold", &m.steps[j].duration, 1, 300, "%d fr")) changed = true;
+
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(-1.0f);
+                        if (SliderIntWithButtons("Wait", &m.steps[j].wait, 0, 300, "%d fr")) changed = true;
+
+                        ImGui::PopID();
+                    }
+
+                    if (ImGui::Button("Delete Macro", ImVec2(-1, GetButtonHeight() * 0.7f)))
+                    {
+                        m.enabled = false;
+                        changed = true;
+                    }
+                }
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
