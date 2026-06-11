@@ -683,6 +683,17 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             if (isAnalogProtect)
             {
                 if (g_analogProtectFrameCount > 1) return false;
+
+                // FASE HANDOVER: Pastikan feintProtect mengambil alih tepat saat analogProtect selesai
+                if (g_pcSettings.enableFeintProtect && IsAimMode())
+                {
+                    g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+                    g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+                    // Gunakan data monitoring langsung agar sinkron sempurna
+                    g_feintLastX = g_analogLastX;
+                    g_feintLastY = g_analogLastY;
+                }
+
                 g_analogProtectWeaponDir = 0;
                 g_analogReleaseTime = 0;
             }
@@ -701,7 +712,7 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (g_pcSettings.enableFeintProtect && IsAimMode())
+            if (!isAnalogProtect && g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
@@ -750,6 +761,17 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             if (isAnalogProtect)
             {
                 if (g_analogProtectFrameCount > 1) return false;
+
+                // FASE HANDOVER: Pastikan feintProtect mengambil alih tepat saat analogProtect selesai
+                if (g_pcSettings.enableFeintProtect && IsAimMode())
+                {
+                    g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+                    g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+                    // Gunakan data monitoring langsung agar sinkron sempurna
+                    g_feintLastX = g_analogLastX;
+                    g_feintLastY = g_analogLastY;
+                }
+
                 g_analogProtectWeaponDir = 0;
                 g_analogReleaseTime = 0;
             }
@@ -768,7 +790,7 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (g_pcSettings.enableFeintProtect && IsAimMode())
+            if (!isAnalogProtect && g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
