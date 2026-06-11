@@ -902,13 +902,14 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     g_internalFrameCount++;
-    if (g_analogProtectFrameCount > 0) g_analogProtectFrameCount--;
 
     Render2DStuff();
     CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
     UpdateMacroShoot();
+
+    if (g_analogProtectFrameCount > 0) g_analogProtectFrameCount--;
 
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
 
