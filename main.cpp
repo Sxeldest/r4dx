@@ -102,6 +102,8 @@ static bool g_lastTargetState = false;
 static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static bool g_macro2Buffered = false;
+static bool g_macro2ReplayActive = false;
+static int g_macro2ReplayAimFrames = 0;
 static uint32_t g_macroStartFrame = 0;
 static uint32_t g_macroSprintFrame = 0;
 static uint32_t g_lastWeaponSwitchFrame = 0;
@@ -286,11 +288,15 @@ float HookOf_WidgetUpdate(void* self)
 static void UpdateMacroShoot()
 {
     bool macro1Pressed = IsActionTouched(ACTION_MACRO_SHOOT);
-    bool macro2Pressed = IsActionTouched(ACTION_MACRO_SHOOT_2);
+    bool macro2PhysicalPressed = IsActionTouched(ACTION_MACRO_SHOOT_2);
+    bool macro2Pressed = macro2PhysicalPressed || g_macro2ReplayActive;
     bool aiming = IsAimMode();
 
     if (macro1Pressed)
     {
+        g_macro2ReplayActive = false;
+        g_macro2ReplayAimFrames = 0;
+
         if (!g_macroHolding)
         {
             g_macroHolding = true;
@@ -315,32 +321,51 @@ static void UpdateMacroShoot()
     {
         if (g_internalFrameCount < g_macro2ProtectFrame)
         {
-            g_macro2Buffered = true;
+            if (macro2PhysicalPressed)
+            {
+                g_macro2Buffered = true;
+                g_macro2ReplayActive = false;
+                g_macro2ReplayAimFrames = 0;
+            }
             return;
         }
 
         if (!aiming && !g_macroAimTriggered)
         {
             g_macroAimTriggered = true;
-            g_macro2Buffered = false;
             // Macro 2 juga menggunakan delay frame yang sama untuk bantuan lari
             g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
             g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
         }
+        g_macro2Buffered = false;
         g_macroHolding = aiming;
+
+        if (g_macro2ReplayActive)
+        {
+            if (aiming)
+            {
+                g_macro2ReplayAimFrames++;
+                if (g_macro2ReplayAimFrames >= 2)
+                {
+                    g_macro2ReplayActive = false;
+                    g_macro2ReplayAimFrames = 0;
+                }
+            }
+            else
+            {
+                g_macro2ReplayAimFrames = 0;
+            }
+        }
     }
     else
     {
         // Jika ada klik yang terbuffer dan proteksi sudah habis, eksekusi sekarang
         if (g_macro2Buffered && g_internalFrameCount >= g_macro2ProtectFrame)
         {
-            if (!aiming && !g_macroAimTriggered)
-            {
-                g_macroAimTriggered = true;
-                g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
-                g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
-            }
             g_macro2Buffered = false;
+            g_macro2ReplayActive = true;
+            g_macro2ReplayAimFrames = 0;
+            return;
         }
 
         g_macroHolding = false;
