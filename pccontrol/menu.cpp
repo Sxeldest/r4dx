@@ -388,12 +388,12 @@ void RenderPCControlMenu()
                     changed |= SliderIntWithButtons("EntryProtect", &g_pcSettings.sprintProtectEntryFrames, 0, 30);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi sinyal lari tetap ditahan saat Anda melepas sprint untuk membidik.");
 
-                    ImGui::Text("Exit Protect (MS)");
-                    changed |= SliderIntWithButtons("ExitProtect", &g_pcSettings.sprintProtectExitMs, 0, 2000, "%d ms", 50);
+                    ImGui::Text("Exit Protect (Frames)");
+                    changed |= SliderIntWithButtons("ExitProtect", &g_pcSettings.sprintProtectExitFrames, 0, 120, "%d frames", 1);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi lari otomatis setelah keluar dari mode membidik.");
 
-                    ImGui::Text("Exit Delay (MS)");
-                    changed |= SliderIntWithButtons("ExitDelay", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms", 50);
+                    ImGui::Text("Exit Delay (Frames)");
+                    changed |= SliderIntWithButtons("ExitDelay", &g_pcSettings.sprintProtectExitDelayFrames, 0, 60, "%d frames", 1);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai setelah keluar dari mode membidik.");
                     ImGui::Unindent();
                 }
@@ -403,8 +403,8 @@ void RenderPCControlMenu()
                 if (g_pcSettings.enableFeintProtect)
                 {
                     ImGui::Indent();
-                    ImGui::Text("Protection Duration (MS)");
-                    changed |= SliderIntWithButtons("FeintProtectMs", &g_pcSettings.feintProtectMs, 0, 2000, "%d ms", 50);
+                    ImGui::Text("Protection Duration (Frames)");
+                    changed |= SliderIntWithButtons("FeintProtectFrames", &g_pcSettings.feintProtectFrames, 0, 120, "%d frames", 1);
                     ImGui::Unindent();
                 }
 

@@ -103,21 +103,18 @@ static bool g_macroHolding = false;
 static bool g_macroAimTriggered = false;
 static uint32_t g_macroStartTime = 0;
 static uint32_t g_macroStartFrame = 0;
-static uint32_t g_macroSprintTimer = 0;
+static uint32_t g_macroSprintFrame = 0;
 static uint32_t g_aimEntryTime = 0;
 static uint32_t g_lastWeaponSwitchTime = 0;
 static uint32_t g_lastWeaponSwitchFrame = 0;
 static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
-static uint32_t g_feintProtectTimer = 0;
 static uint32_t g_feintProtectFrame = 0;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
-static uint32_t g_macro2ProtectTimer = 0;
 static uint32_t g_macro2ProtectFrame = 0;
-static uint32_t g_sprintProtectExitTimer = 0; // Timer kapan proteksi BERAKHIR
-static uint32_t g_sprintProtectExitStart = 0; // Timer kapan proteksi DIMULAI
+static uint32_t g_sprintProtectExitFrame = 0; // Frame kapan proteksi BERAKHIR
+static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
-static uint32_t g_targetingSwitchProtectTimer = 0;
 static uint32_t g_targetingSwitchProtectFrame = 0;
 static uint32_t g_internalFrameCount = 0;
 
@@ -315,8 +312,8 @@ static void UpdateMacroShoot()
             g_macroHolding = true;
             g_macroStartTime = now;
             g_macroStartFrame = g_internalFrameCount;
-            // Gunakan timer terpisah untuk Macro agar tidak bentrok dengan Sprint Protect global
-            if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
+            // Gunakan frame counter untuk Macro agar tidak bentrok dengan Sprint Protect global
+            g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
         }
 
         if (!aiming && !g_macroAimTriggered)
@@ -339,8 +336,8 @@ static void UpdateMacroShoot()
         if (!aiming && !g_macroAimTriggered)
         {
             g_macroAimTriggered = true;
-            // Macro 2 juga menggunakan delay ms yang sama untuk bantuan lari
-            if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
+            // Macro 2 juga menggunakan delay frame yang sama untuk bantuan lari
+            g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
             g_macroStartTime = now;
             g_aimEntryTime = now;
             g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
@@ -351,7 +348,7 @@ static void UpdateMacroShoot()
     {
         g_macroHolding = false;
         g_macroStartTime = 0;
-        g_macroSprintTimer = 0; // Hapus timer macro saat dilepas agar tidak "mempengaruhi" global
+        g_macroSprintFrame = 0; // Hapus timer macro saat dilepas agar tidak "mempengaruhi" global
         if (!aiming) g_macroAimTriggered = false;
     }
 }
@@ -476,29 +473,28 @@ static bool IsCustomSprintTouched()
 static bool IsSprintProtected()
 {
     // 0. Macro Sprint (Selalu aktif saat macro jalan, tidak peduli setting global)
-    if (g_macroSprintTimer > 0 && GetTickMS() < g_macroSprintTimer) return true;
+    if (g_macroSprintFrame > 0 && g_internalFrameCount < g_macroSprintFrame) return true;
 
     if (!g_pcSettings.sprintProtected) return false;
 
     // 1. Exit Protection (Setelah lepas Aim)
-    if (g_sprintProtectExitTimer > 0)
+    if (g_sprintProtectExitFrame > 0)
     {
-        uint32_t now = GetTickMS();
-        if (now < g_sprintProtectExitTimer)
+        if (g_internalFrameCount < g_sprintProtectExitFrame)
         {
             // Hanya aktif jika sudah melewati masa delay
-            if (now >= g_sprintProtectExitStart)
+            if (g_internalFrameCount >= g_sprintProtectExitStartFrame)
             {
                 if (IsCustomSprintTouched())
                 {
-                    g_sprintProtectExitTimer = 0;
+                    g_sprintProtectExitFrame = 0;
                     return false;
                 }
                 return true;
             }
             return false; // Sedang dalam masa delay
         }
-        else g_sprintProtectExitTimer = 0;
+        else g_sprintProtectExitFrame = 0;
     }
 
     // 2. Entry Protection (Saat mau masuk Aim)
@@ -534,10 +530,9 @@ static bool IsAutoRunActive()
     if (customX == 0.0f && customY == 0.0f) return false;
 
     // Follow the same delay as sprintProtected when exiting aim
-    if (g_sprintProtectExitTimer > 0)
+    if (g_sprintProtectExitFrame > 0)
     {
-        uint32_t now = GetTickMS();
-        if (now < g_sprintProtectExitStart) return false; // Sedang dalam masa delay
+        if (g_internalFrameCount < g_sprintProtectExitStartFrame) return false; // Sedang dalam masa delay
     }
 
     return true;
@@ -573,7 +568,7 @@ int HookOf_SprintJustDown(void* self)
     }
 
     // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
-    if (g_pcSettings.sprintProtected && g_sprintProtectExitTimer > 0 && GetTickMS() >= g_sprintProtectExitStart && !g_sprintProtectJustDownSent)
+    if (g_pcSettings.sprintProtected && g_sprintProtectExitFrame > 0 && g_internalFrameCount >= g_sprintProtectExitStartFrame && !g_sprintProtectJustDownSent)
     {
         g_sprintProtectJustDownSent = true;
         return 1;
@@ -785,9 +780,8 @@ void HookOf_Render2DStuff()
 
         if (g_pcSettings.sprintProtected || g_pcSettings.autoRun)
         {
-            uint32_t now = GetTickMS();
-            g_sprintProtectExitStart = now + g_pcSettings.sprintProtectExitDelayMs;
-            g_sprintProtectExitTimer = g_sprintProtectExitStart + (g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitMs : 100);
+            g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)g_pcSettings.sprintProtectExitDelayFrames;
+            g_sprintProtectExitFrame = g_sprintProtectExitStartFrame + (uint32_t)(g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitFrames : 6);
             g_sprintProtectJustDownSent = false;
         }
     }
