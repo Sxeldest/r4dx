@@ -415,12 +415,12 @@ void RenderPCControlMenu()
                 changed |= SliderIntWithButtons("Macro1Delay", &g_pcSettings.macro1DelayFrames, 0, 60);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Delay transisi dari VC Shoot ke Targeting pada Macro 1.");
 
-                ImGui::Text("Targeting Switch Protection (MS)");
-                changed |= SliderIntWithButtons("TargetSwitchProtect", &g_pcSettings.targetingSwitchProtectMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Targeting Switch Protection (Frames)");
+                changed |= SliderIntWithButtons("TargetSwitchProtect", &g_pcSettings.targetingSwitchProtectFrames, 0, 60, "%d frames", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah/menunda ganti senjata saat baru masuk mode aiming (Macro 2).");
 
-                ImGui::Text("Macro 2 Lockout After Switch (MS)");
-                changed |= SliderIntWithButtons("Macro2Protect", &g_pcSettings.macro2ProtectMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Macro 2 Lockout After Switch (Frames)");
+                changed |= SliderIntWithButtons("Macro2Protect", &g_pcSettings.macro2ProtectFrames, 0, 60, "%d frames", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah penggunaan Macro 2 terlalu cepat setelah ganti senjata dari mode bidik.");
 
                 ImGui::Spacing();
@@ -428,8 +428,8 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Enable Switch Protection", &g_pcSettings.enableWeaponSwitchProtect);
 
-                ImGui::Text("Spam Protection / Inter-Delay (MS)");
-                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Spam Protection / Inter-Delay (Frames)");
+                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayFrames, 0, 60, "%d frames", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak berganti terlalu cepat.");
 
                 ImGui::Spacing();
