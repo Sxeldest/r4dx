@@ -422,9 +422,11 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Weapon Switch Protection");
                 ImGui::Separator();
-                ImGui::Text("Spam Protection / Inter-Delay (MS)");
-                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 1000, "%d ms", 10);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak berganti terlalu cepat.");
+                changed |= ImGui::Checkbox("Enable Switch Protection", &g_pcSettings.enableWeaponSwitchProtect);
+
+                ImGui::Text("Aim Entry Protect (MS)");
+                changed |= SliderIntWithButtons("WProtectMs", &g_pcSettings.weaponSwitchProtectMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menunda ganti senjata saat baru membidik (IsAimMode).");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");

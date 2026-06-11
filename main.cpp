@@ -319,6 +319,7 @@ static void UpdateMacroShoot()
             if (elapsed >= macroDelayMs)
             {
                 g_macroAimTriggered = true;
+                g_aimEntryTime = now;
                 g_targetingSwitchProtectTimer = now + g_pcSettings.targetingSwitchProtectMs;
             }
         }
@@ -331,6 +332,7 @@ static void UpdateMacroShoot()
             // Macro 2 juga menggunakan delay ms yang sama untuk bantuan lari
             if (macroDelayMs > 0) g_macroSprintTimer = now + macroDelayMs;
             g_macroStartTime = now;
+            g_aimEntryTime = now;
             g_targetingSwitchProtectTimer = now + g_pcSettings.targetingSwitchProtectMs;
         }
         g_macroHolding = aiming;
@@ -588,31 +590,29 @@ bool HookOf_GetEnterTargeting(void* self)
 static int g_prevWeaponFrames = 0;
 static int g_nextWeaponFrames = 0;
 
-static bool IsInWeaponSwitchProtect()
-{
-    uint32_t now = GetTickMS();
-    // Proteksi jeda minimal antar ganti senjata
-    return (now - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-}
-
 bool HookOf_CycleWeaponLeftJustDown(void* self)
+{
+    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1)
     {
-        bool native = CycleWeaponLeftJustDown(self);
-        bool requested = IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1;
-
-        if (requested || native)
+        bool isBuffered = (g_bufferedWeaponSwitch == 1);
+        if (!g_prevWeaponPrevState || isBuffered)
         {
-            if (IsInWeaponSwitchProtect()) return false;
+            if(!isBuffered) g_prevWeaponPrevState = true;
 
-            uint32_t now = GetTickMS();
-            if (now < g_targetingSwitchProtectTimer)
+            if (g_pcSettings.enableWeaponSwitchProtect)
             {
-                if (native || IsActionTouched(ACTION_PREV_WEAPON)) g_bufferedWeaponSwitch = 1;
-                return false;
-            }
+                uint32_t now = GetTickMS();
+                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
 
+                if (inAimEntry || inTargetingProtect)
+                {
+                    g_bufferedWeaponSwitch = 1;
+                    return false;
+                }
+                g_lastWeaponSwitchTime = now;
+            }
             g_bufferedWeaponSwitch = 0;
-            g_lastWeaponSwitchTime = GetTickMS();
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
@@ -622,35 +622,41 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             }
 
             g_prevWeaponFrames = 2;
-            return true;
         }
-
-        if (g_prevWeaponFrames > 0)
-        {
-            g_prevWeaponFrames--;
-            return true;
-        }
-        return false;
     }
+    else g_prevWeaponPrevState = false;
 
-    bool HookOf_CycleWeaponRightJustDown(void* self)
+    if (g_prevWeaponFrames > 0)
     {
-        bool native = CycleWeaponRightJustDown(self);
-        bool requested = IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2;
+        g_prevWeaponFrames--;
+        return true;
+    }
+    return CycleWeaponLeftJustDown(self);
+}
 
-        if (requested || native)
+bool HookOf_CycleWeaponRightJustDown(void* self)
+{
+    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2)
+    {
+        bool isBuffered = (g_bufferedWeaponSwitch == 2);
+        if (!g_nextWeaponPrevState || isBuffered)
         {
-            if (IsInWeaponSwitchProtect()) return false;
+            if(!isBuffered) g_nextWeaponPrevState = true;
 
-            uint32_t now = GetTickMS();
-            if (now < g_targetingSwitchProtectTimer)
+            if (g_pcSettings.enableWeaponSwitchProtect)
             {
-                if (native || IsActionTouched(ACTION_NEXT_WEAPON)) g_bufferedWeaponSwitch = 2;
-                return false;
-            }
+                uint32_t now = GetTickMS();
+                bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+                bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
 
+                if (inAimEntry || inTargetingProtect)
+                {
+                    g_bufferedWeaponSwitch = 2;
+                    return false;
+                }
+                g_lastWeaponSwitchTime = now;
+            }
             g_bufferedWeaponSwitch = 0;
-            g_lastWeaponSwitchTime = GetTickMS();
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
@@ -660,16 +666,17 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             }
 
             g_nextWeaponFrames = 2;
-            return true;
         }
-
-        if (g_nextWeaponFrames > 0)
-        {
-            g_nextWeaponFrames--;
-            return true;
-        }
-        return false;
     }
+    else g_nextWeaponPrevState = false;
+
+    if (g_nextWeaponFrames > 0)
+    {
+        g_nextWeaponFrames--;
+        return true;
+    }
+    return CycleWeaponRightJustDown(self);
+}
 
 void HookOf_CTimeCycle_Update(void* self)
 {
@@ -995,10 +1002,19 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 
     if (switchRequested)
     {
-        // TUNDA SEPENUHNYA jika masih dalam masa proteksi inter-delay atau targeting protection
-        if (IsInWeaponSwitchProtect() || GetTickMS() < g_targetingSwitchProtectTimer)
+        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
+        // Kita tidak cek inInterDelay di sini karena sudah dicek di JustDown hooks
+        // dan di sini akan "double" (menghalangi switch yang baru saja disetujui di JustDown)
+        if (g_pcSettings.enableWeaponSwitchProtect)
         {
-            return 0;
+            uint32_t now = GetTickMS();
+            bool inAimEntry = IsAimMode() && (now - g_aimEntryTime < (uint32_t)g_pcSettings.weaponSwitchProtectMs);
+            bool inTargetingProtect = (now < g_targetingSwitchProtectTimer);
+
+            if (inAimEntry || inTargetingProtect)
+            {
+                return 0;
+            }
         }
 
         ForceReleaseAction(ACTION_TARGET);
