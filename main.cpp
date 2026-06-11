@@ -1158,16 +1158,46 @@ void HookOf_ButtonPanel_OnTouchEvent(void* self, int type, int x, int y) {
 
 int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 {
-    // Cek apakah ada permintaan ganti senjata (dari input langsung atau dari buffer yang baru dilepas)
-    bool switchRequested = IsActionTouched(ACTION_NEXT_WEAPON) || IsActionTouched(ACTION_PREV_WEAPON) ||
-                           (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_bufferedWeaponSwitch > 0);
+    // Cek apakah saat ini sedang dalam fase proteksi analog
+    bool isAnalogProtecting = (g_analogProtectWeaponDir != 0);
+    int currentIdx = isAnalogProtecting ? (g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1) : 0;
+
+    // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
+    bool switchRequested = false;
+
+    if (isAnalogProtecting)
+    {
+        // Hanya izinkan pembersihan aiming jika sudah mencapai frame eksekusi switch
+        if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
+        {
+            switchRequested = true;
+        }
+    }
+    else
+    {
+        // Logika standar jika tidak dalam proteksi analog:
+        if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
+            (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
+            (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_bufferedWeaponSwitch > 0))
+        {
+            // Verifikasi tambahan: Jika ini adalah awal pemicu Analog Protect, jangan langsung switch
+            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+            {
+                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+                {
+                    switchRequested = false;
+                }
+                else switchRequested = true;
+            }
+            else switchRequested = true;
+        }
+    }
 
     if (switchRequested)
     {
-        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
-        // Kita tidak cek inInterDelay di sini karena sudah dicek di JustDown hooks
-        // dan di sini akan "double" (menghalangi switch yang baru saja disetujui di JustDown)
-        if (g_pcSettings.enableWeaponSwitchProtect)
+        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry (kecuali jika dipicu analogProtect yang memang tujuannya bypass)
+        if (!isAnalogProtecting && g_pcSettings.enableWeaponSwitchProtect)
         {
             bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
             bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
