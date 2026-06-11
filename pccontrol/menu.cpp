@@ -418,7 +418,7 @@ void RenderPCControlMenu()
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda toleransi dari lepas analog sampai menekan switch agar proteksi aktif.");
 
                     ImGui::Text("Total Forced Movement (Frames)");
-                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 20, "%d frames", 1);
+                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 100, "%d frames", 1);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dipaksa.");
 
                     ImGui::Text("Switch Execution Frame");
