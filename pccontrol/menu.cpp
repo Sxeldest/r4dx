@@ -424,8 +424,15 @@ void RenderPCControlMenu()
                     ImGui::Text("Switch Execution Frame");
                     changed |= SliderIntWithButtons("AnalogProtectSwitchFrame", &g_pcSettings.analogWeaponProtectSwitchFrame, 1, g_pcSettings.analogWeaponProtectFrames, "Frame %d", 1);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Di frame ke berapa perintah ganti senjata dikirim (harus <= Total Frames).");
+
+                    ImGui::Text("Sprint Execution Frame");
+                    changed |= SliderIntWithButtons("AnalogProtectSprintFrame", &g_pcSettings.analogWeaponProtectSprintFrame, 1, g_pcSettings.analogWeaponProtectFrames, "Frame %d", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Di frame ke berapa pergerakan lari (Sprint) dipicu.");
+
                     if (g_pcSettings.analogWeaponProtectSwitchFrame > g_pcSettings.analogWeaponProtectFrames)
                         g_pcSettings.analogWeaponProtectSwitchFrame = g_pcSettings.analogWeaponProtectFrames;
+                    if (g_pcSettings.analogWeaponProtectSprintFrame > g_pcSettings.analogWeaponProtectFrames)
+                        g_pcSettings.analogWeaponProtectSprintFrame = g_pcSettings.analogWeaponProtectFrames;
 
                     ImGui::Unindent();
                 }

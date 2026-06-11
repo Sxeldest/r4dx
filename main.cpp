@@ -535,8 +535,13 @@ static bool IsSprintProtected()
     // 0. Macro Sprint (Selalu aktif saat macro jalan, tidak peduli setting global)
     if (g_macroSprintFrame > 0 && g_internalFrameCount < g_macroSprintFrame) return true;
 
-    // 0.1 Analog Weapon Protect Sprint (Force sprint selama proteksi jalan)
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0) return true;
+    // 0.1 Analog Weapon Protect Sprint (Force sprint pada frame tertentu selama proteksi jalan)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    {
+        // Hitung index frame saat ini (1 sampai Total)
+        int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
+        if (currentIdx == g_pcSettings.analogWeaponProtectSprintFrame) return true;
+    }
 
     if (!g_pcSettings.sprintProtected) return false;
 
@@ -635,6 +640,13 @@ int HookOf_SprintJustDown(void* self)
     {
         g_sprintProtectJustDownSent = true;
         return 1;
+    }
+
+    // Analog Protect Sprint JustDown Trigger
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    {
+        int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
+        if (currentIdx == g_pcSettings.analogWeaponProtectSprintFrame) return 1;
     }
 
     if (g_pcSettings.enableSprintDoubleTapBoost && g_sprintDoubleTapBoost > 0)
