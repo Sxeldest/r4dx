@@ -106,17 +106,24 @@ static bool g_macro2ReplayActive = false;
 static int g_macro2ReplayAimFrames = 0;
 static uint32_t g_macroStartFrame = 0;
 static uint32_t g_macroSprintFrame = 0;
-static uint32_t g_lastWeaponSwitchFrame = 0;
+static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
 static uint32_t g_feintProtectFrame = 0;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
-static uint32_t g_macro2ProtectFrame = 0;
+static uint32_t g_macro2ProtectTime = 0;
 static uint32_t g_sprintProtectExitFrame = 0; // Frame kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
 static uint32_t g_targetingSwitchProtectFrame = 0;
 static uint32_t g_internalFrameCount = 0;
+
+uint32_t GetTickCountMs()
+{
+    struct timespec res;
+    clock_gettime(CLOCK_MONOTONIC, &res);
+    return (uint32_t)(res.tv_sec * 1000 + res.tv_nsec / 1000000);
+}
 
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
 const float Z_DEADZONE = 0.1f;
@@ -319,7 +326,7 @@ static void UpdateMacroShoot()
     }
     else if (macro2Pressed)
     {
-        if (g_internalFrameCount < g_macro2ProtectFrame)
+        if (GetTickCountMs() < g_macro2ProtectTime)
         {
             if (macro2PhysicalPressed)
             {
@@ -360,7 +367,7 @@ static void UpdateMacroShoot()
     else
     {
         // Jika ada klik yang terbuffer dan proteksi sudah habis, eksekusi sekarang
-        if (g_macro2Buffered && g_internalFrameCount >= g_macro2ProtectFrame)
+        if (g_macro2Buffered && GetTickCountMs() >= g_macro2ProtectTime)
         {
             g_macro2Buffered = false;
             g_macro2ReplayActive = true;
@@ -628,21 +635,21 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-                bool inInterDelay = (g_internalFrameCount - g_lastWeaponSwitchFrame < (uint32_t)g_pcSettings.weaponSwitchInterDelayFrames);
+                bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
                 if (inTargetingProtect || inInterDelay)
                 {
                     g_bufferedWeaponSwitch = 1;
                     return false;
                 }
-                g_lastWeaponSwitchFrame = g_internalFrameCount;
+                g_lastWeaponSwitchTime = GetTickCountMs();
             }
             g_bufferedWeaponSwitch = 0;
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                g_macro2ProtectFrame = g_internalFrameCount + g_pcSettings.macro2ProtectFrames;
+                g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
@@ -672,21 +679,21 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             if (g_pcSettings.enableWeaponSwitchProtect)
             {
                 bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-                bool inInterDelay = (g_internalFrameCount - g_lastWeaponSwitchFrame < (uint32_t)g_pcSettings.weaponSwitchInterDelayFrames);
+                bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
                 if (inTargetingProtect || inInterDelay)
                 {
                     g_bufferedWeaponSwitch = 2;
                     return false;
                 }
-                g_lastWeaponSwitchFrame = g_internalFrameCount;
+                g_lastWeaponSwitchTime = GetTickCountMs();
             }
             g_bufferedWeaponSwitch = 0;
 
             if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                g_macro2ProtectFrame = g_internalFrameCount + g_pcSettings.macro2ProtectFrames;
+                g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
@@ -1032,7 +1039,7 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
         if (g_pcSettings.enableWeaponSwitchProtect)
         {
             bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-            bool inInterDelay = (g_internalFrameCount - g_lastWeaponSwitchFrame < (uint32_t)g_pcSettings.weaponSwitchInterDelayFrames);
+            bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
 
             if (inTargetingProtect || inInterDelay)
             {

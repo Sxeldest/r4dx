@@ -419,8 +419,8 @@ void RenderPCControlMenu()
                 changed |= SliderIntWithButtons("TargetSwitchProtect", &g_pcSettings.targetingSwitchProtectFrames, 0, 60, "%d frames", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah/menunda ganti senjata saat baru masuk mode aiming (Macro 2).");
 
-                ImGui::Text("Macro 2 Lockout After Switch (Frames)");
-                changed |= SliderIntWithButtons("Macro2Protect", &g_pcSettings.macro2ProtectFrames, 0, 60, "%d frames", 1);
+                ImGui::Text("Macro 2 Lockout After Switch (ms)");
+                changed |= SliderIntWithButtons("Macro2Protect", &g_pcSettings.macro2ProtectMs, 0, 2000, "%d ms", 10);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah penggunaan Macro 2 terlalu cepat setelah ganti senjata dari mode bidik.");
 
                 ImGui::Spacing();
@@ -428,8 +428,8 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Enable Switch Protection", &g_pcSettings.enableWeaponSwitchProtect);
 
-                ImGui::Text("Spam Protection / Inter-Delay (Frames)");
-                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayFrames, 0, 60, "%d frames", 1);
+                ImGui::Text("Spam Protection / Inter-Delay (ms)");
+                changed |= SliderIntWithButtons("WInterDelay", &g_pcSettings.weaponSwitchInterDelayMs, 0, 2000, "%d ms", 10);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda minimal antar ganti senjata agar tidak berganti terlalu cepat.");
 
                 ImGui::Spacing();

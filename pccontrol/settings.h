@@ -179,13 +179,13 @@ struct PCControlSettings
     int macro1DelayFrames;
     bool enableWeaponSwitchProtect;
     int targetingSwitchProtectFrames;
-    int weaponSwitchInterDelayFrames;
+    int weaponSwitchInterDelayMs;
     int sprintProtectExitFrames;
     int sprintProtectExitDelayFrames;
 
     bool enableFeintProtect;
     int feintProtectFrames;
-    int macro2ProtectFrames;
+    int macro2ProtectMs;
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];
 };
