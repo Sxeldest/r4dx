@@ -682,20 +682,32 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
             if (isAnalogProtect)
             {
-                if (g_analogProtectFrameCount > 1) return false;
+                // Hitung index frame saat ini (1 sampai Total)
+                int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
 
-                // FASE HANDOVER: Pastikan feintProtect mengambil alih tepat saat analogProtect selesai
-                if (g_pcSettings.enableFeintProtect && IsAimMode())
+                // FASE SELESAI (Frame terakhir tercapai)
+                if (g_analogProtectFrameCount <= 1)
                 {
-                    g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                    g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                    // Gunakan data monitoring langsung agar sinkron sempurna
-                    g_feintLastX = g_analogLastX;
-                    g_feintLastY = g_analogLastY;
+                    if (g_pcSettings.enableFeintProtect && IsAimMode())
+                    {
+                        g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+                        g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+                        g_feintLastX = g_analogLastX;
+                        g_feintLastY = g_analogLastY;
+                    }
+                    g_analogProtectWeaponDir = 0;
+                    g_analogReleaseTime = 0;
                 }
 
-                g_analogProtectWeaponDir = 0;
-                g_analogReleaseTime = 0;
+                // Kirim Switch hanya jika berada pada frame yang ditentukan
+                if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
+                {
+                    // Lanjut ke eksekusi switch standar di bawah
+                }
+                else
+                {
+                    return false; // Tahan switch di frame lain
+                }
             }
 
             if (g_pcSettings.enableWeaponSwitchProtect)
@@ -760,20 +772,32 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
 
             if (isAnalogProtect)
             {
-                if (g_analogProtectFrameCount > 1) return false;
+                // Hitung index frame saat ini (1 sampai Total)
+                int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
 
-                // FASE HANDOVER: Pastikan feintProtect mengambil alih tepat saat analogProtect selesai
-                if (g_pcSettings.enableFeintProtect && IsAimMode())
+                // FASE SELESAI (Frame terakhir tercapai)
+                if (g_analogProtectFrameCount <= 1)
                 {
-                    g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                    g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                    // Gunakan data monitoring langsung agar sinkron sempurna
-                    g_feintLastX = g_analogLastX;
-                    g_feintLastY = g_analogLastY;
+                    if (g_pcSettings.enableFeintProtect && IsAimMode())
+                    {
+                        g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+                        g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+                        g_feintLastX = g_analogLastX;
+                        g_feintLastY = g_analogLastY;
+                    }
+                    g_analogProtectWeaponDir = 0;
+                    g_analogReleaseTime = 0;
                 }
 
-                g_analogProtectWeaponDir = 0;
-                g_analogReleaseTime = 0;
+                // Kirim Switch hanya jika berada pada frame yang ditentukan
+                if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
+                {
+                    // Lanjut ke eksekusi switch standar di bawah
+                }
+                else
+                {
+                    return false; // Tahan switch di frame lain
+                }
             }
 
             if (g_pcSettings.enableWeaponSwitchProtect)

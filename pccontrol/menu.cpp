@@ -417,9 +417,16 @@ void RenderPCControlMenu()
                     changed |= SliderIntWithButtons("AnalogProtectDelay", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda toleransi dari lepas analog sampai menekan switch agar proteksi aktif.");
 
-                    ImGui::Text("Forced Movement (Frames)");
-                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 10, "%d frames", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Berapa frame pergerakan analog dipaksa saat ganti senjata.");
+                    ImGui::Text("Total Forced Movement (Frames)");
+                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 20, "%d frames", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dipaksa.");
+
+                    ImGui::Text("Switch Execution Frame");
+                    changed |= SliderIntWithButtons("AnalogProtectSwitchFrame", &g_pcSettings.analogWeaponProtectSwitchFrame, 1, g_pcSettings.analogWeaponProtectFrames, "Frame %d", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Di frame ke berapa perintah ganti senjata dikirim (harus <= Total Frames).");
+                    if (g_pcSettings.analogWeaponProtectSwitchFrame > g_pcSettings.analogWeaponProtectFrames)
+                        g_pcSettings.analogWeaponProtectSwitchFrame = g_pcSettings.analogWeaponProtectFrames;
+
                     ImGui::Unindent();
                 }
 

@@ -224,6 +224,7 @@ struct PCControlSettings
     bool enableAnalogWeaponProtect;
     int analogWeaponProtectDelayMs;
     int analogWeaponProtectFrames;
+    int analogWeaponProtectSwitchFrame;
 
     CustomMacro macros[MAX_MACROS];
 
