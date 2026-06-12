@@ -237,3 +237,5 @@ void TogglePCControlMenu();
 bool IsPCControlMenuVisible();
 bool IsWidgetsTabActive();
 bool IsAnyMenuOpen();
+
+uint32_t GetTickCountMs();
