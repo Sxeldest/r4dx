@@ -535,13 +535,8 @@ static bool IsSprintProtected()
     // 0. Macro Sprint (Selalu aktif saat macro jalan, tidak peduli setting global)
     if (g_macroSprintFrame > 0 && g_internalFrameCount < g_macroSprintFrame) return true;
 
-    // 0.1 Analog Weapon Protect Sprint (Force sprint pada frame tertentu selama proteksi jalan)
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
-    {
-        // Hitung index frame saat ini (1 sampai Total)
-        int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
-        if (currentIdx == g_pcSettings.analogWeaponProtectSprintFrame) return true;
-    }
+    // 0.1 Analog Weapon Protect Sprint (Force sprint selama proteksi jalan)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0) return true;
 
     if (!g_pcSettings.sprintProtected) return false;
 
@@ -642,11 +637,11 @@ int HookOf_SprintJustDown(void* self)
         return 1;
     }
 
-    // Analog Protect Sprint JustDown Trigger
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    // Analog Protect Sprint JustDown Trigger (Hanya pemicu di frame pertama)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0 && g_analogProtectWeaponDir != 0)
     {
-        int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
-        if (currentIdx == g_pcSettings.analogWeaponProtectSprintFrame) return 1;
+        g_analogProtectWeaponDir = 0; // Reset pemicu agar tidak trigger JustDown berulang
+        return 1;
     }
 
     if (g_pcSettings.enableSprintDoubleTapBoost && g_sprintDoubleTapBoost > 0)
@@ -672,49 +667,21 @@ static int g_nextWeaponFrames = 0;
 
 bool HookOf_CycleWeaponLeftJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1 || g_analogProtectWeaponDir == 1)
+    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1)
     {
         bool isBuffered = (g_bufferedWeaponSwitch == 1);
-        bool isAnalogProtect = (g_analogProtectWeaponDir == 1);
-
-        if (!g_prevWeaponPrevState || isBuffered || isAnalogProtect)
+        if (!g_prevWeaponPrevState || isBuffered)
         {
-            if(!isBuffered && !isAnalogProtect) g_prevWeaponPrevState = true;
+            if(!isBuffered) g_prevWeaponPrevState = true;
 
-            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && !isAnalogProtect)
+            // Pemicu Analog Protection: Jika sedang AIM dan analog baru saja dilepas
+            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
             {
-                if (g_cachedX == 0 && g_cachedY == 0)
+                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
                 {
-                    uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-                    if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
-                    {
-                        g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
-                        g_analogProtectWeaponDir = 1;
-                        return false; // FRAME 1: Hold weapon switch
-                    }
-                }
-            }
-
-            if (isAnalogProtect)
-            {
-                // Hitung index frame saat ini (1 sampai Total)
-                int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
-
-                // FASE SELESAI (Frame terakhir tercapai)
-                if (g_analogProtectFrameCount <= 1)
-                {
-                    g_analogProtectWeaponDir = 0;
-                    g_analogReleaseTime = 0;
-                }
-
-                // Kirim Switch hanya jika berada pada frame yang ditentukan
-                if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
-                {
-                    // Lanjut ke eksekusi switch standar di bawah
-                }
-                else
-                {
-                    return false; // Tahan switch di frame lain
+                    g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                    g_analogProtectWeaponDir = 1;
                 }
             }
 
@@ -732,15 +699,13 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (!isAnalogProtect && g_pcSettings.enableFeintProtect && IsAimMode())
+            if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
-                // feintProtect hanya aktif jika bukan dipicu oleh analogProtect
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
-
             g_prevWeaponFrames = 2;
         }
     }
@@ -756,49 +721,20 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
 bool HookOf_CycleWeaponRightJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2 || g_analogProtectWeaponDir == 2)
+    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2)
     {
         bool isBuffered = (g_bufferedWeaponSwitch == 2);
-        bool isAnalogProtect = (g_analogProtectWeaponDir == 2);
-
-        if (!g_nextWeaponPrevState || isBuffered || isAnalogProtect)
+        if (!g_nextWeaponPrevState || isBuffered)
         {
-            if(!isBuffered && !isAnalogProtect) g_nextWeaponPrevState = true;
+            if(!isBuffered) g_nextWeaponPrevState = true;
 
-            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && !isAnalogProtect)
+            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
             {
-                if (g_cachedX == 0 && g_cachedY == 0)
+                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
                 {
-                    uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-                    if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
-                    {
-                        g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
-                        g_analogProtectWeaponDir = 2;
-                        return false; // FRAME 1: Hold weapon switch
-                    }
-                }
-            }
-
-            if (isAnalogProtect)
-            {
-                // Hitung index frame saat ini (1 sampai Total)
-                int currentIdx = g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1;
-
-                // FASE SELESAI (Frame terakhir tercapai)
-                if (g_analogProtectFrameCount <= 1)
-                {
-                    g_analogProtectWeaponDir = 0;
-                    g_analogReleaseTime = 0;
-                }
-
-                // Kirim Switch hanya jika berada pada frame yang ditentukan
-                if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
-                {
-                    // Lanjut ke eksekusi switch standar di bawah
-                }
-                else
-                {
-                    return false; // Tahan switch di frame lain
+                    g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                    g_analogProtectWeaponDir = 2;
                 }
             }
 
@@ -816,15 +752,13 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (!isAnalogProtect && g_pcSettings.enableFeintProtect && IsAimMode())
+            if (g_pcSettings.enableFeintProtect && IsAimMode())
             {
-                // feintProtect hanya aktif jika bukan dipicu oleh analogProtect
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
-
             g_nextWeaponFrames = 2;
         }
     }
@@ -1158,20 +1092,12 @@ void HookOf_ButtonPanel_OnTouchEvent(void* self, int type, int x, int y) {
 
 int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 {
-    // Cek apakah saat ini sedang dalam fase proteksi analog
-    bool isAnalogProtecting = (g_analogProtectWeaponDir != 0);
-    int currentIdx = isAnalogProtecting ? (g_pcSettings.analogWeaponProtectFrames - g_analogProtectFrameCount + 1) : 0;
-
     // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
     bool switchRequested = false;
 
-    if (isAnalogProtecting)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
     {
-        // Hanya izinkan pembersihan aiming jika sudah mencapai frame eksekusi switch
-        if (currentIdx == g_pcSettings.analogWeaponProtectSwitchFrame)
-        {
-            switchRequested = true;
-        }
+        switchRequested = true;
     }
     else
     {
@@ -1180,24 +1106,14 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
             (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
             (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_bufferedWeaponSwitch > 0))
         {
-            // Verifikasi tambahan: Jika ini adalah awal pemicu Analog Protect, jangan langsung switch
-            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
-            {
-                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
-                {
-                    switchRequested = false;
-                }
-                else switchRequested = true;
-            }
-            else switchRequested = true;
+            switchRequested = true;
         }
     }
 
     if (switchRequested)
     {
-        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry (kecuali jika dipicu analogProtect yang memang tujuannya bypass)
-        if (!isAnalogProtecting && g_pcSettings.enableWeaponSwitchProtect)
+        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
+        if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectFrameCount == 0)
         {
             bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
             bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);

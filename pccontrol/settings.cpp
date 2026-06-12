@@ -91,9 +91,7 @@ PCControlSettings g_pcSettings = {
     600,    // macro2ProtectMs
     true,   // enableAnalogWeaponProtect
     100,    // analogWeaponProtectDelayMs
-    10,     // analogWeaponProtectFrames (Total)
-    4,      // analogWeaponProtectSwitchFrame (Kapan switch dikirim)
-    1       // analogWeaponProtectSprintFrame (Kapan sprint dilakukan)
+    10      // analogWeaponProtectFrames (Total)
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -199,8 +197,6 @@ static ConfigEntry* s_macro2ProtectMs = nullptr;
 static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
 static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
 static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
-static ConfigEntry* s_analogWeaponProtectSwitchFrame = nullptr;
-static ConfigEntry* s_analogWeaponProtectSprintFrame = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -394,8 +390,6 @@ void InitPCControlSettings()
     s_enableAnalogWeaponProtect = cfg->Bind("AnalogWeaponProtect", true, kSettingsSection);
     s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
     s_analogWeaponProtectFrames = cfg->Bind("AnalogWeaponProtectFrames", 10, kSettingsSection);
-    s_analogWeaponProtectSwitchFrame = cfg->Bind("AnalogWeaponProtectSwitchFrame", 4, kSettingsSection);
-    s_analogWeaponProtectSprintFrame = cfg->Bind("AnalogWeaponProtectSprintFrame", 1, kSettingsSection);
 
     for (int i = 0; i < 4; ++i) {
         char key[32];
@@ -495,8 +489,6 @@ void InitPCControlSettings()
     g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
     g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
     g_pcSettings.analogWeaponProtectFrames = s_analogWeaponProtectFrames->GetInt();
-    g_pcSettings.analogWeaponProtectSwitchFrame = s_analogWeaponProtectSwitchFrame->GetInt();
-    g_pcSettings.analogWeaponProtectSprintFrame = s_analogWeaponProtectSprintFrame->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -707,8 +699,6 @@ void SavePCControlSettings()
     s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
     s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
     s_analogWeaponProtectFrames->SetInt(g_pcSettings.analogWeaponProtectFrames);
-    s_analogWeaponProtectSwitchFrame->SetInt(g_pcSettings.analogWeaponProtectSwitchFrame);
-    s_analogWeaponProtectSprintFrame->SetInt(g_pcSettings.analogWeaponProtectSprintFrame);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {

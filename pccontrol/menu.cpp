@@ -417,22 +417,9 @@ void RenderPCControlMenu()
                     changed |= SliderIntWithButtons("AnalogProtectDelay", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda toleransi dari lepas analog sampai menekan switch agar proteksi aktif.");
 
-                    ImGui::Text("Total Forced Movement (Frames)");
+                    ImGui::Text("Protection Duration (Frames)");
                     changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 100, "%d frames", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dipaksa.");
-
-                    ImGui::Text("Switch Execution Frame");
-                    changed |= SliderIntWithButtons("AnalogProtectSwitchFrame", &g_pcSettings.analogWeaponProtectSwitchFrame, 1, g_pcSettings.analogWeaponProtectFrames, "Frame %d", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Di frame ke berapa perintah ganti senjata dikirim (harus <= Total Frames).");
-
-                    ImGui::Text("Sprint Execution Frame");
-                    changed |= SliderIntWithButtons("AnalogProtectSprintFrame", &g_pcSettings.analogWeaponProtectSprintFrame, 1, g_pcSettings.analogWeaponProtectFrames, "Frame %d", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Di frame ke berapa pergerakan lari (Sprint) dipicu.");
-
-                    if (g_pcSettings.analogWeaponProtectSwitchFrame > g_pcSettings.analogWeaponProtectFrames)
-                        g_pcSettings.analogWeaponProtectSwitchFrame = g_pcSettings.analogWeaponProtectFrames;
-                    if (g_pcSettings.analogWeaponProtectSprintFrame > g_pcSettings.analogWeaponProtectFrames)
-                        g_pcSettings.analogWeaponProtectSprintFrame = g_pcSettings.analogWeaponProtectFrames;
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dan lari dipaksa saat ganti senjata.");
 
                     ImGui::Unindent();
                 }
