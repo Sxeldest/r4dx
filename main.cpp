@@ -117,6 +117,8 @@ static uint32_t g_macro2ProtectTime = 0;
 static uint32_t g_sprintProtectExitFrame = 0; // Frame kapan proteksi BERAKHIR
 static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMULAI
 static bool g_sprintProtectJustDownSent = false;
+static bool g_triggeredByWeaponSwitch = false;
+static bool g_triggeredByExitAim = false;
 static uint32_t g_targetingSwitchProtectFrame = 0;
 static uint32_t g_internalFrameCount = 0;
 
@@ -893,6 +895,7 @@ void HookOf_Render2DStuff()
 
     if (IsActionTouched(ACTION_EXIT_AIM))
     {
+        g_triggeredByExitAim = true;
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
         ForceReleaseAction(ACTION_TARGET);
@@ -918,9 +921,30 @@ void HookOf_Render2DStuff()
 
         if (g_pcSettings.sprintProtected || g_pcSettings.autoRun)
         {
-            g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)g_pcSettings.sprintProtectExitDelayFrames;
+            int delay = g_pcSettings.sprintProtectExitAimDelayFrames;
+            if (g_triggeredByWeaponSwitch) delay = g_pcSettings.sprintProtectWeaponSwitchDelayFrames;
+            else if (g_triggeredByExitAim) delay = g_pcSettings.sprintProtectExitAimDelayFrames;
+            else {
+                // Normal release of Target button (if any)
+                delay = g_pcSettings.sprintProtectExitAimDelayFrames;
+            }
+
+            g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)delay;
             g_sprintProtectExitFrame = g_sprintProtectExitStartFrame + (uint32_t)(g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitFrames : 6);
             g_sprintProtectJustDownSent = false;
+        }
+
+        g_triggeredByWeaponSwitch = false;
+        g_triggeredByExitAim = false;
+    }
+    else
+    {
+        // Reset flags if they were set but didn't result in a state change this frame
+        // (Though switch and exit-aim should always trigger this block)
+        if (!isTargeting)
+        {
+            g_triggeredByWeaponSwitch = false;
+            g_triggeredByExitAim = false;
         }
     }
 
@@ -1163,6 +1187,7 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 
     if (switchRequested)
     {
+        g_triggeredByWeaponSwitch = true;
         // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
         if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectStartTime == 0)
         {

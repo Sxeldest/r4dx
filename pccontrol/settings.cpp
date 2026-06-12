@@ -85,7 +85,8 @@ PCControlSettings g_pcSettings = {
     12,     // targetingSwitchProtectFrames
     400,    // weaponSwitchInterDelayMs
     30,     // sprintProtectExitFrames
-    0,      // sprintProtectExitDelayFrames
+    0,      // sprintProtectExitAimDelayFrames
+    0,      // sprintProtectWeaponSwitchDelayFrames
     true,   // enableFeintProtect
     30,     // feintProtectFrames
     600,    // macro2ProtectMs
@@ -190,7 +191,8 @@ static ConfigEntry* s_enableWeaponSwitchProtect = nullptr;
 static ConfigEntry* s_targetingSwitchProtectFrames = nullptr;
 static ConfigEntry* s_weaponSwitchInterDelayMs = nullptr;
 static ConfigEntry* s_sprintProtectExitFrames = nullptr;
-static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
+static ConfigEntry* s_sprintProtectExitAimDelayFrames = nullptr;
+static ConfigEntry* s_sprintProtectWeaponSwitchDelayFrames = nullptr;
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectFrames = nullptr;
 static ConfigEntry* s_macro2ProtectMs = nullptr;
@@ -388,7 +390,8 @@ void InitPCControlSettings()
     s_targetingSwitchProtectFrames = cfg->Bind("TargetingSwitchProtectFrames", 12, kSettingsSection);
     s_weaponSwitchInterDelayMs = cfg->Bind("WeaponSwitchInterDelayMs", 400, kSettingsSection);
     s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 30, kSettingsSection);
-    s_sprintProtectExitDelayFrames = cfg->Bind("SprintProtectExitDelayFrames", 0, kSettingsSection);
+    s_sprintProtectExitAimDelayFrames = cfg->Bind("SprintProtectExitAimDelayFrames", 0, kSettingsSection);
+    s_sprintProtectWeaponSwitchDelayFrames = cfg->Bind("SprintProtectWeaponSwitchDelayFrames", 0, kSettingsSection);
     s_enableFeintProtect = cfg->Bind("FeintProtect", true, kSettingsSection);
     s_feintProtectFrames = cfg->Bind("FeintProtectFrames", 30, kSettingsSection);
     s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 600, kSettingsSection);
@@ -487,7 +490,8 @@ void InitPCControlSettings()
     g_pcSettings.targetingSwitchProtectFrames = s_targetingSwitchProtectFrames->GetInt();
     g_pcSettings.weaponSwitchInterDelayMs = s_weaponSwitchInterDelayMs->GetInt();
     g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
-    g_pcSettings.sprintProtectExitDelayFrames = s_sprintProtectExitDelayFrames->GetInt();
+    g_pcSettings.sprintProtectExitAimDelayFrames = s_sprintProtectExitAimDelayFrames->GetInt();
+    g_pcSettings.sprintProtectWeaponSwitchDelayFrames = s_sprintProtectWeaponSwitchDelayFrames->GetInt();
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
     g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
@@ -695,7 +699,8 @@ void SavePCControlSettings()
     s_targetingSwitchProtectFrames->SetInt(g_pcSettings.targetingSwitchProtectFrames);
     s_weaponSwitchInterDelayMs->SetInt(g_pcSettings.weaponSwitchInterDelayMs);
     s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
-    s_sprintProtectExitDelayFrames->SetInt(g_pcSettings.sprintProtectExitDelayFrames);
+    s_sprintProtectExitAimDelayFrames->SetInt(g_pcSettings.sprintProtectExitAimDelayFrames);
+    s_sprintProtectWeaponSwitchDelayFrames->SetInt(g_pcSettings.sprintProtectWeaponSwitchDelayFrames);
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
     s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);

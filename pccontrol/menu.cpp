@@ -392,9 +392,13 @@ void RenderPCControlMenu()
                     changed |= SliderIntWithButtons("ExitProtect", &g_pcSettings.sprintProtectExitFrames, 0, 120, "%d frames", 1);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi lari otomatis setelah keluar dari mode membidik.");
 
-                    ImGui::Text("Exit Delay (Frames)");
-                    changed |= SliderIntWithButtons("ExitDelay", &g_pcSettings.sprintProtectExitDelayFrames, 0, 60, "%d frames", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai setelah keluar dari mode membidik.");
+                    ImGui::Text("Exit Aim Delay (Frames)");
+                    changed |= SliderIntWithButtons("ExitAimDelay", &g_pcSettings.sprintProtectExitAimDelayFrames, 0, 60, "%d frames", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai setelah keluar dari mode membidik secara manual (Exit Aim).");
+
+                    ImGui::Text("Weapon Switch Delay (Frames)");
+                    changed |= SliderIntWithButtons("WeaponSwitchDelay", &g_pcSettings.sprintProtectWeaponSwitchDelayFrames, 0, 60, "%d frames", 1);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum lari otomatis dimulai saat ganti senjata.");
                     ImGui::Unindent();
                 }
 

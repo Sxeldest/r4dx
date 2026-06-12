@@ -208,7 +208,8 @@ struct PCControlSettings
     int targetingSwitchProtectFrames;
     int weaponSwitchInterDelayMs;
     int sprintProtectExitFrames;
-    int sprintProtectExitDelayFrames;
+    int sprintProtectExitAimDelayFrames;
+    int sprintProtectWeaponSwitchDelayFrames;
 
     bool enableFeintProtect;
     int feintProtectFrames;
