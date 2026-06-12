@@ -107,7 +107,9 @@ static int g_macro2ReplayAimFrames = 0;
 static uint32_t g_macroStartFrame = 0;
 static uint32_t g_macroSprintFrame = 0;
 static uint32_t g_lastWeaponSwitchTime = 0;
-static int g_bufferedWeaponSwitch = 0; // 0: none, 1: prev, 2: next
+static int g_switchQueue[32];
+static int g_switchQueueCount = 0;
+static int g_switchQueueGap = 0;
 static uint32_t g_feintProtectFrame = 0;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
@@ -671,15 +673,30 @@ static int g_nextWeaponFrames = 0;
 
 bool HookOf_CycleWeaponLeftJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_PREV_WEAPON) || g_bufferedWeaponSwitch == 1)
+    // Detect physical press and push to queue
+    bool physicalPress = IsActionTouched(ACTION_PREV_WEAPON);
+    if (physicalPress)
     {
-        bool isBuffered = (g_bufferedWeaponSwitch == 1);
-        if (!g_prevWeaponPrevState || isBuffered)
+        if (!g_prevWeaponPrevState)
         {
-            if(!isBuffered) g_prevWeaponPrevState = true;
+            g_prevWeaponPrevState = true;
+            if (g_switchQueueCount < 32) g_switchQueue[g_switchQueueCount++] = 1;
+        }
+    }
+    else g_prevWeaponPrevState = false;
 
-            // Pemicu Analog Protection: Jika sedang AIM dan analog baru saja dilepas
-            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+    // Execute from queue
+    if (g_switchQueueCount > 0 && g_switchQueue[0] == 1 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
+    {
+        bool isAnalogProtecting = (g_analogProtectStartTime > 0);
+        bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
+        bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+        // Allow switch if analog protecting or if timing protection is passed
+        if (isAnalogProtecting || !g_pcSettings.enableWeaponSwitchProtect || (!inTargetingProtect && !inInterDelay))
+        {
+            // Trigger Analog Protect on the FIRST switch if we're aiming and idle
+            if (!isAnalogProtecting && g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
             {
                 uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
                 if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
@@ -688,7 +705,6 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                     g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
                     g_analogProtectWeaponDir = 1;
 
-                    // Integrasi Feint Protect: Set feint agar lanjut setelah analogProtect habis
                     if (g_pcSettings.enableFeintProtect)
                     {
                         g_feintLastX = g_analogLastX;
@@ -699,19 +715,9 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                 }
             }
 
-            if (g_pcSettings.enableWeaponSwitchProtect)
-            {
-                bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-                bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-                if (inTargetingProtect || inInterDelay)
-                {
-                    g_bufferedWeaponSwitch = 1;
-                    return false;
-                }
-                g_lastWeaponSwitchTime = GetTickCountMs();
-            }
-            g_bufferedWeaponSwitch = 0;
+            // Pop and Start
+            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+            g_switchQueueCount--;
 
             if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
             {
@@ -720,10 +726,12 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
+
             g_prevWeaponFrames = 2;
+            g_switchQueueGap = 3;
+            g_lastWeaponSwitchTime = GetTickCountMs();
         }
     }
-    else g_prevWeaponPrevState = false;
 
     if (g_prevWeaponFrames > 0)
     {
@@ -735,14 +743,28 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
 bool HookOf_CycleWeaponRightJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_NEXT_WEAPON) || g_bufferedWeaponSwitch == 2)
+    // Detect physical press and push to queue
+    bool physicalPress = IsActionTouched(ACTION_NEXT_WEAPON);
+    if (physicalPress)
     {
-        bool isBuffered = (g_bufferedWeaponSwitch == 2);
-        if (!g_nextWeaponPrevState || isBuffered)
+        if (!g_nextWeaponPrevState)
         {
-            if(!isBuffered) g_nextWeaponPrevState = true;
+            g_nextWeaponPrevState = true;
+            if (g_switchQueueCount < 32) g_switchQueue[g_switchQueueCount++] = 2;
+        }
+    }
+    else g_nextWeaponPrevState = false;
 
-            if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+    // Execute from queue
+    if (g_switchQueueCount > 0 && g_switchQueue[0] == 2 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
+    {
+        bool isAnalogProtecting = (g_analogProtectStartTime > 0);
+        bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
+        bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+
+        if (isAnalogProtecting || !g_pcSettings.enableWeaponSwitchProtect || (!inTargetingProtect && !inInterDelay))
+        {
+            if (!isAnalogProtecting && g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
             {
                 uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
                 if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
@@ -751,7 +773,6 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                     g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
                     g_analogProtectWeaponDir = 2;
 
-                    // Integrasi Feint Protect: Set feint agar lanjut setelah analogProtect habis
                     if (g_pcSettings.enableFeintProtect)
                     {
                         g_feintLastX = g_analogLastX;
@@ -762,19 +783,9 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                 }
             }
 
-            if (g_pcSettings.enableWeaponSwitchProtect)
-            {
-                bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-                bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-                if (inTargetingProtect || inInterDelay)
-                {
-                    g_bufferedWeaponSwitch = 2;
-                    return false;
-                }
-                g_lastWeaponSwitchTime = GetTickCountMs();
-            }
-            g_bufferedWeaponSwitch = 0;
+            // Pop and Start
+            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+            g_switchQueueCount--;
 
             if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
             {
@@ -783,10 +794,12 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                 g_feintLastX = g_cachedX;
                 g_feintLastY = g_cachedY;
             }
+
             g_nextWeaponFrames = 2;
+            g_switchQueueGap = 3;
+            g_lastWeaponSwitchTime = GetTickCountMs();
         }
     }
-    else g_nextWeaponPrevState = false;
 
     if (g_nextWeaponFrames > 0)
     {
@@ -870,6 +883,8 @@ void HookOf_Render2DStuff()
     UpdateMacroExecution();
     UpdateMacroShoot();
 
+    if (g_switchQueueGap > 0) g_switchQueueGap--;
+
     if (g_analogProtectStartTime > 0)
     {
         uint32_t elapsed = GetTickCountMs() - g_analogProtectStartTime;
@@ -883,7 +898,7 @@ void HookOf_Render2DStuff()
     // Detect Aim Entry
     if (!g_lastAimState && aimNow)
     {
-        g_bufferedWeaponSwitch = 0; // Clear buffer on fresh aim
+        g_switchQueueCount = 0; // Clear queue on fresh aim
         g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
     }
 
@@ -1132,7 +1147,7 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
         // Logika standar jika tidak dalam proteksi analog:
         if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
             (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
-            (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_bufferedWeaponSwitch > 0))
+            (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_switchQueueCount > 0))
         {
             switchRequested = true;
         }
