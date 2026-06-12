@@ -713,7 +713,7 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectFrameCount == 0)
+            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
@@ -776,7 +776,7 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             }
             g_bufferedWeaponSwitch = 0;
 
-            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectFrameCount == 0)
+            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
             {
                 g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
                 g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
@@ -1141,7 +1141,7 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     if (switchRequested)
     {
         // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
-        if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectFrameCount == 0)
+        if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectStartTime == 0)
         {
             bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
             bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);

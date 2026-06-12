@@ -703,7 +703,6 @@ void RenderPCControlMenu()
                         m.loop = false;
                         for(int j=0; j<MAX_MACRO_STEPS; ++j) {
                             m.steps[j].action = 0;
-                            m.steps[j].duration = 5;
                             m.steps[j].wait = 5;
                         }
                         changed = true;
