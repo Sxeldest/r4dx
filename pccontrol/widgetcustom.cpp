@@ -240,7 +240,7 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
             CustomMacro& m = g_pcSettings.macros[macroIdx];
             m.active = true;
             m.currentStep = 0;
-            m.currentFrame = (int)GetTickCountMs();
+            m.startTime = GetTickCountMs();
         }
         state.touched = true;
         return;
@@ -850,7 +850,7 @@ void UpdateMacroExecution()
             if (m.loop && IsActionTouched((eWidgetAction)(ACTION_MACRO_1 + i)))
             {
                 m.currentStep = 0;
-                m.currentFrame = (int)now;
+                m.startTime = now;
             }
             else
             {
@@ -860,10 +860,10 @@ void UpdateMacroExecution()
         }
 
         MacroStep& s = m.steps[m.currentStep];
-        if (now - (uint32_t)m.currentFrame >= (uint32_t)s.wait)
+        if (now - m.startTime >= (uint32_t)s.wait)
         {
             m.currentStep++;
-            m.currentFrame = (int)now;
+            m.startTime = now;
         }
     }
 }

@@ -114,8 +114,7 @@ struct CustomMacro
     // Runtime state
     bool active;
     int currentStep;
-    int currentFrame;
-    bool isStepHolding;
+    uint32_t startTime;
 };
 
 struct MemoryPatch
