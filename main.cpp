@@ -119,6 +119,14 @@ static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMUL
 static bool g_sprintProtectJustDownSent = false;
 static bool g_triggeredByWeaponSwitch = false;
 static bool g_triggeredByExitAim = false;
+
+static void ApplySprintExitDelay(int frames)
+{
+    g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)frames;
+    g_sprintProtectExitFrame = g_sprintProtectExitStartFrame + (uint32_t)(g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitFrames : 6);
+    g_sprintProtectJustDownSent = false;
+}
+
 static uint32_t g_targetingSwitchProtectFrame = 0;
 static uint32_t g_internalFrameCount = 0;
 
@@ -895,7 +903,11 @@ void HookOf_Render2DStuff()
 
     if (IsActionTouched(ACTION_EXIT_AIM))
     {
-        g_triggeredByExitAim = true;
+        if (IsActionTouched(ACTION_TARGET) || g_macroAimTriggered)
+        {
+            g_triggeredByExitAim = true;
+            ApplySprintExitDelay(g_pcSettings.sprintProtectExitAimDelayFrames);
+        }
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
         ForceReleaseAction(ACTION_TARGET);
@@ -921,30 +933,33 @@ void HookOf_Render2DStuff()
 
         if (g_pcSettings.sprintProtected || g_pcSettings.autoRun)
         {
-            int delay = g_pcSettings.sprintProtectExitAimDelayFrames;
-            if (g_triggeredByWeaponSwitch) delay = g_pcSettings.sprintProtectWeaponSwitchDelayFrames;
-            else if (g_triggeredByExitAim) delay = g_pcSettings.sprintProtectExitAimDelayFrames;
-            else {
-                // Normal release of Target button (if any)
-                delay = g_pcSettings.sprintProtectExitAimDelayFrames;
+            // Jika belum dihandle oleh hook (manual release), gunakan ExitAimDelay
+            if (!g_triggeredByWeaponSwitch && !g_triggeredByExitAim)
+            {
+                ApplySprintExitDelay(g_pcSettings.sprintProtectExitAimDelayFrames);
             }
-
-            g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)delay;
-            g_sprintProtectExitFrame = g_sprintProtectExitStartFrame + (uint32_t)(g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitFrames : 6);
-            g_sprintProtectJustDownSent = false;
         }
 
+        // Reset flags setelah digunakan
         g_triggeredByWeaponSwitch = false;
         g_triggeredByExitAim = false;
     }
-    else
+
+    // Detect Aim Entry (Reset flags saat mulai bidik lagi)
+    if (!g_lastTargetState && isTargeting)
     {
-        // Reset flags if they were set but didn't result in a state change this frame
-        // (Though switch and exit-aim should always trigger this block)
+        g_triggeredByWeaponSwitch = false;
+        g_triggeredByExitAim = false;
+        g_triggeredByWeaponSwitch = false; // double safety
+    }
+
+    if (!aimNow)
+    {
+        // Cleanup flags jika tidak sedang membidik
         if (!isTargeting)
         {
-            g_triggeredByWeaponSwitch = false;
-            g_triggeredByExitAim = false;
+             g_triggeredByWeaponSwitch = false;
+             g_triggeredByExitAim = false;
         }
     }
 
@@ -1187,7 +1202,12 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 
     if (switchRequested)
     {
-        g_triggeredByWeaponSwitch = true;
+        if (IsActionTouched(ACTION_TARGET) || g_macroAimTriggered)
+        {
+            g_triggeredByWeaponSwitch = true;
+            ApplySprintExitDelay(g_pcSettings.sprintProtectWeaponSwitchDelayFrames);
+        }
+
         // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
         if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectStartTime == 0)
         {
