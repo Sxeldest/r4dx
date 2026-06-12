@@ -527,7 +527,7 @@ void RenderPCControlMenu()
                     if (g_pcSettings.widgets[i].enabled)
                     {
                         char label[64];
-                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
+                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
                         int act = g_pcSettings.widgets[i].action;
                         if (act < 0 || act >= (int)(sizeof(actionNames) / sizeof(actionNames[0]))) act = 0;
 
@@ -575,7 +575,7 @@ void RenderPCControlMenu()
                     ImGui::TextColored(ImVec4(1, 1, 0, 1), "Editing Button %d", idx + 1);
                     ImGui::Separator();
 
-                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
+                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
                     ImGui::Text("Action");
                     ImGui::SetNextItemWidth(-1.0f);
                     changed |= ImGui::Combo("##Action", &g_pcSettings.widgets[idx].action, actions, IM_ARRAYSIZE(actions));
@@ -726,7 +726,7 @@ void RenderPCControlMenu()
                         ImGui::PushID(j);
                         ImGui::Text("Step %d", j + 1);
 
-                        const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
+                        const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
                         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
                         if (ImGui::Combo("Action", &m.steps[j].action, actions, IM_ARRAYSIZE(actions))) changed = true;
 

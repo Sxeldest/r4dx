@@ -891,6 +891,14 @@ void HookOf_Render2DStuff()
         if (elapsed >= g_analogProtectDuration) g_analogProtectStartTime = 0;
     }
 
+    if (IsActionTouched(ACTION_EXIT_AIM))
+    {
+        ResetWidgetToggle(ACTION_TARGET);
+        g_macroAimTriggered = false;
+        ForceReleaseAction(ACTION_TARGET);
+        ResetWidgetToggle(ACTION_EXIT_AIM);
+    }
+
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
 
     bool aimNow = IsAimMode();
