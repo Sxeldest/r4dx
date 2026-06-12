@@ -201,12 +201,9 @@ static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
 static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
-static ConfigEntry* s_macroType[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
 static ConfigEntry* s_macroStepCount[MAX_MACROS];
 static ConfigEntry* s_macroLoop[MAX_MACROS];
-static ConfigEntry* s_macroRepeatedAction[MAX_MACROS];
-static ConfigEntry* s_macroInterval[MAX_MACROS];
 static ConfigEntry* s_macroStepAction[MAX_MACROS][MAX_MACRO_STEPS];
 static ConfigEntry* s_macroStepWait[MAX_MACROS][MAX_MACRO_STEPS];
 
@@ -504,26 +501,17 @@ void InitPCControlSettings()
         char key[64];
         sprintf(key, "Macro%d_Enabled", i);
         s_macroEnabled[i] = cfg->Bind(key, false, "Macros");
-        sprintf(key, "Macro%d_Type", i);
-        s_macroType[i] = cfg->Bind(key, 0, "Macros");
         sprintf(key, "Macro%d_Name", i);
         s_macroName[i] = cfg->Bind(key, "", "Macros");
         sprintf(key, "Macro%d_StepCount", i);
         s_macroStepCount[i] = cfg->Bind(key, 0, "Macros");
         sprintf(key, "Macro%d_Loop", i);
         s_macroLoop[i] = cfg->Bind(key, false, "Macros");
-        sprintf(key, "Macro%d_RepeatedAction", i);
-        s_macroRepeatedAction[i] = cfg->Bind(key, 0, "Macros");
-        sprintf(key, "Macro%d_Interval", i);
-        s_macroInterval[i] = cfg->Bind(key, 100, "Macros");
 
         g_pcSettings.macros[i].enabled = s_macroEnabled[i]->GetBool();
-        g_pcSettings.macros[i].type = s_macroType[i]->GetInt();
         strncpy(g_pcSettings.macros[i].name, s_macroName[i]->GetString(), 31);
         g_pcSettings.macros[i].stepCount = s_macroStepCount[i]->GetInt();
         g_pcSettings.macros[i].loop = s_macroLoop[i]->GetBool();
-        g_pcSettings.macros[i].repeatedAction = s_macroRepeatedAction[i]->GetInt();
-        g_pcSettings.macros[i].interval = s_macroInterval[i]->GetInt();
         g_pcSettings.macros[i].active = false;
 
         for (int j = 0; j < MAX_MACRO_STEPS; ++j)
@@ -719,12 +707,9 @@ void SavePCControlSettings()
     for (int i = 0; i < MAX_MACROS; ++i)
     {
         s_macroEnabled[i]->SetBool(g_pcSettings.macros[i].enabled);
-        s_macroType[i]->SetInt(g_pcSettings.macros[i].type);
         s_macroName[i]->SetString(g_pcSettings.macros[i].name);
         s_macroStepCount[i]->SetInt(g_pcSettings.macros[i].stepCount);
         s_macroLoop[i]->SetBool(g_pcSettings.macros[i].loop);
-        s_macroRepeatedAction[i]->SetInt(g_pcSettings.macros[i].repeatedAction);
-        s_macroInterval[i]->SetInt(g_pcSettings.macros[i].interval);
 
         for (int j = 0; j < MAX_MACRO_STEPS; ++j)
         {
