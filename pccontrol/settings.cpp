@@ -133,6 +133,7 @@ static ConfigEntry* s_slotWidgetAreaH[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetIconPosX[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetIconPosY[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetIconSize[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
+static ConfigEntry* s_slotWidgetMacroIndex[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 
 static ConfigEntry* s_disableLookBehind = nullptr;
 static ConfigEntry* s_disablePinchZoom = nullptr;
@@ -200,11 +201,13 @@ static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
 static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
+static ConfigEntry* s_macroType[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
 static ConfigEntry* s_macroStepCount[MAX_MACROS];
 static ConfigEntry* s_macroLoop[MAX_MACROS];
+static ConfigEntry* s_macroRepeatedAction[MAX_MACROS];
+static ConfigEntry* s_macroInterval[MAX_MACROS];
 static ConfigEntry* s_macroStepAction[MAX_MACROS][MAX_MACRO_STEPS];
-static ConfigEntry* s_macroStepDuration[MAX_MACROS][MAX_MACRO_STEPS];
 static ConfigEntry* s_macroStepWait[MAX_MACROS][MAX_MACRO_STEPS];
 
 static ConfigEntry* s_patchEnabled[MAX_MEMORY_PATCHES];
@@ -312,6 +315,10 @@ void InitPCControlSettings()
             if (s > 0) sprintf(key, "Slot%d_%s", s, buf); else strcpy(key, buf);
             s_slotWidgetIconSize[s][i] = cfg->Bind(key, 0.0f, kSettingsSection);
 
+            sprintf(buf, "Widget%d_MacroIndex", i);
+            if (s > 0) sprintf(key, "Slot%d_%s", s, buf); else strcpy(key, buf);
+            s_slotWidgetMacroIndex[s][i] = cfg->Bind(key, 0, kSettingsSection);
+
             g_pcSettings.widgetSlots[s][i].enabled = s_slotWidgetEnabled[s][i]->GetBool();
             g_pcSettings.widgetSlots[s][i].action = s_slotWidgetAction[s][i]->GetInt();
             g_pcSettings.widgetSlots[s][i].type = s_slotWidgetType[s][i]->GetInt();
@@ -326,6 +333,7 @@ void InitPCControlSettings()
             g_pcSettings.widgetSlots[s][i].iconPosX = s_slotWidgetIconPosX[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconPosY = s_slotWidgetIconPosY[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconSize = s_slotWidgetIconSize[s][i]->GetFloat();
+            g_pcSettings.widgetSlots[s][i].macroIndex = s_slotWidgetMacroIndex[s][i]->GetInt();
         }
     }
 
@@ -496,25 +504,32 @@ void InitPCControlSettings()
         char key[64];
         sprintf(key, "Macro%d_Enabled", i);
         s_macroEnabled[i] = cfg->Bind(key, false, "Macros");
+        sprintf(key, "Macro%d_Type", i);
+        s_macroType[i] = cfg->Bind(key, 0, "Macros");
         sprintf(key, "Macro%d_Name", i);
         s_macroName[i] = cfg->Bind(key, "", "Macros");
         sprintf(key, "Macro%d_StepCount", i);
         s_macroStepCount[i] = cfg->Bind(key, 0, "Macros");
         sprintf(key, "Macro%d_Loop", i);
         s_macroLoop[i] = cfg->Bind(key, false, "Macros");
+        sprintf(key, "Macro%d_RepeatedAction", i);
+        s_macroRepeatedAction[i] = cfg->Bind(key, 0, "Macros");
+        sprintf(key, "Macro%d_Interval", i);
+        s_macroInterval[i] = cfg->Bind(key, 100, "Macros");
 
         g_pcSettings.macros[i].enabled = s_macroEnabled[i]->GetBool();
+        g_pcSettings.macros[i].type = s_macroType[i]->GetInt();
         strncpy(g_pcSettings.macros[i].name, s_macroName[i]->GetString(), 31);
         g_pcSettings.macros[i].stepCount = s_macroStepCount[i]->GetInt();
         g_pcSettings.macros[i].loop = s_macroLoop[i]->GetBool();
+        g_pcSettings.macros[i].repeatedAction = s_macroRepeatedAction[i]->GetInt();
+        g_pcSettings.macros[i].interval = s_macroInterval[i]->GetInt();
         g_pcSettings.macros[i].active = false;
 
         for (int j = 0; j < MAX_MACRO_STEPS; ++j)
         {
             sprintf(key, "Macro%d_Step%d_Action", i, j);
             s_macroStepAction[i][j] = cfg->Bind(key, 0, "Macros");
-            sprintf(key, "Macro%d_Step%d_Duration", i, j);
-            s_macroStepDuration[i][j] = cfg->Bind(key, 5, "Macros");
             sprintf(key, "Macro%d_Step%d_Wait", i, j);
             s_macroStepWait[i][j] = cfg->Bind(key, 5, "Macros");
 
@@ -614,6 +629,7 @@ void SavePCControlSettings()
             s_slotWidgetIconPosX[s][i]->SetFloat(g_pcSettings.widgetSlots[s][i].iconPosX);
             s_slotWidgetIconPosY[s][i]->SetFloat(g_pcSettings.widgetSlots[s][i].iconPosY);
             s_slotWidgetIconSize[s][i]->SetFloat(g_pcSettings.widgetSlots[s][i].iconSize);
+            s_slotWidgetMacroIndex[s][i]->SetInt(g_pcSettings.widgetSlots[s][i].macroIndex);
         }
     }
 
@@ -703,9 +719,12 @@ void SavePCControlSettings()
     for (int i = 0; i < MAX_MACROS; ++i)
     {
         s_macroEnabled[i]->SetBool(g_pcSettings.macros[i].enabled);
+        s_macroType[i]->SetInt(g_pcSettings.macros[i].type);
         s_macroName[i]->SetString(g_pcSettings.macros[i].name);
         s_macroStepCount[i]->SetInt(g_pcSettings.macros[i].stepCount);
         s_macroLoop[i]->SetBool(g_pcSettings.macros[i].loop);
+        s_macroRepeatedAction[i]->SetInt(g_pcSettings.macros[i].repeatedAction);
+        s_macroInterval[i]->SetInt(g_pcSettings.macros[i].interval);
 
         for (int j = 0; j < MAX_MACRO_STEPS; ++j)
         {

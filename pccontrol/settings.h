@@ -40,16 +40,16 @@ enum eWidgetAction
     ACTION_SAMP_2,
     ACTION_SAMP_SPC,
     ACTION_EXIT_AIM,
-    ACTION_MACRO_1,
-    ACTION_MACRO_2,
-    ACTION_MACRO_3,
-    ACTION_MACRO_4,
-    ACTION_MACRO_5,
-    ACTION_MACRO_6,
-    ACTION_MACRO_7,
-    ACTION_MACRO_8,
-    ACTION_MACRO_9,
-    ACTION_MACRO_10
+    ACTION_MACRO,
+    ACTION_MAX
+};
+
+enum eMacroType
+{
+    MTYPE_SEQUENCE = 0,     // Sequence of actions with delays
+    MTYPE_REPEATED_TAP,     // Repeatedly taps an action
+    MTYPE_RAPID_FIRE,      // Same as repeated tap but usually faster
+    MTYPE_TOGGLE_SPAM       // Toggles an action on/off repeatedly
 };
 
 enum eWidgetType
@@ -90,13 +90,14 @@ struct CustomWidget
     float iconPosX;   // Visual icon X (for Voice)
     float iconPosY;   // Visual icon Y (for Voice)
     float iconSize;   // Visual icon size (for Voice)
+    int macroIndex;   // Which macro to trigger if action is ACTION_MACRO
 };
 
 #define MAX_CUSTOM_WIDGETS 30
 #define MAX_WIDGET_SLOTS 5
 #define MAX_MEMORY_PATCHES 20
-#define MAX_MACROS 10
-#define MAX_MACRO_STEPS 10
+#define MAX_MACROS 20
+#define MAX_MACRO_STEPS 20
 
 struct MacroStep
 {
@@ -107,15 +108,24 @@ struct MacroStep
 struct CustomMacro
 {
     bool enabled;
+    int type; // eMacroType
     char name[32];
+
+    // For MTYPE_SEQUENCE
     MacroStep steps[MAX_MACRO_STEPS];
     int stepCount;
     bool loop;
+
+    // For MTYPE_REPEATED_TAP / RAPID_FIRE
+    int repeatedAction;
+    int interval; // ms
 
     // Runtime state
     bool active;
     int currentStep;
     uint32_t startTime;
+    bool lastState; // For toggling in repeated tap
+    uint32_t lastActionTime;
 };
 
 struct MemoryPatch

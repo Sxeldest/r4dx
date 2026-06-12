@@ -231,16 +231,18 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
         return;
     }
 
-    // Handle Custom Macros (Action 100+)
-    if (w.action >= ACTION_MACRO_1 && w.action <= ACTION_MACRO_10)
+    // Handle Custom Macros
+    if (w.action == ACTION_MACRO)
     {
-        int macroIdx = w.action - ACTION_MACRO_1;
-        if (g_pcSettings.macros[macroIdx].enabled)
+        int macroIdx = w.macroIndex;
+        if (macroIdx >= 0 && macroIdx < MAX_MACROS && g_pcSettings.macros[macroIdx].enabled)
         {
             CustomMacro& m = g_pcSettings.macros[macroIdx];
             m.active = true;
             m.currentStep = 0;
             m.startTime = GetTickCountMs();
+            m.lastActionTime = GetTickCountMs();
+            m.lastState = true; // Start with ON
         }
         state.touched = true;
         return;
@@ -763,7 +765,21 @@ void RenderCustomWidgets()
                 }
             }
 
-            DrawCustomWidget(actionLabels[actionIdx], drawX, drawY, w.size,
+            const char* label = actionLabels[actionIdx];
+            if (w.action == ACTION_MACRO)
+            {
+                int mIdx = w.macroIndex;
+                if (mIdx >= 0 && mIdx < MAX_MACROS && g_pcSettings.macros[mIdx].enabled)
+                {
+                    label = g_pcSettings.macros[mIdx].name;
+                }
+                else
+                {
+                    label = "MACRO";
+                }
+            }
+
+            DrawCustomWidget(label, drawX, drawY, w.size,
                              isActive, i + 1, w.action, w.style,
                              s_widgetStates[i].analogX, s_widgetStates[i].analogY);
         }
@@ -845,25 +861,56 @@ void UpdateMacroExecution()
         CustomMacro& m = g_pcSettings.macros[i];
         if (!m.enabled || !m.active) continue;
 
-        if (m.currentStep >= m.stepCount)
+        // Check if the triggering widget is still touched
+        bool stillTouched = false;
+        for (int w = 0; w < MAX_CUSTOM_WIDGETS; ++w)
         {
-            if (m.loop && IsActionTouched((eWidgetAction)(ACTION_MACRO_1 + i)))
+            if (g_pcSettings.widgets[w].enabled && g_pcSettings.widgets[w].action == ACTION_MACRO && g_pcSettings.widgets[w].macroIndex == i)
             {
-                m.currentStep = 0;
-                m.startTime = now;
-            }
-            else
-            {
-                m.active = false;
-                continue;
+                if (s_widgetStates[w].touched) { stillTouched = true; break; }
             }
         }
 
-        MacroStep& s = m.steps[m.currentStep];
-        if (now - m.startTime >= (uint32_t)s.wait)
+        if (m.type == MTYPE_SEQUENCE)
         {
-            m.currentStep++;
-            m.startTime = now;
+            if (m.currentStep >= m.stepCount)
+            {
+                if (m.loop && stillTouched)
+                {
+                    m.currentStep = 0;
+                    m.startTime = now;
+                }
+                else
+                {
+                    m.active = false;
+                    continue;
+                }
+            }
+
+            MacroStep& s = m.steps[m.currentStep];
+            if (now - m.startTime >= (uint32_t)s.wait)
+            {
+                m.currentStep++;
+                m.startTime = now;
+            }
+        }
+        else if (m.type == MTYPE_REPEATED_TAP || m.type == MTYPE_RAPID_FIRE || m.type == MTYPE_TOGGLE_SPAM)
+        {
+            if (!stillTouched)
+            {
+                m.active = false;
+                m.lastState = false;
+                continue;
+            }
+
+            uint32_t interval = (uint32_t)m.interval;
+            if (m.type == MTYPE_RAPID_FIRE && interval > 50) interval = 50; // Rapid fire cap
+
+            if (now - m.lastActionTime >= interval)
+            {
+                m.lastState = !m.lastState;
+                m.lastActionTime = now;
+            }
         }
     }
 }
@@ -879,9 +926,18 @@ bool IsActionTouched(eWidgetAction action)
     for (int i = 0; i < MAX_MACROS; ++i)
     {
         CustomMacro& m = g_pcSettings.macros[i];
-        if (m.enabled && m.active && m.currentStep < m.stepCount)
+        if (!m.enabled || !m.active) continue;
+
+        if (m.type == MTYPE_SEQUENCE)
         {
-            if (m.steps[m.currentStep].action == (int)action)
+            if (m.currentStep < m.stepCount && m.steps[m.currentStep].action == (int)action)
+            {
+                return true;
+            }
+        }
+        else if (m.type == MTYPE_REPEATED_TAP || m.type == MTYPE_RAPID_FIRE || m.type == MTYPE_TOGGLE_SPAM)
+        {
+            if (m.repeatedAction == (int)action && m.lastState)
             {
                 return true;
             }

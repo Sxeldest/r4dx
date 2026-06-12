@@ -527,25 +527,30 @@ void RenderPCControlMenu()
                     if (g_pcSettings.widgets[i].enabled)
                     {
                         char label[64];
-                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
+                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
                         int act = g_pcSettings.widgets[i].action;
-                        if (act < 0 || act >= (int)(sizeof(actionNames) / sizeof(actionNames[0]))) act = 0;
 
-                        // Only show in list if visible in current editing context
-                        if (!IsActionVisibleInContext(act, IsWidgetMenuPreviewInVehicle())) continue;
+                        // Special handling for Macro label in the list
+                        char labelText[128];
+                        if (act == ACTION_MACRO) {
+                            int mIdx = g_pcSettings.widgets[i].macroIndex;
+                            sprintf(labelText, "%d: [MACRO] %s##%d", i + 1, (mIdx >= 0 && mIdx < MAX_MACROS && g_pcSettings.macros[mIdx].enabled) ? g_pcSettings.macros[mIdx].name : "Unknown", i);
+                        } else {
+                            if (act < 0 || act >= (int)(sizeof(actionNames) / sizeof(actionNames[0]))) act = 0;
+                            // Only show in list if visible in current editing context
+                            if (!IsActionVisibleInContext(act, IsWidgetMenuPreviewInVehicle())) continue;
+                            sprintf(labelText, "%d: %s##%d", i + 1, actionNames[act], i);
+                        }
 
-                        sprintf(label, "%d: %s##%d", i + 1, actionNames[act], i);
-                        if (ImGui::Selectable(label, g_pcSettings.selectedWidget == (i + 1)))
+                        if (ImGui::Selectable(labelText, g_pcSettings.selectedWidget == (i + 1)))
                         {
                             g_pcSettings.selectedWidget = i + 1;
                         }
                     }
                 }
                 ImGui::Spacing();
-                if (ImGui::Button(
-                    "Add New Button",
-                    ImVec2(-1, GetButtonHeight())
-                ))
+                float btnWidth = (ImGui::GetContentRegionAvail().x - 10.0f) * 0.5f;
+                if (ImGui::Button("Add Button", ImVec2(btnWidth, GetButtonHeight())))
                 {
                     for (int i = 0; i < MAX_CUSTOM_WIDGETS; ++i)
                     {
@@ -564,6 +569,52 @@ void RenderPCControlMenu()
                         }
                     }
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("Add Macro", ImVec2(-1, GetButtonHeight())))
+                {
+                    ImGui::OpenPopup("MacroTypeSelectorMain");
+                }
+
+                if (ImGui::BeginPopup("MacroTypeSelectorMain"))
+                {
+                    int freeMacro = -1;
+                    for(int m=0; m<MAX_MACROS; ++m) { if(!g_pcSettings.macros[m].enabled) { freeMacro = m; break; } }
+
+                    int freeWidget = -1;
+                    for(int w=0; w<MAX_CUSTOM_WIDGETS; ++w) { if(!g_pcSettings.widgets[w].enabled) { freeWidget = w; break; } }
+
+                    if (freeMacro != -1 && freeWidget != -1)
+                    {
+                        auto SetupMacro = [&](int type, const char* name) {
+                            CustomMacro& m = g_pcSettings.macros[freeMacro];
+                            m.enabled = true;
+                            m.type = type;
+                            strncpy(m.name, name, 31);
+                            m.active = false;
+
+                            CustomWidget& w = g_pcSettings.widgets[freeWidget];
+                            w.enabled = true;
+                            w.action = ACTION_MACRO;
+                            w.macroIndex = freeMacro;
+                            w.posX = 1500.0f; w.posY = 500.0f; w.size = 120.0f;
+                            w.type = WTYPE_DEFAULT; w.activation = WACT_HOLD;
+
+                            g_pcSettings.selectedWidget = freeWidget + 1;
+                            changed = true;
+                            ImGui::CloseCurrentPopup();
+                        };
+
+                        if (ImGui::Selectable("Sequence (Multi-Step)")) SetupMacro(MTYPE_SEQUENCE, "New Sequence");
+                        if (ImGui::Selectable("Repeated Tap (Ketuk Berkali)")) SetupMacro(MTYPE_REPEATED_TAP, "New Auto Tap");
+                        if (ImGui::Selectable("Rapid Fire")) SetupMacro(MTYPE_RAPID_FIRE, "New Rapid Fire");
+                        if (ImGui::Selectable("Toggle Spam")) SetupMacro(MTYPE_TOGGLE_SPAM, "New Spam");
+                    }
+                    else
+                    {
+                        ImGui::TextDisabled("No free slots!");
+                    }
+                    ImGui::EndPopup();
+                }
 
                 ImGui::EndChild();
 
@@ -572,13 +623,26 @@ void RenderPCControlMenu()
                 if (g_pcSettings.selectedWidget >= 1 && g_pcSettings.selectedWidget <= MAX_CUSTOM_WIDGETS)
                 {
                     int idx = g_pcSettings.selectedWidget - 1;
-                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Editing Button %d", idx + 1);
+                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Editing %s %d", (g_pcSettings.widgets[idx].action == ACTION_MACRO ? "Macro" : "Button"), idx + 1);
                     ImGui::Separator();
 
-                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
-                    ImGui::Text("Action");
-                    ImGui::SetNextItemWidth(-1.0f);
-                    changed |= ImGui::Combo("##Action", &g_pcSettings.widgets[idx].action, actions, IM_ARRAYSIZE(actions));
+                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+
+                    if (g_pcSettings.widgets[idx].action == ACTION_MACRO)
+                    {
+                        int mIdx = g_pcSettings.widgets[idx].macroIndex;
+                        ImGui::Text("Action: [MACRO] %s", (mIdx >= 0 && mIdx < MAX_MACROS && g_pcSettings.macros[mIdx].enabled) ? g_pcSettings.macros[mIdx].name : "Unknown");
+                        if (ImGui::Button("Convert to Normal Button")) {
+                            g_pcSettings.widgets[idx].action = ACTION_NONE;
+                            changed = true;
+                        }
+                    }
+                    else
+                    {
+                        ImGui::Text("Action");
+                        ImGui::SetNextItemWidth(-1.0f);
+                        changed |= ImGui::Combo("##Action", &g_pcSettings.widgets[idx].action, actions, IM_ARRAYSIZE(actions));
+                    }
 
                     if (g_pcSettings.widgets[idx].action != ACTION_DPAD && g_pcSettings.widgets[idx].action != ACTION_LOOK)
                     {
@@ -673,75 +737,84 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 ImGui::Spacing();
 
-                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Manager");
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Configurations");
                 ImGui::Separator();
 
-                static int selectedMacro = 0;
-                const char* macroListNames[MAX_MACROS];
-                char macroNamesBuf[MAX_MACROS][64];
-                for(int i=0; i<MAX_MACROS; ++i)
+                bool macroFound = false;
+                for (int i = 0; i < MAX_MACROS; ++i)
                 {
-                    if(g_pcSettings.macros[i].enabled)
-                        sprintf(macroNamesBuf[i], "%d: %s", i+1, g_pcSettings.macros[i].name[0] ? g_pcSettings.macros[i].name : "Unnamed Macro");
-                    else
-                        sprintf(macroNamesBuf[i], "%d: [Empty Slot]", i+1);
-                    macroListNames[i] = macroNamesBuf[i];
-                }
+                    CustomMacro& m = g_pcSettings.macros[i];
+                    if (!m.enabled) continue;
 
-                ImGui::SetNextItemWidth(-1.0f);
-                ImGui::Combo("##MacroSelector", &selectedMacro, macroListNames, MAX_MACROS);
-
-                CustomMacro& m = g_pcSettings.macros[selectedMacro];
-
-                if (!m.enabled)
-                {
-                    if (ImGui::Button("Create Macro", ImVec2(-1, GetButtonHeight() * 0.7f)))
+                    macroFound = true;
+                    ImGui::PushID(i);
+                    char treeLabel[128];
+                    sprintf(treeLabel, "Macro %d: %s###MacroNode%d", i + 1, m.name, i);
+                    if (ImGui::CollapsingHeader(treeLabel))
                     {
-                        m.enabled = true;
-                        strcpy(m.name, "New Macro");
-                        m.stepCount = 1;
-                        m.loop = false;
-                        for(int j=0; j<MAX_MACRO_STEPS; ++j) {
-                            m.steps[j].action = 0;
-                            m.steps[j].wait = 5;
+                        ImGui::Indent();
+                        ImGui::InputText("Name", m.name, 31);
+                        if (ImGui::IsItemDeactivatedAfterEdit()) changed = true;
+
+                        const char* typeNames[] = { "Sequence", "Repeated Tap", "Rapid Fire", "Toggle Spam" };
+                        ImGui::Text("Type: %s", typeNames[m.type]);
+
+                        if (m.type == MTYPE_SEQUENCE)
+                        {
+                            changed |= ImGui::Checkbox("Loop Macro", &m.loop);
+
+                            ImGui::Text("Step Count");
+                            changed |= SliderIntWithButtons("StepCount", &m.stepCount, 1, MAX_MACRO_STEPS);
+
+                            ImGui::Spacing();
+                            ImGui::TextColored(ImVec4(1, 1, 0, 1), "Steps Sequence:");
+
+                            for (int j = 0; j < m.stepCount; ++j)
+                            {
+                                ImGui::PushID(j);
+                                ImGui::Text("Step %d", j + 1);
+
+                                const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
+                                if (ImGui::Combo("Action", &m.steps[j].action, mActions, IM_ARRAYSIZE(mActions))) changed = true;
+
+                                ImGui::SameLine();
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (SliderIntWithButtons("Wait (ms)", &m.steps[j].wait, 0, 5000, "%d ms")) changed = true;
+
+                                ImGui::PopID();
+                            }
                         }
-                        changed = true;
+                        else // Repeated Tap, Rapid Fire, Toggle Spam
+                        {
+                            const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                            ImGui::Text("Action to Repeat");
+                            changed |= ImGui::Combo("##RepeatAction", &m.repeatedAction, mActions, IM_ARRAYSIZE(mActions));
+
+                            ImGui::Text("Interval (ms)");
+                            changed |= SliderIntWithButtons("Interval", &m.interval, 1, 5000, "%d ms");
+                        }
+
+                        if (ImGui::Button("Delete Macro", ImVec2(-1, GetButtonHeight() * 0.6f)))
+                        {
+                            m.enabled = false;
+                            // Also disable widgets that point to this macro
+                            for(int w=0; w<MAX_CUSTOM_WIDGETS; ++w) {
+                                if(g_pcSettings.widgets[w].action == ACTION_MACRO && g_pcSettings.widgets[w].macroIndex == i) {
+                                    g_pcSettings.widgets[w].enabled = false;
+                                }
+                            }
+                            changed = true;
+                        }
+                        ImGui::Unindent();
+                        ImGui::Separator();
                     }
+                    ImGui::PopID();
                 }
-                else
+
+                if (!macroFound)
                 {
-                    ImGui::InputText("Macro Name", m.name, 31);
-                    if (ImGui::IsItemDeactivatedAfterEdit()) changed = true;
-
-                    changed |= ImGui::Checkbox("Loop Macro", &m.loop);
-
-                    ImGui::Text("Step Count");
-                    changed |= SliderIntWithButtons("StepCount", &m.stepCount, 1, MAX_MACRO_STEPS);
-
-                    ImGui::Spacing();
-                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Steps Sequence:");
-
-                    for (int j = 0; j < m.stepCount; ++j)
-                    {
-                        ImGui::PushID(j);
-                        ImGui::Text("Step %d", j + 1);
-
-                        const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Macro 9", "Macro 10" };
-                        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
-                        if (ImGui::Combo("Action", &m.steps[j].action, actions, IM_ARRAYSIZE(actions))) changed = true;
-
-                        ImGui::SameLine();
-                        ImGui::SetNextItemWidth(-1.0f);
-                        if (SliderIntWithButtons("Wait (ms)", &m.steps[j].wait, 0, 5000, "%d ms")) changed = true;
-
-                        ImGui::PopID();
-                    }
-
-                    if (ImGui::Button("Delete Macro", ImVec2(-1, GetButtonHeight() * 0.7f)))
-                    {
-                        m.enabled = false;
-                        changed = true;
-                    }
+                    ImGui::TextDisabled("No macros created yet. Click 'Add Macro' above.");
                 }
 
                 ImGui::EndChild();
