@@ -91,7 +91,7 @@ PCControlSettings g_pcSettings = {
     600,    // macro2ProtectMs
     true,   // enableAnalogWeaponProtect
     100,    // analogWeaponProtectDelayMs
-    10      // analogWeaponProtectFrames (Total)
+    200     // analogWeaponProtectDurationMs
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -197,6 +197,7 @@ static ConfigEntry* s_macro2ProtectMs = nullptr;
 static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
 static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
 static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
+static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -389,7 +390,7 @@ void InitPCControlSettings()
 
     s_enableAnalogWeaponProtect = cfg->Bind("AnalogWeaponProtect", true, kSettingsSection);
     s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
-    s_analogWeaponProtectFrames = cfg->Bind("AnalogWeaponProtectFrames", 10, kSettingsSection);
+    s_analogWeaponProtectDurationMs = cfg->Bind("AnalogWeaponProtectDurationMs", 200, kSettingsSection);
 
     for (int i = 0; i < 4; ++i) {
         char key[32];
@@ -488,7 +489,7 @@ void InitPCControlSettings()
 
     g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
     g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
-    g_pcSettings.analogWeaponProtectFrames = s_analogWeaponProtectFrames->GetInt();
+    g_pcSettings.analogWeaponProtectDurationMs = s_analogWeaponProtectDurationMs->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -518,7 +519,6 @@ void InitPCControlSettings()
             s_macroStepWait[i][j] = cfg->Bind(key, 5, "Macros");
 
             g_pcSettings.macros[i].steps[j].action = s_macroStepAction[i][j]->GetInt();
-            g_pcSettings.macros[i].steps[j].duration = s_macroStepDuration[i][j]->GetInt();
             g_pcSettings.macros[i].steps[j].wait = s_macroStepWait[i][j]->GetInt();
         }
     }
@@ -698,7 +698,7 @@ void SavePCControlSettings()
 
     s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
     s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
-    s_analogWeaponProtectFrames->SetInt(g_pcSettings.analogWeaponProtectFrames);
+    s_analogWeaponProtectDurationMs->SetInt(g_pcSettings.analogWeaponProtectDurationMs);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -710,7 +710,6 @@ void SavePCControlSettings()
         for (int j = 0; j < MAX_MACRO_STEPS; ++j)
         {
             s_macroStepAction[i][j]->SetInt(g_pcSettings.macros[i].steps[j].action);
-            s_macroStepDuration[i][j]->SetInt(g_pcSettings.macros[i].steps[j].duration);
             s_macroStepWait[i][j]->SetInt(g_pcSettings.macros[i].steps[j].wait);
         }
     }

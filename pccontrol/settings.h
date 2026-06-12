@@ -100,8 +100,7 @@ struct CustomWidget
 struct MacroStep
 {
     int action; // eWidgetAction
-    int duration; // frames
-    int wait; // frames
+    int wait; // ms
 };
 
 struct CustomMacro
@@ -223,7 +222,7 @@ struct PCControlSettings
 
     bool enableAnalogWeaponProtect;
     int analogWeaponProtectDelayMs;
-    int analogWeaponProtectFrames;
+    int analogWeaponProtectDurationMs;
 
     CustomMacro macros[MAX_MACROS];
 

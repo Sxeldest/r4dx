@@ -121,7 +121,8 @@ static uint32_t g_internalFrameCount = 0;
 static uint32_t g_analogReleaseTime = 0;
 static int g_analogLastX = 0;
 static int g_analogLastY = 0;
-static int g_analogProtectFrameCount = 0;
+static uint32_t g_analogProtectStartTime = 0;
+static uint32_t g_analogProtectDuration = 0;
 static int g_analogProtectWeaponDir = 0; // 0: none, 1: prev, 2: next
 
 uint32_t GetTickCountMs()
@@ -249,8 +250,13 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     {
         if (outX != 0 || outY != 0)
         {
-            g_analogLastX = outX;
-            g_analogLastY = outY;
+            // Ambil arah mentok (Full Magnitude)
+            float mag = sqrtf((float)outX * outX + (float)outY * outY);
+            if (mag > 0.1f)
+            {
+                g_analogLastX = (int)((float)outX / mag * 127.0f);
+                g_analogLastY = (int)((float)outY / mag * 127.0f);
+            }
             g_analogReleaseTime = 0;
         }
         else if (g_analogReleaseTime == 0)
@@ -264,10 +270,18 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     }
 
     // EKSEKUSI SEKUENS PROTEKSI (PROTEKSI AKTIF)
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectStartTime > 0)
     {
-        outX = g_analogLastX;
-        outY = g_analogLastY;
+        uint32_t elapsed = GetTickCountMs() - g_analogProtectStartTime;
+        if (elapsed < g_analogProtectDuration)
+        {
+            outX = g_analogLastX;
+            outY = g_analogLastY;
+        }
+        else
+        {
+            g_analogProtectStartTime = 0;
+        }
     }
 
     if (g_pcSettings.enableFeintProtect && g_feintProtectFrame > 0)
@@ -670,7 +684,8 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                 uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
                 if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
                 {
-                    g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                    g_analogProtectStartTime = GetTickCountMs();
+                    g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
                     g_analogProtectWeaponDir = 1;
 
                     // Integrasi Feint Protect: Set feint agar lanjut setelah analogProtect habis
@@ -678,7 +693,7 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
                     {
                         g_feintLastX = g_analogLastX;
                         g_feintLastY = g_analogLastY;
-                        g_feintProtectFrame = g_internalFrameCount + g_pcSettings.analogWeaponProtectFrames + g_pcSettings.feintProtectFrames;
+                        g_feintProtectFrame = g_internalFrameCount + (g_pcSettings.analogWeaponProtectDurationMs / 20) + g_pcSettings.feintProtectFrames;
                         g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                     }
                 }
@@ -732,7 +747,8 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                 uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
                 if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
                 {
-                    g_analogProtectFrameCount = g_pcSettings.analogWeaponProtectFrames;
+                    g_analogProtectStartTime = GetTickCountMs();
+                    g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
                     g_analogProtectWeaponDir = 2;
 
                     // Integrasi Feint Protect: Set feint agar lanjut setelah analogProtect habis
@@ -740,7 +756,7 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
                     {
                         g_feintLastX = g_analogLastX;
                         g_feintLastY = g_analogLastY;
-                        g_feintProtectFrame = g_internalFrameCount + g_pcSettings.analogWeaponProtectFrames + g_pcSettings.feintProtectFrames;
+                        g_feintProtectFrame = g_internalFrameCount + (g_pcSettings.analogWeaponProtectDurationMs / 20) + g_pcSettings.feintProtectFrames;
                         g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
                     }
                 }
@@ -854,7 +870,11 @@ void HookOf_Render2DStuff()
     UpdateMacroExecution();
     UpdateMacroShoot();
 
-    if (g_analogProtectFrameCount > 0) g_analogProtectFrameCount--;
+    if (g_analogProtectStartTime > 0)
+    {
+        uint32_t elapsed = GetTickCountMs() - g_analogProtectStartTime;
+        if (elapsed >= g_analogProtectDuration) g_analogProtectStartTime = 0;
+    }
 
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
 
@@ -1103,7 +1123,7 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
     bool switchRequested = false;
 
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectFrameCount > 0)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectStartTime > 0)
     {
         switchRequested = true;
     }

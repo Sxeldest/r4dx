@@ -417,9 +417,9 @@ void RenderPCControlMenu()
                     changed |= SliderIntWithButtons("AnalogProtectDelay", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda toleransi dari lepas analog sampai menekan switch agar proteksi aktif.");
 
-                    ImGui::Text("Protection Duration (Frames)");
-                    changed |= SliderIntWithButtons("AnalogProtectFrames", &g_pcSettings.analogWeaponProtectFrames, 1, 100, "%d frames", 1);
-                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dan lari dipaksa saat ganti senjata.");
+                    ImGui::Text("Protection Duration (ms)");
+                    changed |= SliderIntWithButtons("AnalogProtectDurationMs", &g_pcSettings.analogWeaponProtectDurationMs, 0, 2000, "%d ms", 10);
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Total durasi pergerakan analog dipaksa saat ganti senjata.");
 
                     ImGui::Unindent();
                 }
@@ -732,12 +732,8 @@ void RenderPCControlMenu()
                         if (ImGui::Combo("Action", &m.steps[j].action, actions, IM_ARRAYSIZE(actions))) changed = true;
 
                         ImGui::SameLine();
-                        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.3f);
-                        if (SliderIntWithButtons("Hold", &m.steps[j].duration, 1, 300, "%d fr")) changed = true;
-
-                        ImGui::SameLine();
                         ImGui::SetNextItemWidth(-1.0f);
-                        if (SliderIntWithButtons("Wait", &m.steps[j].wait, 0, 300, "%d fr")) changed = true;
+                        if (SliderIntWithButtons("Wait (ms)", &m.steps[j].wait, 0, 5000, "%d ms")) changed = true;
 
                         ImGui::PopID();
                     }

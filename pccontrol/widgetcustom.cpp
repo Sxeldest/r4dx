@@ -240,8 +240,7 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
             CustomMacro& m = g_pcSettings.macros[macroIdx];
             m.active = true;
             m.currentStep = 0;
-            m.currentFrame = 0;
-            m.isStepHolding = true;
+            m.currentFrame = (int)GetTickCountMs();
         }
         state.touched = true;
         return;
@@ -840,6 +839,7 @@ bool HandleWidgetDragging(int type, int fingerId, int x, int y)
 
 void UpdateMacroExecution()
 {
+    uint32_t now = GetTickCountMs();
     for (int i = 0; i < MAX_MACROS; ++i)
     {
         CustomMacro& m = g_pcSettings.macros[i];
@@ -850,8 +850,7 @@ void UpdateMacroExecution()
             if (m.loop && IsActionTouched((eWidgetAction)(ACTION_MACRO_1 + i)))
             {
                 m.currentStep = 0;
-                m.currentFrame = 0;
-                m.isStepHolding = true;
+                m.currentFrame = (int)now;
             }
             else
             {
@@ -861,29 +860,10 @@ void UpdateMacroExecution()
         }
 
         MacroStep& s = m.steps[m.currentStep];
-        m.currentFrame++;
-
-        if (m.isStepHolding)
+        if (now - (uint32_t)m.currentFrame >= (uint32_t)s.wait)
         {
-            if (m.currentFrame >= s.duration)
-            {
-                m.isStepHolding = false;
-                m.currentFrame = 0;
-                if (s.wait <= 0) // No wait, go to next step immediately
-                {
-                    m.currentStep++;
-                    m.isStepHolding = true;
-                }
-            }
-        }
-        else
-        {
-            if (m.currentFrame >= s.wait)
-            {
-                m.currentStep++;
-                m.currentFrame = 0;
-                m.isStepHolding = true;
-            }
+            m.currentStep++;
+            m.currentFrame = (int)now;
         }
     }
 }
@@ -901,7 +881,7 @@ bool IsActionTouched(eWidgetAction action)
         CustomMacro& m = g_pcSettings.macros[i];
         if (m.enabled && m.active && m.currentStep < m.stepCount)
         {
-            if (m.isStepHolding && m.steps[m.currentStep].action == (int)action)
+            if (m.steps[m.currentStep].action == (int)action)
             {
                 return true;
             }
