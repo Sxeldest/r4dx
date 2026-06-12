@@ -119,6 +119,7 @@ static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMUL
 static bool g_sprintProtectJustDownSent = false;
 static bool g_triggeredByWeaponSwitch = false;
 static bool g_triggeredByExitAim = false;
+static uint32_t g_internalFrameCount = 0;
 
 static void ApplySprintExitDelay(int frames)
 {
@@ -128,7 +129,6 @@ static void ApplySprintExitDelay(int frames)
 }
 
 static uint32_t g_targetingSwitchProtectFrame = 0;
-static uint32_t g_internalFrameCount = 0;
 
 static uint32_t g_analogReleaseTime = 0;
 static int g_analogLastX = 0;
