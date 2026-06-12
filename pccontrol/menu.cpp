@@ -572,11 +572,6 @@ void RenderPCControlMenu()
                 ImGui::SameLine();
                 if (ImGui::Button("Add Macro", ImVec2(-1, GetButtonHeight())))
                 {
-                    ImGui::OpenPopup("MacroTypeSelectorMain");
-                }
-
-                if (ImGui::BeginPopup("MacroTypeSelectorMain"))
-                {
                     int freeMacro = -1;
                     for(int m=0; m<MAX_MACROS; ++m) { if(!g_pcSettings.macros[m].enabled) { freeMacro = m; break; } }
 
@@ -585,35 +580,24 @@ void RenderPCControlMenu()
 
                     if (freeMacro != -1 && freeWidget != -1)
                     {
-                        auto SetupMacro = [&](int type, const char* name) {
-                            CustomMacro& m = g_pcSettings.macros[freeMacro];
-                            m.enabled = true;
-                            m.type = type;
-                            strncpy(m.name, name, 31);
-                            m.active = false;
+                        CustomMacro& m = g_pcSettings.macros[freeMacro];
+                        m.enabled = true;
+                        sprintf(m.name, "mac%d", freeMacro + 1);
+                        m.active = false;
+                        m.stepCount = 1;
+                        m.loop = false;
+                        for(int j=0; j<MAX_MACRO_STEPS; ++j) { m.steps[j].action = 0; m.steps[j].wait = 50; }
 
-                            CustomWidget& w = g_pcSettings.widgets[freeWidget];
-                            w.enabled = true;
-                            w.action = ACTION_MACRO;
-                            w.macroIndex = freeMacro;
-                            w.posX = 1500.0f; w.posY = 500.0f; w.size = 120.0f;
-                            w.type = WTYPE_DEFAULT; w.activation = WACT_HOLD;
+                        CustomWidget& w = g_pcSettings.widgets[freeWidget];
+                        w.enabled = true;
+                        w.action = ACTION_MACRO;
+                        w.macroIndex = freeMacro;
+                        w.posX = 1500.0f; w.posY = 500.0f; w.size = 120.0f;
+                        w.type = WTYPE_DEFAULT; w.activation = WACT_HOLD;
 
-                            g_pcSettings.selectedWidget = freeWidget + 1;
-                            changed = true;
-                            ImGui::CloseCurrentPopup();
-                        };
-
-                        if (ImGui::Selectable("Sequence (Multi-Step)")) SetupMacro(MTYPE_SEQUENCE, "New Sequence");
-                        if (ImGui::Selectable("Repeated Tap (Ketuk Berkali)")) SetupMacro(MTYPE_REPEATED_TAP, "New Auto Tap");
-                        if (ImGui::Selectable("Rapid Fire")) SetupMacro(MTYPE_RAPID_FIRE, "New Rapid Fire");
-                        if (ImGui::Selectable("Toggle Spam")) SetupMacro(MTYPE_TOGGLE_SPAM, "New Spam");
+                        g_pcSettings.selectedWidget = freeWidget + 1;
+                        changed = true;
                     }
-                    else
-                    {
-                        ImGui::TextDisabled("No free slots!");
-                    }
-                    ImGui::EndPopup();
                 }
 
                 ImGui::EndChild();
@@ -756,43 +740,35 @@ void RenderPCControlMenu()
                         ImGui::InputText("Name", m.name, 31);
                         if (ImGui::IsItemDeactivatedAfterEdit()) changed = true;
 
-                        const char* typeNames[] = { "Sequence", "Repeated Tap", "Rapid Fire", "Toggle Spam" };
-                        ImGui::Text("Type: %s", typeNames[m.type]);
-
-                        if (m.type == MTYPE_SEQUENCE)
+                        const char* modeNames[] = { "Single Run (Sekali Jalan)", "Loop While Held (Terus Menerus)" };
+                        int currentMode = m.loop ? 1 : 0;
+                        ImGui::Text("Macro Mode");
+                        if (ImGui::Combo("##MacroMode", &currentMode, modeNames, 2))
                         {
-                            changed |= ImGui::Checkbox("Loop Macro", &m.loop);
-
-                            ImGui::Text("Step Count");
-                            changed |= SliderIntWithButtons("StepCount", &m.stepCount, 1, MAX_MACRO_STEPS);
-
-                            ImGui::Spacing();
-                            ImGui::TextColored(ImVec4(1, 1, 0, 1), "Steps Sequence:");
-
-                            for (int j = 0; j < m.stepCount; ++j)
-                            {
-                                ImGui::PushID(j);
-                                ImGui::Text("Step %d", j + 1);
-
-                                const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
-                                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
-                                if (ImGui::Combo("Action", &m.steps[j].action, mActions, IM_ARRAYSIZE(mActions))) changed = true;
-
-                                ImGui::SameLine();
-                                ImGui::SetNextItemWidth(-1.0f);
-                                if (SliderIntWithButtons("Wait (ms)", &m.steps[j].wait, 0, 5000, "%d ms")) changed = true;
-
-                                ImGui::PopID();
-                            }
+                            m.loop = (currentMode == 1);
+                            changed = true;
                         }
-                        else // Repeated Tap, Rapid Fire, Toggle Spam
-                        {
-                            const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
-                            ImGui::Text("Action to Repeat");
-                            changed |= ImGui::Combo("##RepeatAction", &m.repeatedAction, mActions, IM_ARRAYSIZE(mActions));
 
-                            ImGui::Text("Interval (ms)");
-                            changed |= SliderIntWithButtons("Interval", &m.interval, 1, 5000, "%d ms");
+                        ImGui::Text("Step Count");
+                        changed |= SliderIntWithButtons("StepCount", &m.stepCount, 1, MAX_MACRO_STEPS);
+
+                        ImGui::Spacing();
+                        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Steps Sequence:");
+
+                        for (int j = 0; j < m.stepCount; ++j)
+                        {
+                            ImGui::PushID(j);
+                            ImGui::Text("Step %d", j + 1);
+
+                            const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
+                            if (ImGui::Combo("Action", &m.steps[j].action, mActions, IM_ARRAYSIZE(mActions))) changed = true;
+
+                            ImGui::SameLine();
+                            ImGui::SetNextItemWidth(-1.0f);
+                            if (SliderIntWithButtons("Wait (ms)", &m.steps[j].wait, 0, 5000, "%d ms")) changed = true;
+
+                            ImGui::PopID();
                         }
 
                         if (ImGui::Button("Delete Macro", ImVec2(-1, GetButtonHeight() * 0.6f)))

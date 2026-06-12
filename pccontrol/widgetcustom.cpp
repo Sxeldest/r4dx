@@ -241,8 +241,6 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
             m.active = true;
             m.currentStep = 0;
             m.startTime = GetTickCountMs();
-            m.lastActionTime = GetTickCountMs();
-            m.lastState = true; // Start with ON
         }
         state.touched = true;
         return;
@@ -871,46 +869,25 @@ void UpdateMacroExecution()
             }
         }
 
-        if (m.type == MTYPE_SEQUENCE)
+        if (m.currentStep >= m.stepCount)
         {
-            if (m.currentStep >= m.stepCount)
+            if (m.loop && stillTouched)
             {
-                if (m.loop && stillTouched)
-                {
-                    m.currentStep = 0;
-                    m.startTime = now;
-                }
-                else
-                {
-                    m.active = false;
-                    continue;
-                }
-            }
-
-            MacroStep& s = m.steps[m.currentStep];
-            if (now - m.startTime >= (uint32_t)s.wait)
-            {
-                m.currentStep++;
+                m.currentStep = 0;
                 m.startTime = now;
             }
-        }
-        else if (m.type == MTYPE_REPEATED_TAP || m.type == MTYPE_RAPID_FIRE || m.type == MTYPE_TOGGLE_SPAM)
-        {
-            if (!stillTouched)
+            else
             {
                 m.active = false;
-                m.lastState = false;
                 continue;
             }
+        }
 
-            uint32_t interval = (uint32_t)m.interval;
-            if (m.type == MTYPE_RAPID_FIRE && interval > 50) interval = 50; // Rapid fire cap
-
-            if (now - m.lastActionTime >= interval)
-            {
-                m.lastState = !m.lastState;
-                m.lastActionTime = now;
-            }
+        MacroStep& s = m.steps[m.currentStep];
+        if (now - m.startTime >= (uint32_t)s.wait)
+        {
+            m.currentStep++;
+            m.startTime = now;
         }
     }
 }
@@ -928,19 +905,9 @@ bool IsActionTouched(eWidgetAction action)
         CustomMacro& m = g_pcSettings.macros[i];
         if (!m.enabled || !m.active) continue;
 
-        if (m.type == MTYPE_SEQUENCE)
+        if (m.currentStep < m.stepCount && m.steps[m.currentStep].action == (int)action)
         {
-            if (m.currentStep < m.stepCount && m.steps[m.currentStep].action == (int)action)
-            {
-                return true;
-            }
-        }
-        else if (m.type == MTYPE_REPEATED_TAP || m.type == MTYPE_RAPID_FIRE || m.type == MTYPE_TOGGLE_SPAM)
-        {
-            if (m.repeatedAction == (int)action && m.lastState)
-            {
-                return true;
-            }
+            return true;
         }
     }
 

@@ -44,14 +44,6 @@ enum eWidgetAction
     ACTION_MAX
 };
 
-enum eMacroType
-{
-    MTYPE_SEQUENCE = 0,     // Sequence of actions with delays
-    MTYPE_REPEATED_TAP,     // Repeatedly taps an action
-    MTYPE_RAPID_FIRE,      // Same as repeated tap but usually faster
-    MTYPE_TOGGLE_SPAM       // Toggles an action on/off repeatedly
-};
-
 enum eWidgetType
 {
     WTYPE_DEFAULT = 0,      // Blocks touch, Click to activate
@@ -108,24 +100,16 @@ struct MacroStep
 struct CustomMacro
 {
     bool enabled;
-    int type; // eMacroType
     char name[32];
 
-    // For MTYPE_SEQUENCE
     MacroStep steps[MAX_MACRO_STEPS];
     int stepCount;
     bool loop;
-
-    // For MTYPE_REPEATED_TAP / RAPID_FIRE
-    int repeatedAction;
-    int interval; // ms
 
     // Runtime state
     bool active;
     int currentStep;
     uint32_t startTime;
-    bool lastState; // For toggling in repeated tap
-    uint32_t lastActionTime;
 };
 
 struct MemoryPatch
