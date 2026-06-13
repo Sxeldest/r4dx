@@ -1,2 +1,0 @@
-0x197674: ADRL            R12, 0x67267C
-0x19767c: LDR             PC, [R12,#(_ZN14RQVertexBuffer3SetEPS__ptr - 0x67267C)]!; RQVertexBuffer::Set(RQVertexBuffer*)

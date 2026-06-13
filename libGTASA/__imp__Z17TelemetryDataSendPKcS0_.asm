@@ -1,1 +1,0 @@
-0xa99314: IMPORT __imp__Z17TelemetryDataSendPKcS0_

@@ -1,1 +1,0 @@
-0xa992e8: IMPORT __imp_glPolygonOffset

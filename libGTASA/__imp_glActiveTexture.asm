@@ -1,1 +1,0 @@
-0xa9920c: IMPORT __imp_glActiveTexture

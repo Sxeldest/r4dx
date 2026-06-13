@@ -1,3 +1,0 @@
-0x233df0: LDR             R0, =(off_683D10 - 0x233DF6); "generic" ...
-0x233df2: ADD             R0, PC; off_683D10
-0x233df4: BX              LR

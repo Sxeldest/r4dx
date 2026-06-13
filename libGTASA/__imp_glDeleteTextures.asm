@@ -1,1 +1,0 @@
-0xa9929c: IMPORT __imp_glDeleteTextures

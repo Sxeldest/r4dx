@@ -1,3 +1,0 @@
-0x1ddabc: LDR             R0, =(off_682668 - 0x1DDAC2); "OpenGLSubmitNoLight.csl" ...
-0x1ddabe: ADD             R0, PC; off_682668
-0x1ddac0: BX              LR

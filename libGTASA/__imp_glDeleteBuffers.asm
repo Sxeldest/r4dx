@@ -1,1 +1,0 @@
-0xa990c0: IMPORT __imp_glDeleteBuffers

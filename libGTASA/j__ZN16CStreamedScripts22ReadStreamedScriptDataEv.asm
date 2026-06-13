@@ -1,2 +1,0 @@
-0x199200: ADRL            R12, 0x673208
-0x199208: LDR             PC, [R12,#(_ZN16CStreamedScripts22ReadStreamedScriptDataEv_ptr - 0x673208)]!; CStreamedScripts::ReadStreamedScriptData(void)

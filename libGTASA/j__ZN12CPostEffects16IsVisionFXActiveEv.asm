@@ -1,2 +1,0 @@
-0x196648: ADRL            R12, 0x671650
-0x196650: LDR             PC, [R12,#(_ZN12CPostEffects16IsVisionFXActiveEv_ptr - 0x671650)]!; CPostEffects::IsVisionFXActive(void)

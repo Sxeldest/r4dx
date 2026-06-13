@@ -1,1 +1,0 @@
-0xa993fc: IMPORT __imp_pthread_attr_setstacksize

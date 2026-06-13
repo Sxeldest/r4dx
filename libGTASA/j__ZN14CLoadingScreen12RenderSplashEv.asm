@@ -1,2 +1,0 @@
-0x193824: ADRL            R12, 0x67082C
-0x19382c: LDR             PC, [R12,#(_ZN14CLoadingScreen12RenderSplashEv_ptr - 0x67082C)]!; CLoadingScreen::RenderSplash(void)

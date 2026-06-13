@@ -1,1 +1,0 @@
-0xa9939c: IMPORT __imp_glCompressedTexImage2D

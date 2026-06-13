@@ -1,1 +1,0 @@
-0xa993f0: IMPORT __imp_eglGetProcAddress

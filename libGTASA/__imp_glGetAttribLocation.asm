@@ -1,1 +1,0 @@
-0xa99370: IMPORT __imp_glGetAttribLocation

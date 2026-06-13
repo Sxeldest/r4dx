@@ -1,2 +1,0 @@
-0x193570: ADRL            R12, 0x671578
-0x193578: LDR             PC, [R12,#(_ZN4CPed15ProcessBuoyancyEv_ptr - 0x671578)]!; CPed::ProcessBuoyancy(void)

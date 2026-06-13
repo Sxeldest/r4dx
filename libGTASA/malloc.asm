@@ -1,2 +1,0 @@
-0x194880: ADRL            R12, 0x671888
-0x194888: LDR             PC, [R12,#(malloc_ptr - 0x671888)]!; __imp_malloc

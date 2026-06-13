@@ -1,2 +1,0 @@
-0x19bdd4: ADRL            R12, 0x673DDC
-0x19bddc: LDR             PC, [R12,#(_ZN14MobileSettings12LoadFromFileEj_ptr - 0x673DDC)]!; MobileSettings::LoadFromFile(uint)

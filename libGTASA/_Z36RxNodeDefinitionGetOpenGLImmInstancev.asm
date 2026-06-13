@@ -1,3 +1,0 @@
-0x1ddaa0: LDR             R0, =(off_682610 - 0x1DDAA6); "OpenGLImmInstance.csl" ...
-0x1ddaa2: ADD             R0, PC; off_682610
-0x1ddaa4: BX              LR

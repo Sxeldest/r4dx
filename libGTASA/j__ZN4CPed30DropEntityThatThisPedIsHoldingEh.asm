@@ -1,2 +1,0 @@
-0x193588: ADRL            R12, 0x671590
-0x193590: LDR             PC, [R12,#(_ZN4CPed30DropEntityThatThisPedIsHoldingEh_ptr - 0x671590)]!; CPed::DropEntityThatThisPedIsHolding(uchar)
