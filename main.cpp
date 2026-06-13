@@ -1331,7 +1331,7 @@ extern "C" void OnModLoad()
         if (hSAMP_ORIG)
         {
             HOOK(ButtonPanel_Render, hSAMP_ORIG + 0x7D0F4 + 1);
-            HOOK(ButtonPanel_OnTouchEvent, hSAMP_ORIG + 0x7D700 + 1);
+            // HOOK(ButtonPanel_OnTouchEvent, hSAMP_ORIG + 0x7D700 + 1);
         }
 
         HOOK(CTimeCycle_Update, gtasa + 0x41EF28 + 1);
