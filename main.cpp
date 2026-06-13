@@ -1176,29 +1176,10 @@ void HookOf_ButtonPanel_Render(void* self, void* a2){
     if (g_pcSettings.bpEnabled && self)
     {
         float* fv = (float*)self;
-        // Pemetaan Benar untuk SAMP ORIG UI:
-        fv[11] = g_pcSettings.bpPosX;   // Offset 0x2C
-        fv[12] = g_pcSettings.bpPosY;   // Offset 0x30
-        fv[5]  = g_pcSettings.bpWidth;  // Offset 0x14
-        fv[6]  = g_pcSettings.bpHeight; // Offset 0x18
-
-        // Font Size (Sangat penting agar teks ">>" ikut mengecil/membesar)
-        // Biasanya default adalah 1.0f atau nilai pixel tertentu
-        fv[29] = g_pcSettings.bpScale * 30.0f; // Offset 0x74 (asumsi base font 30.0)
+        fv[12] = 2000.0f; // Force PosY (Offset 0x30) far off-screen
+        return; // Kill rendering
     }
     ButtonPanel_Render(self, a2);
-}
-
-void HookOf_ButtonPanel_OnTouchEvent(void* self, int type, int x, int y) {
-    if (g_pcSettings.bpEnabled && self)
-    {
-        float* fv = (float*)self;
-        fv[11] = g_pcSettings.bpPosX;
-        fv[12] = g_pcSettings.bpPosY;
-        fv[5]  = g_pcSettings.bpWidth;
-        fv[6]  = g_pcSettings.bpHeight;
-    }
-    ButtonPanel_OnTouchEvent(self, type, x, y);
 }
 
 int HookOf_ProcessWeaponSwitch(void* self, void* pad)

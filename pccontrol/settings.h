@@ -221,11 +221,6 @@ struct PCControlSettings
 
     // Button Panel Settings
     bool bpEnabled;
-    float bpPosX;
-    float bpPosY;
-    float bpWidth;
-    float bpHeight;
-    float bpScale;
 
     CustomMacro macros[MAX_MACROS];
 

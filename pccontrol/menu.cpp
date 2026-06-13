@@ -462,22 +462,8 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Legacy Button Panel");
                 ImGui::Separator();
-                changed |= ImGui::Checkbox("Enable Panel Overrides", &g_pcSettings.bpEnabled);
-                if (g_pcSettings.bpEnabled)
-                {
-                    ImGui::Indent();
-                    ImGui::Text("Position X");
-                    changed |= SliderFloatWithButtons("bpPosX", &g_pcSettings.bpPosX, 0.0f, 3000.0f, "%.0f", 1.0f);
-                    ImGui::Text("Position Y");
-                    changed |= SliderFloatWithButtons("bpPosY", &g_pcSettings.bpPosY, 0.0f, 2000.0f, "%.0f", 1.0f);
-                    ImGui::Text("Panel Width");
-                    changed |= SliderFloatWithButtons("bpWidth", &g_pcSettings.bpWidth, 50.0f, 1000.0f, "%.0f", 1.0f);
-                    ImGui::Text("Panel Height");
-                    changed |= SliderFloatWithButtons("bpHeight", &g_pcSettings.bpHeight, 50.0f, 1000.0f, "%.0f", 1.0f);
-                    ImGui::Text("Global Scale");
-                    changed |= SliderFloatWithButtons("bpScale", &g_pcSettings.bpScale, 0.1f, 3.0f, "%.2f", 0.05f);
-                    ImGui::Unindent();
-                }
+                changed |= ImGui::Checkbox("Kill Button Panel", &g_pcSettings.bpEnabled);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memindahkan area sentuh Button Panel ke luar layar dan mematikan render-nya.");
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
