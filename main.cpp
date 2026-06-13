@@ -1173,11 +1173,30 @@ void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w,
 }
 
 void HookOf_ButtonPanel_Render(void* self, void* a2){
-    // Do nothing to hide the panel
+    if (g_pcSettings.bpEnabled && self)
+    {
+        float* fv = (float*)self;
+        fv[5] = g_pcSettings.bpPosX;  // Offset 0x14
+        fv[6] = g_pcSettings.bpPosY;  // Offset 0x18
+        fv[7] = g_pcSettings.bpWidth; // Offset 0x1C
+        fv[8] = g_pcSettings.bpHeight;// Offset 0x20
+
+        // Scale is handled differently in ButtonPanel,
+        // usually through a separate float at 0x74 or similar.
+    }
+    ButtonPanel_Render(self, a2);
 }
 
 void HookOf_ButtonPanel_OnTouchEvent(void* self, int type, int x, int y) {
-    // Return kosong = abaikan semua sentuhan pada panel ini
+    if (g_pcSettings.bpEnabled && self)
+    {
+        float* fv = (float*)self;
+        fv[5] = g_pcSettings.bpPosX;
+        fv[6] = g_pcSettings.bpPosY;
+        fv[7] = g_pcSettings.bpWidth;
+        fv[8] = g_pcSettings.bpHeight;
+    }
+    ButtonPanel_OnTouchEvent(self, type, x, y);
 }
 
 int HookOf_ProcessWeaponSwitch(void* self, void* pad)

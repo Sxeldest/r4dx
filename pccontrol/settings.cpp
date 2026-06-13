@@ -92,7 +92,15 @@ PCControlSettings g_pcSettings = {
     600,    // macro2ProtectMs
     true,   // enableAnalogWeaponProtect
     100,    // analogWeaponProtectDelayMs
-    200     // analogWeaponProtectDurationMs
+    200,    // analogWeaponProtectDurationMs
+
+    // Button Panel Settings
+    false,  // bpEnabled
+    100.0f, // bpPosX
+    400.0f, // bpPosY
+    200.0f, // bpWidth
+    400.0f, // bpHeight
+    1.0f    // bpScale
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -201,6 +209,13 @@ static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
 static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
 static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
 static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
+
+static ConfigEntry* s_bpEnabled = nullptr;
+static ConfigEntry* s_bpPosX = nullptr;
+static ConfigEntry* s_bpPosY = nullptr;
+static ConfigEntry* s_bpWidth = nullptr;
+static ConfigEntry* s_bpHeight = nullptr;
+static ConfigEntry* s_bpScale = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -400,6 +415,13 @@ void InitPCControlSettings()
     s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
     s_analogWeaponProtectDurationMs = cfg->Bind("AnalogWeaponProtectDurationMs", 200, kSettingsSection);
 
+    s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
+    s_bpPosX = cfg->Bind("BP_PosX", 100.0f, "ButtonPanel");
+    s_bpPosY = cfg->Bind("BP_PosY", 400.0f, "ButtonPanel");
+    s_bpWidth = cfg->Bind("BP_Width", 200.0f, "ButtonPanel");
+    s_bpHeight = cfg->Bind("BP_Height", 400.0f, "ButtonPanel");
+    s_bpScale = cfg->Bind("BP_Scale", 1.0f, "ButtonPanel");
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -499,6 +521,13 @@ void InitPCControlSettings()
     g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
     g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
     g_pcSettings.analogWeaponProtectDurationMs = s_analogWeaponProtectDurationMs->GetInt();
+
+    g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
+    g_pcSettings.bpPosX = s_bpPosX->GetFloat();
+    g_pcSettings.bpPosY = s_bpPosY->GetFloat();
+    g_pcSettings.bpWidth = s_bpWidth->GetFloat();
+    g_pcSettings.bpHeight = s_bpHeight->GetFloat();
+    g_pcSettings.bpScale = s_bpScale->GetFloat();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -708,6 +737,13 @@ void SavePCControlSettings()
     s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
     s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
     s_analogWeaponProtectDurationMs->SetInt(g_pcSettings.analogWeaponProtectDurationMs);
+
+    s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
+    s_bpPosX->SetFloat(g_pcSettings.bpPosX);
+    s_bpPosY->SetFloat(g_pcSettings.bpPosY);
+    s_bpWidth->SetFloat(g_pcSettings.bpWidth);
+    s_bpHeight->SetFloat(g_pcSettings.bpHeight);
+    s_bpScale->SetFloat(g_pcSettings.bpScale);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
