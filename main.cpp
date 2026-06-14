@@ -708,19 +708,11 @@ int HookOf_SprintJustDown(void* self)
 
 void* HookOf_BlendAnimation(void* clump, int group, int animId, float delta)
 {
-    if (animId == 2) // ANIM_ID_SPRINT
-    {
-        delta = g_pcSettings.sprintBlendDelta;
-    }
-
     void* assoc = BlendAnimation(clump, group, animId, delta);
     if (assoc)
     {
         float speedMult = 1.0f;
         if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
-        else if (animId == 2) speedMult = g_pcSettings.sprintAnimSpeed;
-        else if (animId == 6 || animId == 7) speedMult = g_pcSettings.stopAnimSpeed;
-        else if (animId == 54 || animId == 226) speedMult = g_pcSettings.swapAnimSpeed; // Putaway & Swap
 
         if (speedMult != 1.0f)
         {
@@ -950,12 +942,6 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     g_internalFrameCount++;
-
-    // Apply movement acceleration patch
-    if (g_gtasa)
-    {
-        aml->Write(g_gtasa + 0x539DE0, (uintptr_t)&g_pcSettings.runAcceleration, 4);
-    }
 
     Render2DStuff();
     CameraPatchOnRender2D();
@@ -1250,9 +1236,6 @@ int HookOf_CAnimBlendAssociation_UpdateTime(void* self, float time1, float time2
         float speedMult = 1.0f;
 
         if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
-        else if (animId == 2) speedMult = g_pcSettings.sprintAnimSpeed;
-        else if (animId == 6 || animId == 7) speedMult = g_pcSettings.stopAnimSpeed;
-        else if (animId == 54 || animId == 226) speedMult = g_pcSettings.swapAnimSpeed;
 
         if (speedMult != 1.0f)
         {

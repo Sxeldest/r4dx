@@ -431,19 +431,8 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Movement & Animations");
                 ImGui::Separator();
-                ImGui::Text("Run Acceleration");
-                changed |= SliderFloatWithButtons("runAccel", &g_pcSettings.runAcceleration, 0.01f, 1.0f, "%.3f", 0.01f);
-                ImGui::Text("Sprint Blending Speed");
-                changed |= SliderFloatWithButtons("blendSpeed", &g_pcSettings.sprintBlendDelta, 0.5f, 10.0f, "%.1f", 0.5f);
                 ImGui::Text("Run Anim Speed");
                 changed |= SliderFloatWithButtons("runAnimSpeed", &g_pcSettings.runAnimSpeed, 0.1f, 5.0f, "%.2f", 0.05f);
-                ImGui::Text("Sprint Anim Speed");
-                changed |= SliderFloatWithButtons("sprintAnimSpeed", &g_pcSettings.sprintAnimSpeed, 0.1f, 5.0f, "%.2f", 0.05f);
-                ImGui::Text("Stop Anim Speed");
-                changed |= SliderFloatWithButtons("stopAnimSpeed", &g_pcSettings.stopAnimSpeed, 0.1f, 5.0f, "%.2f", 0.05f);
-                ImGui::Text("Swap Weapon Speed");
-                changed |= SliderFloatWithButtons("swapAnimSpeed", &g_pcSettings.swapAnimSpeed, 0.1f, 10.0f, "%.2f", 0.1f);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Percepat animasi tangan turun saat ganti senjata.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Settings");
