@@ -52,6 +52,9 @@ uintptr_t addrSAMP_RenderNametag = 0xF18C8;
 uintptr_t addrGetWeaponRadiusOnScreen = 0x4C6978;
 uintptr_t addrCPlayerCrossHair_Render = 0x40C2C8;
 uintptr_t addrCHud_DrawCrossHairs = 0x4371B0;
+uintptr_t addrGetDuck = 0x3FB9EC;
+uintptr_t addrGetJump = 0x3FBC08;
+uintptr_t addrJumpJustDown = 0x3FBC5C;
 
 DECL_HOOKi(GetPedWalkLeftRight, void* self);
 DECL_HOOKi(GetPedWalkUpDown, void* self);
@@ -61,6 +64,9 @@ DECL_HOOKi(IsDoubleTapped, int widgetId, bool a2, int a3);
 DECL_HOOKi(IsTouched, int widgetId, void* a2, int a3);
 DECL_HOOKi(IsReleased, int widgetId, void* a2, int a3);
 DECL_HOOKi(IsHeldDown, int widgetId, int a2);
+DECL_HOOKi(GetDuck, void* self);
+DECL_HOOKi(GetJump, void* self);
+DECL_HOOKi(JumpJustDown, void* self);
 DECL_HOOKi(GetSprint, void* self, int sprintType);
 DECL_HOOKi(SprintJustDown, void* self);
 DECL_HOOKb(GetEnterTargeting, void* self);
@@ -463,29 +469,51 @@ int HookOf_IsDoubleTapped(int widgetId, bool a2, int a3)
 {
     if (widgetId == 167)
     {
-        int res = 0;
-        if (!g_pcSettings.disableNativeCrouch) res = IsDoubleTapped(widgetId, a2, a3);
-        if (IsActionTouched(ACTION_CROUCH))
-        {
-            if (!g_crouchPrevState) { g_crouchPrevState = true; res = 1; }
-        }
-        else g_crouchPrevState = false;
-        return res;
+        if (!g_pcSettings.disableNativeCrouch) return IsDoubleTapped(widgetId, a2, a3);
+        return 0;
     }
     if (widgetId == 31 || widgetId == 168)
     {
         int nativeRes = IsDoubleTapped(widgetId, a2, a3);
         if (g_pcSettings.enableSprintDoubleTapBoost && nativeRes) g_sprintDoubleTapBoost = Z_SPRINT_DOUBLE_TAP_BOOST;
-        int res = 0;
-        if (!g_pcSettings.disableNativeJump) res = nativeRes;
-        if (IsActionTouched(ACTION_JUMP))
-        {
-            if (!g_jumpPrevState) { g_jumpPrevState = true; res = 1; }
-        }
-        else g_jumpPrevState = false;
-        return res;
+        if (!g_pcSettings.disableNativeJump) return nativeRes;
+        return 0;
     }
     return IsDoubleTapped(widgetId, a2, a3);
+}
+
+int HookOf_GetDuck(void* self)
+{
+    if (IsActionTouched(ACTION_CROUCH))
+    {
+        if (!g_crouchPrevState)
+        {
+            g_crouchPrevState = true;
+            return 1;
+        }
+    }
+    else g_crouchPrevState = false;
+    return GetDuck(self);
+}
+
+int HookOf_GetJump(void* self)
+{
+    if (IsActionTouched(ACTION_JUMP)) return 1;
+    return GetJump(self);
+}
+
+int HookOf_JumpJustDown(void* self)
+{
+    if (IsActionTouched(ACTION_JUMP))
+    {
+        if (!g_jumpPrevState)
+        {
+            g_jumpPrevState = true;
+            return 1;
+        }
+    }
+    else g_jumpPrevState = false;
+    return JumpJustDown(self);
 }
 
 int HookOf_IsHeldDown(int widgetId, int a2)
@@ -1290,6 +1318,9 @@ extern "C" void OnModLoad()
         HOOK(IsReleased, gtasa + addrIsReleased + 1);
         HOOK(IsHeldDown, gtasa + addrIsHeldDown + 1);
         HOOK(IsPinchZooming, gtasa + addrIsPinchZooming + 1);
+        HOOK(GetDuck, gtasa + addrGetDuck + 1);
+        HOOK(GetJump, gtasa + addrGetJump + 1);
+        HOOK(JumpJustDown, gtasa + addrJumpJustDown + 1);
         HOOK(GetSprint, gtasa + addrGetSprint + 1);
         HOOK(SprintJustDown, gtasa + addrSprintJustDown + 1);
         HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
