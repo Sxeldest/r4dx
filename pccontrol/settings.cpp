@@ -99,6 +99,7 @@ PCControlSettings g_pcSettings = {
     1.0f,   // runAnimSpeed
     1.0f,   // sprintAnimSpeed
     1.0f,   // stopAnimSpeed
+    1.0f,   // swapAnimSpeed
 
     // Button Panel Settings
     false,  // bpEnabled
@@ -216,6 +217,7 @@ static ConfigEntry* s_sprintBlendDelta = nullptr;
 static ConfigEntry* s_runAnimSpeed = nullptr;
 static ConfigEntry* s_sprintAnimSpeed = nullptr;
 static ConfigEntry* s_stopAnimSpeed = nullptr;
+static ConfigEntry* s_swapAnimSpeed = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
 
@@ -422,6 +424,7 @@ void InitPCControlSettings()
     s_runAnimSpeed = cfg->Bind("RunAnimSpeed", 1.0f, kSettingsSection);
     s_sprintAnimSpeed = cfg->Bind("SprintAnimSpeed", 1.0f, kSettingsSection);
     s_stopAnimSpeed = cfg->Bind("StopAnimSpeed", 1.0f, kSettingsSection);
+    s_swapAnimSpeed = cfg->Bind("SwapAnimSpeed", 1.0f, kSettingsSection);
 
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
@@ -530,6 +533,7 @@ void InitPCControlSettings()
     g_pcSettings.runAnimSpeed = s_runAnimSpeed->GetFloat();
     g_pcSettings.sprintAnimSpeed = s_sprintAnimSpeed->GetFloat();
     g_pcSettings.stopAnimSpeed = s_stopAnimSpeed->GetFloat();
+    g_pcSettings.swapAnimSpeed = s_swapAnimSpeed->GetFloat();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
@@ -747,6 +751,7 @@ void SavePCControlSettings()
     s_runAnimSpeed->SetFloat(g_pcSettings.runAnimSpeed);
     s_sprintAnimSpeed->SetFloat(g_pcSettings.sprintAnimSpeed);
     s_stopAnimSpeed->SetFloat(g_pcSettings.stopAnimSpeed);
+    s_swapAnimSpeed->SetFloat(g_pcSettings.swapAnimSpeed);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 

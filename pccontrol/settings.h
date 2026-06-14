@@ -224,6 +224,7 @@ struct PCControlSettings
     float runAnimSpeed;
     float sprintAnimSpeed;
     float stopAnimSpeed;
+    float swapAnimSpeed;
 
     // Button Panel Settings
     bool bpEnabled;

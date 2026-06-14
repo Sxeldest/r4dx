@@ -89,6 +89,7 @@ DECL_HOOKv(CPlayerCrossHair_Render, void* self, int playerIdx);
 DECL_HOOKv(CHud_DrawCrossHairs);
 DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
 DECL_HOOKv(RenderOneXLUSprite_Rotate_Aspect, float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a);
+DECL_HOOK(int, CAnimBlendAssociation_UpdateTime, void* self, float time1, float time2);
 int (*GetTaskUseGun)(void* self);
 DECL_HOOK(int, ProcessWeaponSwitch, void* self, void* pad);
 DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
@@ -715,12 +716,18 @@ void* HookOf_BlendAnimation(void* clump, int group, int animId, float delta)
     void* assoc = BlendAnimation(clump, group, animId, delta);
     if (assoc)
     {
-        if (animId == 1) // ANIM_ID_RUN
-            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.runAnimSpeed;
-        else if (animId == 2) // ANIM_ID_SPRINT
-            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.sprintAnimSpeed;
-        else if (animId == 6 || animId == 7) // ANIM_ID_RUN_STOP, ANIM_ID_RUN_STOPR
-            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.stopAnimSpeed;
+        float speedMult = 1.0f;
+        if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
+        else if (animId == 2) speedMult = g_pcSettings.sprintAnimSpeed;
+        else if (animId == 6 || animId == 7) speedMult = g_pcSettings.stopAnimSpeed;
+        else if (animId == 54 || animId == 226) speedMult = g_pcSettings.swapAnimSpeed; // Putaway & Swap
+
+        if (speedMult != 1.0f)
+        {
+            *(float*)((uintptr_t)assoc + 0x18) *= speedMult;
+            *(float*)((uintptr_t)assoc + 0x1C) *= speedMult; // Second possible offset
+            *(float*)((uintptr_t)assoc + 0x24) *= speedMult; // Third possible offset
+        }
     }
     return assoc;
 }
@@ -1235,6 +1242,30 @@ void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w,
     RenderOneXLUSprite_Rotate_Aspect(x, y, z, w, h, r, g, b, intensity, rotation, aspect, a);
 }
 
+int HookOf_CAnimBlendAssociation_UpdateTime(void* self, float time1, float time2)
+{
+    if (self)
+    {
+        uint16_t animId = *(uint16_t*)((uintptr_t)self + 0x2A); // Offset to m_nAnimId (32-bit mobile)
+        float speedMult = 1.0f;
+
+        if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
+        else if (animId == 2) speedMult = g_pcSettings.sprintAnimSpeed;
+        else if (animId == 6 || animId == 7) speedMult = g_pcSettings.stopAnimSpeed;
+        else if (animId == 54 || animId == 226) speedMult = g_pcSettings.swapAnimSpeed;
+
+        if (speedMult != 1.0f)
+        {
+            // Apply multiplier to speed before game uses it
+            // Based on disassembly, speed is likely at 0x1C or 0x24
+            *(float*)((uintptr_t)self + 0x1C) *= speedMult;
+            *(float*)((uintptr_t)self + 0x24) *= speedMult;
+        }
+    }
+    int res = CAnimBlendAssociation_UpdateTime(self, time1, time2);
+    return res;
+}
+
 void HookOf_ButtonPanel_Render(void* self, void* a2){
     if (g_pcSettings.bpEnabled && self)
     {
@@ -1378,6 +1409,7 @@ extern "C" void OnModLoad()
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
         HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));
+        HOOK(CAnimBlendAssociation_UpdateTime, gtasa + 0x38BDB4 + 1);
 
         if (hSAMP_ORIG)
         {
