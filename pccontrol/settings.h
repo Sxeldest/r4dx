@@ -192,27 +192,6 @@ struct PCControlSettings
     float chExpansionMax;
     float chExpansionIdle;
 
-    bool autoRun;
-    bool sprintProtected;
-    int sprintProtectEntryFrames;
-    int macro1DelayFrames;
-    bool enableWeaponSwitchProtect;
-    int targetingSwitchProtectFrames;
-    int weaponSwitchInterDelayMs;
-    int sprintProtectExitFrames;
-    int sprintProtectExitAimDelayFrames;
-    int sprintProtectWeaponSwitchDelayFrames;
-
-    bool enableFeintProtect;
-    int feintProtectFrames;
-    int macro2ProtectMs;
-
-    bool enableAnalogWeaponProtect;
-    int analogWeaponProtectDelayMs;
-    int analogWeaponProtectDurationMs;
-
-    float runAnimSpeed;
-
     // Button Panel Settings
     bool bpEnabled;
 

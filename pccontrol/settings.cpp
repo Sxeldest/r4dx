@@ -70,24 +70,6 @@ PCControlSettings g_pcSettings = {
     0.0f,   // chPosY
     1.0f,   // chExpansionMax
     1.0f,   // chExpansionIdle
-    false,  // autoRun
-    false,  // sprintProtected
-    10,     // sprintProtectEntryFrames
-    10,     // macro1DelayFrames
-    true,   // enableWeaponSwitchProtect
-    12,     // targetingSwitchProtectFrames
-    400,    // weaponSwitchInterDelayMs
-    30,     // sprintProtectExitFrames
-    0,      // sprintProtectExitAimDelayFrames
-    0,      // sprintProtectWeaponSwitchDelayFrames
-    true,   // enableFeintProtect
-    30,     // feintProtectFrames
-    600,    // macro2ProtectMs
-    true,   // enableAnalogWeaponProtect
-    100,    // analogWeaponProtectDelayMs
-    200,    // analogWeaponProtectDurationMs
-
-    1.0f,   // runAnimSpeed
 
     // Button Panel Settings
     false,  // bpEnabled
@@ -174,26 +156,6 @@ static ConfigEntry* s_chPosX = nullptr;
 static ConfigEntry* s_chPosY = nullptr;
 static ConfigEntry* s_chExpansionMax = nullptr;
 static ConfigEntry* s_chExpansionIdle = nullptr;
-static ConfigEntry* s_autoRun = nullptr;
-static ConfigEntry* s_sprintProtected = nullptr;
-static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
-static ConfigEntry* s_macro1DelayFrames = nullptr;
-static ConfigEntry* s_enableWeaponSwitchProtect = nullptr;
-static ConfigEntry* s_targetingSwitchProtectFrames = nullptr;
-static ConfigEntry* s_weaponSwitchInterDelayMs = nullptr;
-static ConfigEntry* s_sprintProtectExitFrames = nullptr;
-static ConfigEntry* s_sprintProtectExitAimDelayFrames = nullptr;
-static ConfigEntry* s_sprintProtectWeaponSwitchDelayFrames = nullptr;
-static ConfigEntry* s_enableFeintProtect = nullptr;
-static ConfigEntry* s_feintProtectFrames = nullptr;
-static ConfigEntry* s_macro2ProtectMs = nullptr;
-
-static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
-static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
-static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
-static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
-
-static ConfigEntry* s_runAnimSpeed = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
 
@@ -370,25 +332,6 @@ void InitPCControlSettings()
     s_chPosY = cfg->Bind("PosY", 0.0f, "Crosshair");
     s_chExpansionMax = cfg->Bind("ExpansionMax", 1.0f, "Crosshair");
     s_chExpansionIdle = cfg->Bind("ExpansionIdle", 1.0f, "Crosshair");
-    s_autoRun = cfg->Bind("AutoRun", false, kSettingsSection);
-    s_sprintProtected = cfg->Bind("SprintProtected", false, kSettingsSection);
-    s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntry", 10, kSettingsSection);
-    s_macro1DelayFrames = cfg->Bind("Macro1DelayFrames", 10, kSettingsSection);
-    s_enableWeaponSwitchProtect = cfg->Bind("WeaponSwitchProtect", true, kSettingsSection);
-    s_targetingSwitchProtectFrames = cfg->Bind("TargetingSwitchProtectFrames", 12, kSettingsSection);
-    s_weaponSwitchInterDelayMs = cfg->Bind("WeaponSwitchInterDelayMs", 400, kSettingsSection);
-    s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 30, kSettingsSection);
-    s_sprintProtectExitAimDelayFrames = cfg->Bind("SprintProtectExitAimDelayFrames", 0, kSettingsSection);
-    s_sprintProtectWeaponSwitchDelayFrames = cfg->Bind("SprintProtectWeaponSwitchDelayFrames", 0, kSettingsSection);
-    s_enableFeintProtect = cfg->Bind("FeintProtect", true, kSettingsSection);
-    s_feintProtectFrames = cfg->Bind("FeintProtectFrames", 30, kSettingsSection);
-    s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 600, kSettingsSection);
-
-    s_enableAnalogWeaponProtect = cfg->Bind("AnalogWeaponProtect", true, kSettingsSection);
-    s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
-    s_analogWeaponProtectDurationMs = cfg->Bind("AnalogWeaponProtectDurationMs", 200, kSettingsSection);
-
-    s_runAnimSpeed = cfg->Bind("RunAnimSpeed", 1.0f, kSettingsSection);
 
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
@@ -467,25 +410,6 @@ void InitPCControlSettings()
     g_pcSettings.chPosY = s_chPosY->GetFloat();
     g_pcSettings.chExpansionMax = s_chExpansionMax->GetFloat();
     g_pcSettings.chExpansionIdle = s_chExpansionIdle->GetFloat();
-    g_pcSettings.autoRun = s_autoRun->GetBool();
-    g_pcSettings.sprintProtected = s_sprintProtected->GetBool();
-    g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
-    g_pcSettings.macro1DelayFrames = s_macro1DelayFrames->GetInt();
-    g_pcSettings.enableWeaponSwitchProtect = s_enableWeaponSwitchProtect->GetBool();
-    g_pcSettings.targetingSwitchProtectFrames = s_targetingSwitchProtectFrames->GetInt();
-    g_pcSettings.weaponSwitchInterDelayMs = s_weaponSwitchInterDelayMs->GetInt();
-    g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
-    g_pcSettings.sprintProtectExitAimDelayFrames = s_sprintProtectExitAimDelayFrames->GetInt();
-    g_pcSettings.sprintProtectWeaponSwitchDelayFrames = s_sprintProtectWeaponSwitchDelayFrames->GetInt();
-    g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
-    g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
-    g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
-
-    g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
-    g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
-    g_pcSettings.analogWeaponProtectDurationMs = s_analogWeaponProtectDurationMs->GetInt();
-
-    g_pcSettings.runAnimSpeed = s_runAnimSpeed->GetFloat();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
@@ -665,25 +589,6 @@ void SavePCControlSettings()
     s_chPosY->SetFloat(g_pcSettings.chPosY);
     s_chExpansionMax->SetFloat(g_pcSettings.chExpansionMax);
     s_chExpansionIdle->SetFloat(g_pcSettings.chExpansionIdle);
-    s_autoRun->SetBool(g_pcSettings.autoRun);
-    s_sprintProtected->SetBool(g_pcSettings.sprintProtected);
-    s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
-    s_macro1DelayFrames->SetInt(g_pcSettings.macro1DelayFrames);
-    s_enableWeaponSwitchProtect->SetBool(g_pcSettings.enableWeaponSwitchProtect);
-    s_targetingSwitchProtectFrames->SetInt(g_pcSettings.targetingSwitchProtectFrames);
-    s_weaponSwitchInterDelayMs->SetInt(g_pcSettings.weaponSwitchInterDelayMs);
-    s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
-    s_sprintProtectExitAimDelayFrames->SetInt(g_pcSettings.sprintProtectExitAimDelayFrames);
-    s_sprintProtectWeaponSwitchDelayFrames->SetInt(g_pcSettings.sprintProtectWeaponSwitchDelayFrames);
-    s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
-    s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
-    s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
-
-    s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
-    s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
-    s_analogWeaponProtectDurationMs->SetInt(g_pcSettings.analogWeaponProtectDurationMs);
-
-    s_runAnimSpeed->SetFloat(g_pcSettings.runAnimSpeed);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 

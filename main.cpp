@@ -114,37 +114,15 @@ static bool g_macro2Buffered = false;
 static bool g_macro2ReplayActive = false;
 static int g_macro2ReplayAimFrames = 0;
 static uint32_t g_macroStartFrame = 0;
-static uint32_t g_macroSprintFrame = 0;
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_switchQueue[32];
 static int g_switchQueueCount = 0;
 static int g_switchQueueGap = 0;
-static uint32_t g_feintProtectFrame = 0;
-static int g_feintLastX = 0;
-static int g_feintLastY = 0;
-static uint32_t g_macro2ProtectTime = 0;
-static uint32_t g_sprintProtectExitFrame = 0; // Frame kapan proteksi BERAKHIR
-static uint32_t g_sprintProtectExitStartFrame = 0; // Frame kapan proteksi DIMULAI
-static bool g_sprintProtectJustDownSent = false;
-static bool g_triggeredByWeaponSwitch = false;
-static bool g_triggeredByExitAim = false;
 static uint32_t g_internalFrameCount = 0;
-
-static void ApplySprintExitDelay(int frames)
-{
-    g_sprintProtectExitStartFrame = g_internalFrameCount + (uint32_t)frames;
-    g_sprintProtectExitFrame = g_sprintProtectExitStartFrame + (uint32_t)(g_pcSettings.sprintProtected ? g_pcSettings.sprintProtectExitFrames : 6);
-    g_sprintProtectJustDownSent = false;
-}
-
-static uint32_t g_targetingSwitchProtectFrame = 0;
 
 static uint32_t g_analogReleaseTime = 0;
 static int g_analogLastX = 0;
 static int g_analogLastY = 0;
-static uint32_t g_analogProtectStartTime = 0;
-static uint32_t g_analogProtectDuration = 0;
-static int g_analogProtectWeaponDir = 0; // 0: none, 1: prev, 2: next
 
 uint32_t GetTickCountMs()
 {
@@ -295,34 +273,6 @@ int HookOf_GetPedWalkLeftRight(void* self) {
         g_analogReleaseTime = 0;
     }
 
-    // EKSEKUSI SEKUENS PROTEKSI (PROTEKSI AKTIF)
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectStartTime > 0)
-    {
-        uint32_t elapsed = GetTickCountMs() - g_analogProtectStartTime;
-        if (elapsed < g_analogProtectDuration)
-        {
-            outX = g_analogLastX;
-            outY = g_analogLastY;
-        }
-        else
-        {
-            g_analogProtectStartTime = 0;
-        }
-    }
-
-    if (g_pcSettings.enableFeintProtect && g_feintProtectFrame > 0)
-    {
-        if (g_internalFrameCount < g_feintProtectFrame)
-        {
-            if (outX == 0 && outY == 0)
-            {
-                outX = g_feintLastX;
-                outY = g_feintLastY;
-            }
-        }
-        else g_feintProtectFrame = 0;
-    }
-
     g_cachedX = outX;
     g_cachedY = outY;
     g_lastPed = self;
@@ -380,41 +330,18 @@ static void UpdateMacroShoot()
         {
             g_macroHolding = true;
             g_macroStartFrame = g_internalFrameCount;
-            // Gunakan frame counter untuk Macro agar tidak bentrok dengan Sprint Protect global
-            g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
-        }
-
-        if (!aiming && !g_macroAimTriggered)
-        {
-            uint32_t elapsedFrames = g_internalFrameCount - g_macroStartFrame;
-
-            // Menunggu delay macro selesai baru membidik
-            if (elapsedFrames >= (uint32_t)g_pcSettings.macro1DelayFrames)
-            {
-                g_macroAimTriggered = true;
-                g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
-            }
-        }
-    }
-    else if (macro2Pressed)
-    {
-        if (GetTickCountMs() < g_macro2ProtectTime)
-        {
-            if (macro2PhysicalPressed)
-            {
-                g_macro2Buffered = true;
-                g_macro2ReplayActive = false;
-                g_macro2ReplayAimFrames = 0;
-            }
-            return;
         }
 
         if (!aiming && !g_macroAimTriggered)
         {
             g_macroAimTriggered = true;
-            // Macro 2 juga menggunakan delay frame yang sama untuk bantuan lari
-            g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
-            g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
+        }
+    }
+    else if (macro2Pressed)
+    {
+        if (!aiming && !g_macroAimTriggered)
+        {
+            g_macroAimTriggered = true;
         }
         g_macro2Buffered = false;
         g_macroHolding = aiming;
@@ -438,8 +365,7 @@ static void UpdateMacroShoot()
     }
     else
     {
-        // Jika ada klik yang terbuffer dan proteksi sudah habis, eksekusi sekarang
-        if (g_macro2Buffered && GetTickCountMs() >= g_macro2ProtectTime)
+        if (g_macro2Buffered)
         {
             g_macro2Buffered = false;
             g_macro2ReplayActive = true;
@@ -448,7 +374,6 @@ static void UpdateMacroShoot()
         }
 
         g_macroHolding = false;
-        g_macroSprintFrame = 0; // Hapus timer macro saat dilepas agar tidak "mempengaruhi" global
         if (!aiming) g_macroAimTriggered = false;
     }
 }
@@ -597,45 +522,6 @@ static bool IsCustomSprintTouched()
     return IsActionTouched(ACTION_SPRINT);
 }
 
-static bool IsSprintProtected()
-{
-    // 0. Macro Sprint (Selalu aktif saat macro jalan, tidak peduli setting global)
-    if (g_macroSprintFrame > 0 && g_internalFrameCount < g_macroSprintFrame) return true;
-
-    if (!g_pcSettings.sprintProtected) return false;
-
-    // 1. Exit Protection (Setelah lepas Aim)
-    if (g_sprintProtectExitFrame > 0)
-    {
-        if (g_internalFrameCount < g_sprintProtectExitFrame)
-        {
-            // Hanya aktif jika sudah melewati masa delay
-            if (g_internalFrameCount >= g_sprintProtectExitStartFrame)
-            {
-                if (IsCustomSprintTouched())
-                {
-                    g_sprintProtectExitFrame = 0;
-                    return false;
-                }
-                return true;
-            }
-            return false; // Sedang dalam masa delay
-        }
-        else g_sprintProtectExitFrame = 0;
-    }
-
-    // 2. Entry Protection (Saat mau masuk Aim)
-    // Jika tombol Target ditekan, tapi Sprint baru saja dilepas (kurang dari 10 frame)
-    // dan belum benar-benar masuk mode aiming kamera.
-    if (IsActionTouched(ACTION_TARGET) && !IsAimMode())
-    {
-        int relFrames = GetActionReleaseFrames(ACTION_SPRINT);
-        if (relFrames > 0 && relFrames < g_pcSettings.sprintProtectEntryFrames) return true;
-    }
-
-    return false;
-}
-
 static bool IsCustomTargetHeld()
 {
     if (IsActionTouched(ACTION_TARGET))
@@ -647,27 +533,9 @@ static bool IsCustomTargetHeld()
     return false;
 }
 
-static bool IsAutoRunActive()
-{
-    if (!g_pcSettings.autoRun) return false;
-    if (IsAimMode()) return false;
-
-    float customX, customY;
-    GetCustomAnalogValues(customX, customY);
-    if (customX == 0.0f && customY == 0.0f) return false;
-
-    // Follow the same delay as sprintProtected when exiting aim
-    if (g_sprintProtectExitFrame > 0)
-    {
-        if (g_internalFrameCount < g_sprintProtectExitStartFrame) return false; // Sedang dalam masa delay
-    }
-
-    return true;
-}
-
 int HookOf_GetSprint(void* self, int sprintType)
 {
-    if (IsCustomSprintTouched() || IsSprintProtected() || IsAutoRunActive())
+    if (IsCustomSprintTouched())
     {
         void* player = FindPlayerPed(-1);
         if (player) SetMoveState(player, 7);
@@ -694,13 +562,6 @@ int HookOf_SprintJustDown(void* self)
         return 1;
     }
 
-    // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
-    if (g_pcSettings.sprintProtected && g_sprintProtectExitFrame > 0 && g_internalFrameCount >= g_sprintProtectExitStartFrame && !g_sprintProtectJustDownSent)
-    {
-        g_sprintProtectJustDownSent = true;
-        return 1;
-    }
-
     if (g_pcSettings.enableSprintDoubleTapBoost && g_sprintDoubleTapBoost > 0)
     {
         g_sprintDoubleTapBoost--;
@@ -712,18 +573,6 @@ int HookOf_SprintJustDown(void* self)
 void* HookOf_BlendAnimation(void* clump, int group, int animId, float delta)
 {
     void* assoc = BlendAnimation(clump, group, animId, delta);
-    if (assoc)
-    {
-        float speedMult = 1.0f;
-        if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
-
-        if (speedMult != 1.0f)
-        {
-            *(float*)((uintptr_t)assoc + 0x18) *= speedMult;
-            *(float*)((uintptr_t)assoc + 0x1C) *= speedMult; // Second possible offset
-            *(float*)((uintptr_t)assoc + 0x24) *= speedMult; // Third possible offset
-        }
-    }
     return assoc;
 }
 
@@ -757,49 +606,13 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 1 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        bool isAnalogProtecting = (g_analogProtectStartTime > 0);
-        bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-        bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+        // Pop and Start
+        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+        g_switchQueueCount--;
 
-        // Allow switch if analog protecting or if timing protection is passed
-        if (isAnalogProtecting || !g_pcSettings.enableWeaponSwitchProtect || (!inTargetingProtect && !inInterDelay))
-        {
-            // Trigger Analog Protect on the FIRST switch if we're aiming and idle
-            if (!isAnalogProtecting && g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
-            {
-                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
-                {
-                    g_analogProtectStartTime = GetTickCountMs();
-                    g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
-                    g_analogProtectWeaponDir = 1;
-
-                    if (g_pcSettings.enableFeintProtect)
-                    {
-                        g_feintLastX = g_analogLastX;
-                        g_feintLastY = g_analogLastY;
-                        g_feintProtectFrame = g_internalFrameCount + (g_pcSettings.analogWeaponProtectDurationMs / 20) + g_pcSettings.feintProtectFrames;
-                        g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                    }
-                }
-            }
-
-            // Pop and Start
-            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-            g_switchQueueCount--;
-
-            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
-            {
-                g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                g_feintLastX = g_cachedX;
-                g_feintLastY = g_cachedY;
-            }
-
-            g_prevWeaponFrames = 2;
-            g_switchQueueGap = 3;
-            g_lastWeaponSwitchTime = GetTickCountMs();
-        }
+        g_prevWeaponFrames = 2;
+        g_switchQueueGap = 3;
+        g_lastWeaponSwitchTime = GetTickCountMs();
     }
 
     if (g_prevWeaponFrames > 0)
@@ -827,47 +640,13 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 2 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        bool isAnalogProtecting = (g_analogProtectStartTime > 0);
-        bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-        bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
+        // Pop and Start
+        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+        g_switchQueueCount--;
 
-        if (isAnalogProtecting || !g_pcSettings.enableWeaponSwitchProtect || (!inTargetingProtect && !inInterDelay))
-        {
-            if (!isAnalogProtecting && g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
-            {
-                uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-                if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
-                {
-                    g_analogProtectStartTime = GetTickCountMs();
-                    g_analogProtectDuration = (uint32_t)g_pcSettings.analogWeaponProtectDurationMs;
-                    g_analogProtectWeaponDir = 2;
-
-                    if (g_pcSettings.enableFeintProtect)
-                    {
-                        g_feintLastX = g_analogLastX;
-                        g_feintLastY = g_analogLastY;
-                        g_feintProtectFrame = g_internalFrameCount + (g_pcSettings.analogWeaponProtectDurationMs / 20) + g_pcSettings.feintProtectFrames;
-                        g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                    }
-                }
-            }
-
-            // Pop and Start
-            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-            g_switchQueueCount--;
-
-            if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogProtectStartTime == 0)
-            {
-                g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-                g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
-                g_feintLastX = g_cachedX;
-                g_feintLastY = g_cachedY;
-            }
-
-            g_nextWeaponFrames = 2;
-            g_switchQueueGap = 3;
-            g_lastWeaponSwitchTime = GetTickCountMs();
-        }
+        g_nextWeaponFrames = 2;
+        g_switchQueueGap = 3;
+        g_lastWeaponSwitchTime = GetTickCountMs();
     }
 
     if (g_nextWeaponFrames > 0)
@@ -952,19 +731,8 @@ void HookOf_Render2DStuff()
 
     if (g_switchQueueGap > 0) g_switchQueueGap--;
 
-    if (g_analogProtectStartTime > 0)
-    {
-        uint32_t elapsed = GetTickCountMs() - g_analogProtectStartTime;
-        if (elapsed >= g_analogProtectDuration) g_analogProtectStartTime = 0;
-    }
-
     if (IsActionTouched(ACTION_EXIT_AIM))
     {
-        if (IsActionTouched(ACTION_TARGET) || g_macroAimTriggered)
-        {
-            g_triggeredByExitAim = true;
-            ApplySprintExitDelay(g_pcSettings.sprintProtectExitAimDelayFrames);
-        }
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
         ForceReleaseAction(ACTION_TARGET);
@@ -979,7 +747,6 @@ void HookOf_Render2DStuff()
     if (!g_lastAimState && aimNow)
     {
         g_switchQueueCount = 0; // Clear queue on fresh aim
-        g_targetingSwitchProtectFrame = g_internalFrameCount + g_pcSettings.targetingSwitchProtectFrames;
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
@@ -987,40 +754,8 @@ void HookOf_Render2DStuff()
     {
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
-
-        if (g_pcSettings.sprintProtected || g_pcSettings.autoRun)
-        {
-            // Jika belum dihandle oleh hook (manual release), gunakan ExitAimDelay
-            if (!g_triggeredByWeaponSwitch && !g_triggeredByExitAim)
-            {
-                ApplySprintExitDelay(g_pcSettings.sprintProtectExitAimDelayFrames);
-            }
-        }
-
-        // Reset flags setelah digunakan
-        g_triggeredByWeaponSwitch = false;
-        g_triggeredByExitAim = false;
     }
 
-    // Detect Aim Entry (Reset flags saat mulai bidik lagi)
-    if (!g_lastTargetState && isTargeting)
-    {
-        g_triggeredByWeaponSwitch = false;
-        g_triggeredByExitAim = false;
-        g_triggeredByWeaponSwitch = false; // double safety
-    }
-
-    if (!aimNow)
-    {
-        // Cleanup flags jika tidak sedang membidik
-        if (!isTargeting)
-        {
-             g_triggeredByWeaponSwitch = false;
-             g_triggeredByExitAim = false;
-        }
-    }
-
-    // Secondary cleanup when camera actually changes
     if (g_lastAimState && !aimNow)
     {
         void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
@@ -1229,21 +964,6 @@ void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w,
 
 int HookOf_CAnimBlendAssociation_UpdateTime(void* self, float time1, float time2)
 {
-    if (self)
-    {
-        uint16_t animId = *(uint16_t*)((uintptr_t)self + 0x2A); // Offset to m_nAnimId (32-bit mobile)
-        float speedMult = 1.0f;
-
-        if (animId == 1) speedMult = g_pcSettings.runAnimSpeed;
-
-        if (speedMult != 1.0f)
-        {
-            // Apply multiplier to speed before game uses it
-            // Based on disassembly, speed is likely at 0x1C or 0x24
-            *(float*)((uintptr_t)self + 0x1C) *= speedMult;
-            *(float*)((uintptr_t)self + 0x24) *= speedMult;
-        }
-    }
     int res = CAnimBlendAssociation_UpdateTime(self, time1, time2);
     return res;
 }
@@ -1263,41 +983,16 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
     bool switchRequested = false;
 
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogProtectStartTime > 0)
+    // Logika standar jika tidak dalam proteksi analog:
+    if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
+        (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
+        (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_switchQueueCount > 0))
     {
         switchRequested = true;
-    }
-    else
-    {
-        // Logika standar jika tidak dalam proteksi analog:
-        if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
-            (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
-            (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_switchQueueCount > 0))
-        {
-            switchRequested = true;
-        }
     }
 
     if (switchRequested)
     {
-        if (IsActionTouched(ACTION_TARGET) || g_macroAimTriggered)
-        {
-            g_triggeredByWeaponSwitch = true;
-            ApplySprintExitDelay(g_pcSettings.sprintProtectWeaponSwitchDelayFrames);
-        }
-
-        // TUNDA SEPENUHNYA jika masih dalam masa proteksi aim entry
-        if (g_pcSettings.enableWeaponSwitchProtect && g_analogProtectStartTime == 0)
-        {
-            bool inTargetingProtect = (g_internalFrameCount < g_targetingSwitchProtectFrame);
-            bool inInterDelay = (GetTickCountMs() - g_lastWeaponSwitchTime < (uint32_t)g_pcSettings.weaponSwitchInterDelayMs);
-
-            if (inTargetingProtect || inInterDelay)
-            {
-                return 0;
-            }
-        }
-
         ForceReleaseAction(ACTION_TARGET);
         ForceReleaseAction(ACTION_VC_SHOOT);
         ForceReleaseAction(ACTION_MACRO_SHOOT);
@@ -1399,8 +1094,8 @@ extern "C" void OnModLoad()
 
         HOOK(CTimeCycle_Update, gtasa + 0x41EF28 + 1);
         // --- PATCH: Allow Aiming/Quick-Aim While Running/Sprinting ---
-        aml->Write(gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2);
-        aml->Write(gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
+        // aml->Write(gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2);
+        // aml->Write(gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
 
         HOOK(Render2DStuff, aml->GetSym(pGameHandle, "_Z13Render2dStuffv"));
         HOOKPLT(InitRenderware, gtasa + 0x66F2D0);
