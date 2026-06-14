@@ -94,6 +94,12 @@ PCControlSettings g_pcSettings = {
     100,    // analogWeaponProtectDelayMs
     200,    // analogWeaponProtectDurationMs
 
+    0.07f,  // runAcceleration
+    2.0f,   // sprintBlendDelta
+    1.0f,   // runAnimSpeed
+    1.0f,   // sprintAnimSpeed
+    1.0f,   // stopAnimSpeed
+
     // Button Panel Settings
     false,  // bpEnabled
 };
@@ -204,6 +210,12 @@ static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
 static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
 static ConfigEntry* s_analogWeaponProtectFrames = nullptr;
 static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
+
+static ConfigEntry* s_runAcceleration = nullptr;
+static ConfigEntry* s_sprintBlendDelta = nullptr;
+static ConfigEntry* s_runAnimSpeed = nullptr;
+static ConfigEntry* s_sprintAnimSpeed = nullptr;
+static ConfigEntry* s_stopAnimSpeed = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
 
@@ -405,6 +417,12 @@ void InitPCControlSettings()
     s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
     s_analogWeaponProtectDurationMs = cfg->Bind("AnalogWeaponProtectDurationMs", 200, kSettingsSection);
 
+    s_runAcceleration = cfg->Bind("RunAcceleration", 0.07f, kSettingsSection);
+    s_sprintBlendDelta = cfg->Bind("SprintBlendDelta", 2.0f, kSettingsSection);
+    s_runAnimSpeed = cfg->Bind("RunAnimSpeed", 1.0f, kSettingsSection);
+    s_sprintAnimSpeed = cfg->Bind("SprintAnimSpeed", 1.0f, kSettingsSection);
+    s_stopAnimSpeed = cfg->Bind("StopAnimSpeed", 1.0f, kSettingsSection);
+
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
     for (int i = 0; i < 4; ++i) {
@@ -506,6 +524,12 @@ void InitPCControlSettings()
     g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
     g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
     g_pcSettings.analogWeaponProtectDurationMs = s_analogWeaponProtectDurationMs->GetInt();
+
+    g_pcSettings.runAcceleration = s_runAcceleration->GetFloat();
+    g_pcSettings.sprintBlendDelta = s_sprintBlendDelta->GetFloat();
+    g_pcSettings.runAnimSpeed = s_runAnimSpeed->GetFloat();
+    g_pcSettings.sprintAnimSpeed = s_sprintAnimSpeed->GetFloat();
+    g_pcSettings.stopAnimSpeed = s_stopAnimSpeed->GetFloat();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
@@ -717,6 +741,12 @@ void SavePCControlSettings()
     s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
     s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
     s_analogWeaponProtectDurationMs->SetInt(g_pcSettings.analogWeaponProtectDurationMs);
+
+    s_runAcceleration->SetFloat(g_pcSettings.runAcceleration);
+    s_sprintBlendDelta->SetFloat(g_pcSettings.sprintBlendDelta);
+    s_runAnimSpeed->SetFloat(g_pcSettings.runAnimSpeed);
+    s_sprintAnimSpeed->SetFloat(g_pcSettings.sprintAnimSpeed);
+    s_stopAnimSpeed->SetFloat(g_pcSettings.stopAnimSpeed);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 

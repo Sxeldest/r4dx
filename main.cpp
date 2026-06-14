@@ -71,6 +71,7 @@ DECL_HOOKi(GetJump, void* self);
 DECL_HOOKi(JumpJustDown, void* self);
 DECL_HOOKi(GetSprint, void* self, int sprintType);
 DECL_HOOKi(SprintJustDown, void* self);
+DECL_HOOK(void*, BlendAnimation, void* clump, int group, int animId, float delta);
 DECL_HOOKb(GetEnterTargeting, void* self);
 DECL_HOOKb(CycleWeaponLeftJustDown, void* self);
 DECL_HOOKb(CycleWeaponRightJustDown, void* self);
@@ -704,6 +705,26 @@ int HookOf_SprintJustDown(void* self)
     return SprintJustDown(self);
 }
 
+void* HookOf_BlendAnimation(void* clump, int group, int animId, float delta)
+{
+    if (animId == 2) // ANIM_ID_SPRINT
+    {
+        delta = g_pcSettings.sprintBlendDelta;
+    }
+
+    void* assoc = BlendAnimation(clump, group, animId, delta);
+    if (assoc)
+    {
+        if (animId == 1) // ANIM_ID_RUN
+            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.runAnimSpeed;
+        else if (animId == 2) // ANIM_ID_SPRINT
+            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.sprintAnimSpeed;
+        else if (animId == 6 || animId == 7) // ANIM_ID_RUN_STOP, ANIM_ID_RUN_STOPR
+            *(float*)((uintptr_t)assoc + 0x18) *= g_pcSettings.stopAnimSpeed;
+    }
+    return assoc;
+}
+
 bool HookOf_GetEnterTargeting(void* self)
 {
     if (IsCustomTargetHeld())
@@ -922,6 +943,12 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     g_internalFrameCount++;
+
+    // Apply movement acceleration patch
+    if (g_gtasa)
+    {
+        aml->Write(g_gtasa + 0x539DE0, (uintptr_t)&g_pcSettings.runAcceleration, 4);
+    }
 
     Render2DStuff();
     CameraPatchOnRender2D();
@@ -1335,6 +1362,9 @@ extern "C" void OnModLoad()
         HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
         HOOK(CycleWeaponLeftJustDown, gtasa + addrCycleWeaponLeft + 1);
         HOOK(CycleWeaponRightJustDown, gtasa + addrCycleWeaponRight + 1);
+        BlendAnimation = (void* (*)(void*, int, int, float))aml->GetSym(pGameHandle, "_ZN12CAnimManager14BlendAnimationEP7RpClump12AssocGroupId11AnimationIdf");
+        if (BlendAnimation) HOOK(BlendAnimation, (uintptr_t)BlendAnimation);
+
         GetTaskUseGun = (int (*)(void*))(gtasa + addrGetTaskUseGun + 1);
         FindPlayerPed = (void* (*)(int))(aml->GetSym(pGameHandle, "_Z13FindPlayerPedi"));
         SetMoveState = (void (*)(void*, int))(aml->GetSym(pGameHandle, "_ZN4CPed12SetMoveStateE10eMoveState"));

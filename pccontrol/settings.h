@@ -219,6 +219,12 @@ struct PCControlSettings
     int analogWeaponProtectDelayMs;
     int analogWeaponProtectDurationMs;
 
+    float runAcceleration;
+    float sprintBlendDelta;
+    float runAnimSpeed;
+    float sprintAnimSpeed;
+    float stopAnimSpeed;
+
     // Button Panel Settings
     bool bpEnabled;
 
