@@ -13,7 +13,6 @@
 #include "game/World.h"
 #include "game/Sprite.h"
 #include "pccontrol/playertags.h"
-#include "pccontrol/camera.h"
 #include "pccontrol/command.h"
 #include "pccontrol/menu.h"
 #include "pccontrol/settings.h"
@@ -179,9 +178,14 @@ static CCamera* pTheCamera = nullptr;
 
 static bool IsCustomVCShootWidget(int widgetId) { return widgetId == 21; }
 
-static bool IsAimMode()
+bool IsAimMode()
 {
-    return IsCameraInAimMode();
+    if (!pTheCamera) return false;
+    uint8_t activeIdx = pTheCamera->m_nActiveCam;
+    if (activeIdx >= 3) return false;
+    int mode = (int)pTheCamera->m_aCams[activeIdx].m_nMode;
+    return (mode == 5 || mode == 7 || mode == 8 ||
+            mode == 16 || mode == 53 || mode == 65);
 }
 
 static void CleanAnalogAxes(float& x, float& y)
@@ -565,7 +569,6 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     {
         result = 1;
     }
-    CameraPatchOnIsTouched(widgetId, result);
     return result;
 }
 
@@ -932,7 +935,6 @@ bool HookOf_InitRenderware()
 {
     if (!InitRenderware()) return false;
     InitRenderWareFunctions();
-    CameraPatchOnInitRenderware();
     g_pGUI = new PCControlGUI();
     if (!g_pGUI->initialize()) logger->Error("Failed to initialize GUI");
     g_imguiInitialized = true;
@@ -944,7 +946,6 @@ void HookOf_Render2DStuff()
     g_internalFrameCount++;
 
     Render2DStuff();
-    CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
     UpdateMacroShoot();
@@ -1076,8 +1077,6 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
 {
     // Safety check for fingerId to prevent out-of-bounds in our own and game's arrays
     if (fingerId < 0 || fingerId >= 10) return;
-
-    CameraPatchOnTouchEvent(type, fingerId, (float)x, (float)y);
 
     if (HandleWidgetDragging(type, fingerId, x, y)) return;
     if (HandleCustomWidgetTouch(type, fingerId, x, y)) return;
@@ -1339,7 +1338,6 @@ extern "C" void OnModPreLoad()
     recipNearClip = (RwReal*)aml->GetSym(pGameHandle, "_ZN9CSprite2d13RecipNearClipE");
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (uintptr_t*)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
-    CameraPatchPreload(pGameHandle);
 }
 
 extern "C" void OnModLoad()
@@ -1355,7 +1353,6 @@ extern "C" void OnModLoad()
         pTheCamera = (CCamera*)aml->GetSym(pGameHandle, "TheCamera");
         if (!g_touchWidgets) g_touchWidgets = (uintptr_t*)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
-        CameraPatchLoad(pGameHandle, gtasa);
         DebugUI_Init(pGameHandle);
 
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);

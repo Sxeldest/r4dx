@@ -21,7 +21,6 @@ enum eWidgetAction
     ACTION_MACRO_SHOOT,
     ACTION_MACRO_SHOOT_2,
     ACTION_VOICE,
-    ACTION_LOOK,
     ACTION_GAS,
     ACTION_BRAKE,
     ACTION_HANDBRAKE,
@@ -126,17 +125,10 @@ struct MemoryPatch
 struct PCControlSettings
 {
     bool showMenu;
-    bool enableCameraPatch;
     bool disableNativeCrouch;
     bool disableNativeJump;
     bool enableAnalogPatch;
     bool enableSprintDoubleTapBoost;
-    float camSensX;
-    float camSensY;
-    float aimSensX;
-    float aimSensY;
-    float smoothness;
-    float camAccel;
     float dpadSensX;
     float dpadSensY;
     float dpadSmoothness;

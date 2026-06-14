@@ -169,8 +169,6 @@ static bool IsWidgetActive(int idx)
 static void RefreshActiveActionsMask()
 {
     s_activeActionsMask = 0;
-    bool lookActive = false;
-    int lookFinger = -1;
     for (int i = 0; i < MAX_CUSTOM_WIDGETS; ++i)
     {
         if (IsWidgetActive(i))
@@ -189,15 +187,8 @@ static void RefreshActiveActionsMask()
                 if (ay < -50.0f) s_activeActionsMask |= (1ULL << ACTION_GAS);
                 if (ay > 50.0f) s_activeActionsMask |= (1ULL << ACTION_BRAKE);
             }
-
-            if (action == ACTION_LOOK)
-            {
-                lookActive = true;
-                lookFinger = s_widgetStates[i].activeFinger;
-            }
         }
     }
-    SetCustomLookActive(lookActive, lookFinger);
 }
 
 bool IsActionTouched(eWidgetAction action);
@@ -277,7 +268,7 @@ static void ActivateCustomWidget(CustomWidget& w, WidgetState& state)
 
 static bool IsHoldActivation(const CustomWidget& w)
 {
-    return w.action == ACTION_DPAD || w.action == ACTION_LOOK || w.activation == WACT_HOLD;
+    return w.action == ACTION_DPAD || w.activation == WACT_HOLD;
 }
 
 static bool IsPointInCustomButton(float x, float y, float centerX, float centerY, float size)
@@ -380,8 +371,7 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
 
         WidgetState& state = s_widgetStates[i];
         bool isDPAD = (w.action == ACTION_DPAD);
-        bool isLook = (w.action == ACTION_LOOK);
-        bool isAreaWidget = (isDPAD || isLook);
+        bool isAreaWidget = isDPAD;
 
         bool inside = false;
         if (isAreaWidget)
@@ -428,15 +418,6 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
             if (fingerId == state.activeFinger)
             {
                 if (IsHoldActivation(w) || w.activation == WACT_TOGGLE) state.touched = true;
-
-                if (isLook)
-                {
-                    float dx = (float)x - state.currentPosX;
-                    float dy = (float)y - state.currentPosY;
-                    ApplyCustomCameraLook(dx, dy);
-                    state.currentPosX = (float)x;
-                    state.currentPosY = (float)y;
-                }
 
                 if (!isPassType) blocked = true;
             }
@@ -487,9 +468,9 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 // Output dikalikan dengan sensitivity (SensX/SensY).
 
                 // Gunakan Diagonal Resistance (Threshold) & Sensitivity hanya saat aiming
-                float threshold = IsCameraInAimMode() ? g_pcSettings.dpadDiagonalThreshold : 45.0f;
-                float sensX = IsCameraInAimMode() ? g_pcSettings.dpadSensX : 1.0f;
-                float sensY = IsCameraInAimMode() ? g_pcSettings.dpadSensY : 1.0f;
+                float threshold = IsAimMode() ? g_pcSettings.dpadDiagonalThreshold : 45.0f;
+                float sensX = IsAimMode() ? g_pcSettings.dpadSensX : 1.0f;
+                float sensY = IsAimMode() ? g_pcSettings.dpadSensY : 1.0f;
 
                 float outX = 0, outY = 0;
                 if (fabsf(tx) >= threshold) outX = (tx > 0) ? 127.0f : -127.0f;
@@ -644,7 +625,7 @@ void RenderCustomWidgets()
     bool playerInVehicle = FindPlayerVehicle && FindPlayerVehicle(-1, false) != 0;
     bool inVehicleContext = IsPCControlMenuVisible() ? s_menuPreviewInVehicle : playerInVehicle;
 
-    const char* actionLabels[] = { "NONE", "VCS", "TGT", "JMP", "CRH", "SPR", "DPD", "W-P", "W-N", "TOG", "WLK", "MS1", "MS2", "MIC", "LOK", "GAS", "BRK", "HBR", "STL", "STR", "ENT", "HRN", "Y", "N", "G", "H", "F", "TAB", "ALT", "ESC", "2", "SPC", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10" };
+    const char* actionLabels[] = { "NONE", "VCS", "TGT", "JMP", "CRH", "SPR", "DPD", "W-P", "W-N", "TOG", "WLK", "MS1", "MS2", "MIC", "GAS", "BRK", "HBR", "STL", "STR", "ENT", "HRN", "Y", "N", "G", "H", "F", "TAB", "ALT", "ESC", "2", "SPC", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10" };
 
     for (int i = 0; i < MAX_CUSTOM_WIDGETS; ++i)
     {
@@ -666,33 +647,10 @@ void RenderCustomWidgets()
             int actionIdx = w.action;
             if (actionIdx < 0 || actionIdx >= (int)(sizeof(actionLabels) / sizeof(actionLabels[0]))) actionIdx = 0;
 
-            if (actionIdx == ACTION_LOOK)
-            {
-                // LOOK AREA: Draw only the box, no circles or knobs
-                ImDrawList* dl = ImGui::GetBackgroundDrawList();
-                if (dl)
-                {
-                    bool touched = s_widgetStates[i].touched;
-                    bool isSelected = IsPCControlMenuVisible() && (g_pcSettings.selectedWidget == (i + 1));
-
-                    ImU32 col = isSelected ? IM_COL32(255, 255, 0, AlphaFromOpacity(150)) :
-                               (touched ? IM_COL32(255, 255, 255, AlphaFromOpacity(80)) : IM_COL32(255, 255, 255, AlphaFromOpacity(40)));
-
-                    dl->AddRect(ImVec2(w.posX, w.posY), ImVec2(w.posX + w.areaW, w.posY + w.areaH), col, 0.0f, 0, isSelected ? 3.0f : 1.0f);
-
-                    if (isSelected || touched)
-                    {
-                        char buf[32]; sprintf(buf, "LOOK AREA %d", i + 1);
-                        dl->AddText(ImVec2(w.posX + 5, w.posY + 5), col, buf);
-                    }
-                }
-                continue;
-            }
-
             float drawX = w.posX;
             float drawY = w.posY;
 
-            if (actionIdx == ACTION_DPAD || actionIdx == ACTION_LOOK)
+            if (actionIdx == ACTION_DPAD)
             {
                 // In menu, area widgets are centered in their area
                 if (IsPCControlMenuVisible())
@@ -706,7 +664,7 @@ void RenderCustomWidgets()
                     {
                         ImU32 col = (g_pcSettings.selectedWidget == (i + 1)) ? IM_COL32(255, 255, 0, 150) : IM_COL32(255, 255, 255, 60);
                         dl->AddRect(ImVec2(w.posX, w.posY), ImVec2(w.posX + w.areaW, w.posY + w.areaH), col, 0.0f, 0, 2.0f);
-                        char buf[32]; sprintf(buf, "%s Area %d", (actionIdx == ACTION_DPAD) ? "DPAD" : "LOOK", i + 1);
+                        char buf[32]; sprintf(buf, "DPAD Area %d", i + 1);
                         dl->AddText(ImVec2(w.posX + 5, w.posY + 5), col, buf);
                     }
                 }
@@ -801,7 +759,7 @@ bool HandleWidgetDragging(int type, int fingerId, int x, int y)
 
             if (!IsActionVisibleInContext(w.action, s_menuPreviewInVehicle)) continue;
 
-            if (w.action == ACTION_DPAD || w.action == ACTION_LOOK)
+            if (w.action == ACTION_DPAD)
             {
                 // Dragging the area
                 if ((float)x >= w.posX && (float)x <= w.posX + w.areaW && (float)y >= w.posY && (float)y <= w.posY + w.areaH)
@@ -983,7 +941,7 @@ void UpdateWidgetReleaseFrames()
         if (s_widgetStates[i].releaseFrames > 0) s_widgetStates[i].releaseFrames--;
 
         // Analog Smoothing (Jiggle Responsiveness) - Only active when aiming
-        float smooth = IsCameraInAimMode() ? g_pcSettings.dpadSmoothness : 1.0f;
+        float smooth = IsAimMode() ? g_pcSettings.dpadSmoothness : 1.0f;
         s_widgetStates[i].analogX = s_widgetStates[i].analogX * (1.0f - smooth) + s_widgetStates[i].targetAnalogX * smooth;
         s_widgetStates[i].analogY = s_widgetStates[i].analogY * (1.0f - smooth) + s_widgetStates[i].targetAnalogY * smooth;
 

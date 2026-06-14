@@ -6,17 +6,10 @@
 
 PCControlSettings g_pcSettings = {
     false, // showMenu
-    true,  // enableCameraPatch
     false, // disableNativeCrouch
     false, // disableNativeJump
     true,  // enableAnalogPatch
     true,  // enableSprintDoubleTapBoost
-    40.0f,
-    35.0f,
-    30.0f,
-    25.0f,
-    7.0f,
-    1.0f, // camAccel
     1.0f, // dpadSensX
     1.0f, // dpadSensY
     0.5f, // dpadSmoothness
@@ -103,17 +96,10 @@ PCControlSettings g_pcSettings = {
 static const char* kSettingsSection = "PCControl";
 static const char* kNametagSection = "Nametags";
 
-static ConfigEntry* s_enableCameraPatch = nullptr;
 static ConfigEntry* s_disableNativeCrouch = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
 static ConfigEntry* s_analogPatch = nullptr;
 static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
-static ConfigEntry* s_camSensX = nullptr;
-static ConfigEntry* s_camSensY = nullptr;
-static ConfigEntry* s_aimSensX = nullptr;
-static ConfigEntry* s_aimSensY = nullptr;
-static ConfigEntry* s_smoothness = nullptr;
-static ConfigEntry* s_camAccel = nullptr;
 static ConfigEntry* s_dpadSensX = nullptr;
 static ConfigEntry* s_dpadSensY = nullptr;
 static ConfigEntry* s_dpadSmoothness = nullptr;
@@ -235,17 +221,10 @@ void InitPCControlSettings()
 {
     cfg->Init();
 
-    s_enableCameraPatch = cfg->Bind("EnableCameraPatch", true, kSettingsSection);
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
     s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
     s_analogPatch = cfg->Bind("AnalogPatch", true, kSettingsSection);
     s_sprintDoubleTapBoost = cfg->Bind("SprintDoubleTapBoost", true, kSettingsSection);
-    s_camSensX = cfg->Bind("CamSensX", 40.0f, kSettingsSection);
-    s_camSensY = cfg->Bind("CamSensY", 35.0f, kSettingsSection);
-    s_aimSensX = cfg->Bind("AimSensX", 30.0f, kSettingsSection);
-    s_aimSensY = cfg->Bind("AimSensY", 25.0f, kSettingsSection);
-    s_smoothness = cfg->Bind("Smoothness", 7.0f, kSettingsSection);
-    s_camAccel = cfg->Bind("CamAccel", 1.0f, kSettingsSection);
     s_dpadSensX = cfg->Bind("DpadSensX", 1.0f, kSettingsSection);
     s_dpadSensY = cfg->Bind("DpadSensY", 1.0f, kSettingsSection);
     s_dpadSmoothness = cfg->Bind("DpadSmoothness", 0.5f, kSettingsSection);
@@ -421,17 +400,10 @@ void InitPCControlSettings()
         s_ntAPColor[i] = cfg->Bind(key, g_pcSettings.ntAPColor[i], kNametagSection);
     }
 
-    g_pcSettings.enableCameraPatch = s_enableCameraPatch->GetBool();
     g_pcSettings.disableNativeCrouch = s_disableNativeCrouch->GetBool();
     g_pcSettings.disableNativeJump = s_disableNativeJump->GetBool();
     g_pcSettings.enableAnalogPatch = s_analogPatch->GetBool();
     g_pcSettings.enableSprintDoubleTapBoost = s_sprintDoubleTapBoost->GetBool();
-    g_pcSettings.camSensX = ClampSetting(s_camSensX->GetFloat(), 1.0f, 100.0f);
-    g_pcSettings.camSensY = ClampSetting(s_camSensY->GetFloat(), 1.0f, 100.0f);
-    g_pcSettings.aimSensX = ClampSetting(s_aimSensX->GetFloat(), 1.0f, 100.0f);
-    g_pcSettings.aimSensY = ClampSetting(s_aimSensY->GetFloat(), 1.0f, 100.0f);
-    g_pcSettings.smoothness = ClampSetting(s_smoothness->GetFloat(), 1.0f, 20.0f);
-    g_pcSettings.camAccel = ClampSetting(s_camAccel->GetFloat(), 1.0f, 5.0f);
     g_pcSettings.dpadSensX = ClampSetting(s_dpadSensX->GetFloat(), 0.1f, 2.0f);
     g_pcSettings.dpadSensY = ClampSetting(s_dpadSensY->GetFloat(), 0.1f, 2.0f);
     g_pcSettings.dpadSmoothness = ClampSetting(s_dpadSmoothness->GetFloat(), 0.01f, 1.0f);
@@ -592,14 +564,6 @@ void InitPCControlSettings()
 
 void SavePCControlSettings()
 {
-    if (!s_enableCameraPatch) return;
-
-    // Clamp values
-    g_pcSettings.camSensX = ClampSetting(g_pcSettings.camSensX, 1.0f, 100.0f);
-    g_pcSettings.camSensY = ClampSetting(g_pcSettings.camSensY, 1.0f, 100.0f);
-    g_pcSettings.aimSensX = ClampSetting(g_pcSettings.aimSensX, 1.0f, 100.0f);
-    g_pcSettings.aimSensY = ClampSetting(g_pcSettings.aimSensY, 1.0f, 100.0f);
-    g_pcSettings.smoothness = ClampSetting(g_pcSettings.smoothness, 1.0f, 20.0f);
     g_pcSettings.deathListFontSize = ClampSetting(g_pcSettings.deathListFontSize, 0.1f, 3.0f);
     g_pcSettings.deathListPosX = ClampSetting(g_pcSettings.deathListPosX, 0.0f, 3000.0f);
     g_pcSettings.deathListPosY = ClampSetting(g_pcSettings.deathListPosY, 0.0f, 2000.0f);
@@ -644,17 +608,10 @@ void SavePCControlSettings()
 
     s_activeWidgetSlot->SetInt(g_pcSettings.activeWidgetSlot);
 
-    s_enableCameraPatch->SetBool(g_pcSettings.enableCameraPatch);
     s_disableNativeCrouch->SetBool(g_pcSettings.disableNativeCrouch);
     s_disableNativeJump->SetBool(g_pcSettings.disableNativeJump);
     s_analogPatch->SetBool(g_pcSettings.enableAnalogPatch);
     s_sprintDoubleTapBoost->SetBool(g_pcSettings.enableSprintDoubleTapBoost);
-    s_camSensX->SetFloat(g_pcSettings.camSensX);
-    s_camSensY->SetFloat(g_pcSettings.camSensY);
-    s_aimSensX->SetFloat(g_pcSettings.aimSensX);
-    s_aimSensY->SetFloat(g_pcSettings.aimSensY);
-    s_smoothness->SetFloat(g_pcSettings.smoothness);
-    s_camAccel->SetFloat(g_pcSettings.camAccel);
     s_dpadSensX->SetFloat(g_pcSettings.dpadSensX);
     s_dpadSensY->SetFloat(g_pcSettings.dpadSensY);
     s_dpadSmoothness->SetFloat(g_pcSettings.dpadSmoothness);

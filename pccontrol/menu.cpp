@@ -333,24 +333,9 @@ void RenderPCControlMenu()
             {
                 ImGui::BeginChild("GeneralScroll", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Mouse & Camera");
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Controls & Patches");
                 ImGui::Separator();
-                changed |= ImGui::Checkbox("Enable Camera Patch", &g_pcSettings.enableCameraPatch);
-                ImGui::SameLine();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
-
-                ImGui::Text("Horizontal Sensitivity");
-                changed |= SliderFloatWithButtons("camSensX", &g_pcSettings.camSensX, 1.0f, 100.0f, "%.1f", 0.5f);
-                ImGui::Text("Vertical Sensitivity");
-                changed |= SliderFloatWithButtons("camSensY", &g_pcSettings.camSensY, 1.0f, 100.0f, "%.1f", 0.5f);
-                ImGui::Text("Aim Sensitivity X");
-                changed |= SliderFloatWithButtons("aimSensX", &g_pcSettings.aimSensX, 1.0f, 100.0f, "%.1f", 0.5f);
-                ImGui::Text("Aim Sensitivity Y");
-                changed |= SliderFloatWithButtons("aimSensY", &g_pcSettings.aimSensY, 1.0f, 100.0f, "%.1f", 0.5f);
-                ImGui::Text("Camera Smoothness");
-                changed |= SliderFloatWithButtons("smoothness", &g_pcSettings.smoothness, 1.0f, 20.0f, "%.1f", 0.5f);
-                ImGui::Text("Camera Acceleration");
-                changed |= SliderFloatWithButtons("camAccel", &g_pcSettings.camAccel, 1.0f, 5.0f, "%.1f", 0.1f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
@@ -443,7 +428,7 @@ void RenderPCControlMenu()
 
                 ImGui::Text("Targeting Switch Protection (Frames)");
                 changed |= SliderIntWithButtons("TargetSwitchProtect", &g_pcSettings.targetingSwitchProtectFrames, 0, 60, "%d frames", 1);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mencegah/menunda ganti senjata saat baru masuk mode aiming (Macro 2).");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Membantu mencegah ganti senjata saat baru masuk mode aiming.");
 
                 ImGui::Text("Macro 2 Lockout After Switch (ms)");
                 changed |= SliderIntWithButtons("Macro2Protect", &g_pcSettings.macro2ProtectMs, 0, 2000, "%d ms", 10);
@@ -469,7 +454,7 @@ void RenderPCControlMenu()
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Legacy Button Panel");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Kill Button Panel", &g_pcSettings.bpEnabled);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memindahkan area sentuh Button Panel ke luar layar dan mematikan render-nya.");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mematikan Button Panel bawaan game.");
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
@@ -543,7 +528,7 @@ void RenderPCControlMenu()
                     if (g_pcSettings.widgets[i].enabled)
                     {
                         char label[64];
-                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                        const char* actionNames[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog/DPAD", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
                         int act = g_pcSettings.widgets[i].action;
 
                         // Special handling for Macro label in the list
@@ -626,7 +611,7 @@ void RenderPCControlMenu()
                     ImGui::TextColored(ImVec4(1, 1, 0, 1), "Editing %s %d", (g_pcSettings.widgets[idx].action == ACTION_MACRO ? "Macro" : "Button"), idx + 1);
                     ImGui::Separator();
 
-                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                    const char* actions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
 
                     if (g_pcSettings.widgets[idx].action == ACTION_MACRO)
                     {
@@ -644,7 +629,7 @@ void RenderPCControlMenu()
                         changed |= ImGui::Combo("##Action", &g_pcSettings.widgets[idx].action, actions, IM_ARRAYSIZE(actions));
                     }
 
-                    if (g_pcSettings.widgets[idx].action != ACTION_DPAD && g_pcSettings.widgets[idx].action != ACTION_LOOK)
+                    if (g_pcSettings.widgets[idx].action != ACTION_DPAD)
                     {
                         const char* types[] = { "Default (Block)", "Passthrough", "Slide-to-Activate", "Slide + Pass" };
                         ImGui::Text("Touch Type");
@@ -685,7 +670,7 @@ void RenderPCControlMenu()
                     }
 
                     ImGui::Spacing();
-                    if (g_pcSettings.widgets[idx].action == ACTION_DPAD || g_pcSettings.widgets[idx].action == ACTION_LOOK)
+                    if (g_pcSettings.widgets[idx].action == ACTION_DPAD)
                     {
                         ImGui::Text("Area Position X");
                         changed |= SliderFloatWithButtons("AreaPosX", &g_pcSettings.widgets[idx].posX, 0.0f, 3000.0f, "%.0f", 1.0f);
@@ -699,7 +684,7 @@ void RenderPCControlMenu()
                         ImGui::Text("Area Height");
                         changed |= SliderFloatWithButtons("AreaHeight", &g_pcSettings.widgets[idx].areaH, 50.0f, 2000.0f);
 
-                        ImGui::Text(g_pcSettings.widgets[idx].action == ACTION_DPAD ? "Analog Size" : "knob Center Size");
+                        ImGui::Text("Analog Size");
                         changed |= SliderFloatWithButtons("AnalogSize", &g_pcSettings.widgets[idx].size, 20.0f, 800.0f);
                     }
                     else
@@ -776,7 +761,7 @@ void RenderPCControlMenu()
                             ImGui::PushID(j);
                             ImGui::Text("Step %d", j + 1);
 
-                            const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Look Area", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
+                            const char* mActions[] = { "NONE", "VC Shoot", "Target", "Jump", "Crouch", "Sprint", "Analog", "Prev Weapon", "Next Weapon", "Toggle HUD", "Walk", "Macro Shoot 1", "Macro Shoot 2", "Voice Chat", "Gas", "Brake", "Handbrake", "Steer Left", "Steer Right", "Enter/Exit Car", "Horn", "SAMP: Y", "SAMP: N", "SAMP: G", "SAMP: H", "SAMP: F", "SAMP: TAB", "SAMP: ALT", "SAMP: ESC", "SAMP: 2", "SAMP: SPC", "Exit Aim" };
                             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
                             if (ImGui::Combo("Action", &m.steps[j].action, mActions, IM_ARRAYSIZE(mActions))) changed = true;
 
