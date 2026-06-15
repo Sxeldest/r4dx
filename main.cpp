@@ -109,10 +109,6 @@ static bool g_customTargetWasHeld = false;
 static bool g_lastAimState = false;
 static bool g_lastTargetState = false;
 
-static bool g_sprintBlockedByAim = false;
-static bool g_sprintWasHeldBeforeAim = false;
-static int g_sprintResetTimer = 0;
-
 static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_macro2StartTimeMs = 0;
 static bool g_macro1Active = false;
@@ -529,50 +525,13 @@ int HookOf_GetSprint(void* self, int sprintType)
     bool targeting = IsCustomTargetHeld();
     bool aiming = IsAimMode();
 
-    // Logic: Smart Sprint Blocking during Aiming
-    if (targeting || aiming)
-    {
-        // 1. Jika baru mulai targeting/aiming dan sprint sudah tertahan dari sebelumnya
-        if (!g_lastTargetState && sprintTouched)
-        {
-            g_sprintWasHeldBeforeAim = true;
-            g_sprintBlockedByAim = true;
-        }
-
-        // 2. Jika sprint dilepas saat sedang aiming, reset status "held before"
-        if (!sprintTouched)
-        {
-            g_sprintWasHeldBeforeAim = false;
-            g_sprintBlockedByAim = false;
-        }
-
-        // 3. Jika menekan sprint BARU (bukan dari sebelum aim), izinkan lari
-        if (sprintTouched && !g_sprintWasHeldBeforeAim)
-        {
-            g_sprintBlockedByAim = false;
-        }
-    }
-    else
-    {
-        // Reset saat sedang tidak bertarung/aiming
-        g_sprintWasHeldBeforeAim = false;
-        g_sprintBlockedByAim = false;
-    }
-
     g_lastTargetState = targeting;
 
     if (sprintTouched)
     {
-        if (g_sprintBlockedByAim) return 0;
-
         void* player = FindPlayerPed(-1);
         if (player)
         {
-            bool isCombat = targeting || IsActionTouched(ACTION_VC_SHOOT);
-
-            // Blokir SetMoveState HANYA saat transisi awal (menekan target/shoot tapi belum masuk aim mode)
-            if (isCombat && !aiming) return 0;
-
             SetMoveState(player, 7);
         }
         return 1;
@@ -582,11 +541,8 @@ int HookOf_GetSprint(void* self, int sprintType)
 
 int HookOf_SprintJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_SPRINT) && !g_sprintBlockedByAim)
+    if (IsActionTouched(ACTION_SPRINT))
     {
-        bool isCombat = IsCustomTargetHeld() || IsActionTouched(ACTION_VC_SHOOT);
-        if (isCombat && !IsAimMode()) return 0;
-
         if (!g_sprintPrevState)
         {
             g_sprintPrevState = true;
@@ -779,26 +735,27 @@ void HookOf_Render2DStuff()
     }
 
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
-
     bool aimNow = IsAimMode();
+
+    // DYNAMIC PATCH: Allow hipfire while sprinting, but keep original logic for aiming
+    if (g_gtasa && aimNow != g_lastAimState)
+    {
+        if (aimNow)
+        {
+            aml->Write(g_gtasa + 0x5379EC, (uintptr_t)"\x07\x28", 2); // Restore original: CMP R0, #7
+            aml->Write(g_gtasa + 0x53815E, (uintptr_t)"\x07\x28", 2);
+        }
+        else
+        {
+            aml->Write(g_gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2); // Patch: CMP R0, #255 (Bypass)
+            aml->Write(g_gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
+        }
+    }
 
     // Detect Aim Entry (Transition to aiming)
     if ((!g_lastTargetState && isTargeting) || (!g_lastAimState && aimNow))
     {
         g_switchQueueCount = 0; // Clear queue on fresh aim
-        g_sprintResetTimer = 3; // Beri delay 3 frame sebelum reset sprint
-    }
-
-    if (g_sprintResetTimer > 0)
-    {
-        g_sprintResetTimer--;
-        if (g_sprintResetTimer == 0)
-        {
-            // RESET SPRINT TOUCH SETELAH DELAY
-            ForceReleaseAction(ACTION_SPRINT);
-            g_sprintBlockedByAim = true;
-            g_sprintWasHeldBeforeAim = true;
-        }
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
@@ -1151,9 +1108,13 @@ extern "C" void OnModLoad()
         }
 
         HOOK(CTimeCycle_Update, gtasa + 0x41EF28 + 1);
-        // --- PATCH: Allow Aiming/Quick-Aim While Running/Sprinting ---
-        // aml->Write(gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2);
-        // aml->Write(gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
+
+        // Patch CTaskSimplePlayerOnFoot::ProcessPlayerWeapon state check (Hipfire while sprinting)
+        // Offset 0x5379EC: CMP R0, #7 -> Change to CMP R0, #255 (Always false, allows shooting)
+        // Offset 0x53815E: CMP R0, #7 -> Change to CMP R0, #255
+        // Logic: if (!IsAimMode()) we patch to 255, if (IsAimMode()) we restore to 7?
+        // Actually, for simplicity and typical PC feel, we just allow it always or
+        // we can hook it. Let's do a conditional patch in Render2DStuff.
 
         HOOK(Render2DStuff, aml->GetSym(pGameHandle, "_Z13Render2dStuffv"));
         HOOKPLT(InitRenderware, gtasa + 0x66F2D0);
