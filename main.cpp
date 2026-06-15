@@ -115,6 +115,8 @@ static bool g_sprintWasHeldBeforeAim = false;
 static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_macro2StartTimeMs = 0;
 static bool g_macro1Active = false;
+static bool g_macro1AimSuppressed = false;
+static bool g_macro2AimSuppressed = false;
 
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_switchQueue[32];
@@ -325,29 +327,24 @@ static void UpdateMacroShoot()
 
     g_macroHolding = false;
 
+    if (!macro1) g_macro1AimSuppressed = false;
+    if (!macro2) g_macro2AimSuppressed = false;
+
     // MACRO 1
     if (macro1)
     {
-        if (aiming)
+        g_macroHolding = true;
+        if (!g_macro1Active)
         {
-            g_macroHolding = true;
-            if (g_pcSettings.macroShootMode == 1) g_macroAimTriggered = true;
+            g_macro1Active = true;
+            g_macroStartTimeMs = now;
         }
-        else
-        {
-            g_macroHolding = true;
-            if (!g_macro1Active)
-            {
-                g_macro1Active = true;
-                g_macroStartTimeMs = now;
-            }
 
-            if (!g_macroAimTriggered)
+        if (!g_macroAimTriggered && !g_macro1AimSuppressed)
+        {
+            if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
-                if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
-                {
-                    g_macroAimTriggered = true;
-                }
+                g_macroAimTriggered = true;
             }
         }
     }
@@ -360,11 +357,8 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
-        g_macroAimTriggered = true;
-        if (aiming)
-        {
-            g_macroHolding = true;
-        }
+        if (!g_macro2AimSuppressed) g_macroAimTriggered = true;
+        if (aiming) g_macroHolding = true;
     }
     else
     {
@@ -824,6 +818,12 @@ void HookOf_Render2DStuff()
                 ClearWeaponTarget(player);
             }
         }
+
+        // PROTECTION: Jika keluar aiming karena jatuh/terdorong/apapun,
+        // RESET status makro agar tidak memaksa masuk mode aiming lagi secara otomatis.
+        g_macroAimTriggered = false;
+        if (IsActionTouched(ACTION_MACRO_SHOOT)) g_macro1AimSuppressed = true;
+        if (IsActionTouched(ACTION_MACRO_SHOOT_2)) g_macro2AimSuppressed = true;
     }
 
     g_lastAimState = aimNow;
