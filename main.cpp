@@ -323,21 +323,20 @@ static void UpdateMacroShoot()
     uint32_t now = GetTickCountMs();
 
     g_macroHolding = false;
-    g_macroAimTriggered = false;
+    // g_macroAimTriggered tidak direset di sini agar bisa toggle
 
-    // Macro 1: Shoot -> Delay -> Aim
+    // Macro 1: Shoot -> Delay -> Toggle Aim
     if (macro1)
     {
+        g_macroHolding = true;
         if (!g_macro1Active)
         {
             g_macro1Active = true;
             g_macroStartTimeMs = now;
         }
 
-        g_macroHolding = true; // Always forcing Fire when held
-
-        // Only trigger aim if not yet aiming
-        if (!aiming)
+        // Hanya trigger toggle aim jika belum membidik
+        if (!aiming && !g_macroAimTriggered)
         {
             if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
@@ -350,11 +349,17 @@ static void UpdateMacroShoot()
         g_macro1Active = false;
     }
 
-    // Macro 2: Instant Aim + Shoot (Simplified)
+    // Macro 2: Tap/Hold to Toggle Aim + Shoot
+    static bool macro2Prev = false;
+    if (macro2 && !macro2Prev)
+    {
+        g_macroAimTriggered = !g_macroAimTriggered; // Toggle state
+    }
+    macro2Prev = macro2;
+
     if (macro2)
     {
         g_macroHolding = true;
-        g_macroAimTriggered = true;
     }
 }
 
@@ -552,8 +557,10 @@ int HookOf_GetSprint(void* self, int sprintType)
 
     g_lastTargetState = targeting;
 
-    if (sprintTouched && !g_sprintBlockedByAim)
+    if (sprintTouched)
     {
+        if (g_sprintBlockedByAim) return 0;
+
         void* player = FindPlayerPed(-1);
         if (player)
         {
