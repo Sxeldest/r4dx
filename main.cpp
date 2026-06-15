@@ -187,8 +187,7 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
         int originalState = *pState;
 
         // Ambil info senjata aktif
-        int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
-        int weaponType = *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+        int weaponType = GetCurrentWeapon(ped);
 
         bool aiming = IsAimMode();
         bool sprintHeld = IsActionTouched(ACTION_SPRINT);
@@ -209,16 +208,16 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
                 {
                     if (originalState == 7 || originalState == 4) shouldBypass = true;
                 }
-                // Jika melepas sprint di tengah mode aiming, shouldBypass tetap false.
-                // Game akan mendeteksi State 7 (jika masih transisi) dan memblokir tembakan secara alami.
             }
         }
-        else
+        else if (!IsMeleeWeapon(weaponType))
         {
-            // TINJU DAN SENJATA LAIN: Tidak ada proteksi
+            // SENJATA API LAINNYA (Kecuali Melee & Sawn-off)
             // Selalu bypass state lari agar transisi animasi mulus dan tidak berhenti mendadak
             if (originalState == 7 || originalState == 4) shouldBypass = true;
         }
+
+        // UNTUK MELEE / TINJU: shouldBypass tetap false (Tidak ada proteksi sesuai permintaan user)
 
         if (shouldBypass) *pState = 1;
         ProcessPlayerWeapon(self, ped);
@@ -505,13 +504,42 @@ int HookOf_JumpJustDown(void* self)
     return JumpJustDown(self);
 }
 
+bool IsMeleeWeapon(int weaponType)
+{
+    // 0: Unarmed, 1-15: Melee/Gifts
+    return (weaponType >= 0 && weaponType <= 15);
+}
+
+int GetCurrentWeapon(void* ped)
+{
+    if (!ped) return 0;
+    int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
+    return *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+}
+
 int HookOf_IsHeldDown(int widgetId, int a2)
 {
     int result = IsHeldDown(widgetId, a2);
 
+    void* ped = FindPlayerPed(-1);
+    int weapon = GetCurrentWeapon(ped);
+    bool isMelee = IsMeleeWeapon(weapon);
+    bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
+
+    if (vcShootTouched)
+    {
+        if (isMelee)
+        {
+            if (widgetId == 1) return 1;
+        }
+        else
+        {
+            if (IsCustomVCShootWidget(widgetId)) return 1;
+        }
+    }
+
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
-        || (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
         || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
         || (widgetId == 2 && IsActionTouched(ACTION_GAS))
         || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
@@ -530,13 +558,29 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
 {
     int result = IsTouched(widgetId, a2, a3);
 
+    void* ped = FindPlayerPed(-1);
+    int weapon = GetCurrentWeapon(ped);
+    bool isMelee = IsMeleeWeapon(weapon);
+    bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
+
+    if (vcShootTouched)
+    {
+        if (isMelee)
+        {
+            if (widgetId == 1) return 1;
+        }
+        else
+        {
+            if (IsCustomVCShootWidget(widgetId)) return 1;
+        }
+    }
+
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
-        || (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
         || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
         || (widgetId == 2 && IsActionTouched(ACTION_GAS))
         || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-        || (widgetId == 4 && ImGui::IsItemActive()) // Not sure why ImGui is here, but keeping logic consistent
+        || (widgetId == 4 && ImGui::IsItemActive())
         || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
         || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
         || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
