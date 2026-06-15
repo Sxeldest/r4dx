@@ -192,6 +192,8 @@ struct PCControlSettings
     float chExpansionMax;
     float chExpansionIdle;
 
+    float macroShoot1Delay;
+
     // Button Panel Settings
     bool bpEnabled;
 

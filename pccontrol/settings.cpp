@@ -157,6 +157,8 @@ static ConfigEntry* s_chPosY = nullptr;
 static ConfigEntry* s_chExpansionMax = nullptr;
 static ConfigEntry* s_chExpansionIdle = nullptr;
 
+static ConfigEntry* s_macroShoot1Delay = nullptr;
+
 static ConfigEntry* s_bpEnabled = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
@@ -333,6 +335,8 @@ void InitPCControlSettings()
     s_chExpansionMax = cfg->Bind("ExpansionMax", 1.0f, "Crosshair");
     s_chExpansionIdle = cfg->Bind("ExpansionIdle", 1.0f, "Crosshair");
 
+    s_macroShoot1Delay = cfg->Bind("MacroShoot1Delay", 50.0f, kSettingsSection);
+
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
     for (int i = 0; i < 4; ++i) {
@@ -410,6 +414,8 @@ void InitPCControlSettings()
     g_pcSettings.chPosY = s_chPosY->GetFloat();
     g_pcSettings.chExpansionMax = s_chExpansionMax->GetFloat();
     g_pcSettings.chExpansionIdle = s_chExpansionIdle->GetFloat();
+
+    g_pcSettings.macroShoot1Delay = s_macroShoot1Delay->GetFloat();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
@@ -589,6 +595,8 @@ void SavePCControlSettings()
     s_chPosY->SetFloat(g_pcSettings.chPosY);
     s_chExpansionMax->SetFloat(g_pcSettings.chExpansionMax);
     s_chExpansionIdle->SetFloat(g_pcSettings.chExpansionIdle);
+
+    s_macroShoot1Delay->SetFloat(g_pcSettings.macroShoot1Delay);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 

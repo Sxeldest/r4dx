@@ -114,6 +114,7 @@ static bool g_macro2Buffered = false;
 static bool g_macro2ReplayActive = false;
 static int g_macro2ReplayAimFrames = 0;
 static uint32_t g_macroStartFrame = 0;
+static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_switchQueue[32];
 static int g_switchQueueCount = 0;
@@ -330,11 +331,16 @@ static void UpdateMacroShoot()
         {
             g_macroHolding = true;
             g_macroStartFrame = g_internalFrameCount;
+            g_macroStartTimeMs = GetTickCountMs();
+            g_macroAimTriggered = false;
         }
 
         if (!aiming && !g_macroAimTriggered)
         {
-            g_macroAimTriggered = true;
+            if (GetTickCountMs() - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
+            {
+                g_macroAimTriggered = true;
+            }
         }
     }
     else if (macro2Pressed)
@@ -469,6 +475,7 @@ int HookOf_IsHeldDown(int widgetId, int a2)
         || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
         || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
         || (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        || ((widgetId == 31 || widgetId == 168) && IsActionTouched(ACTION_SPRINT))
     )
     {
         result = 1;
@@ -490,6 +497,7 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
         || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
         || (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        || ((widgetId == 31 || widgetId == 168) && IsActionTouched(ACTION_SPRINT))
     )
     {
         result = 1;
@@ -510,6 +518,7 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
         || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) > 0)
         || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) > 0)
         || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) > 0)
+        || ((widgetId == 31 || widgetId == 168) && GetActionReleaseFrames(ACTION_SPRINT) > 0)
     )
     {
         result = 1;
@@ -535,33 +544,11 @@ static bool IsCustomTargetHeld()
 
 int HookOf_GetSprint(void* self, int sprintType)
 {
-    if (IsCustomSprintTouched())
-    {
-        void* player = FindPlayerPed(-1);
-        if (player) SetMoveState(player, 7);
-        return 1;
-    }
     return GetSprint(self, sprintType);
 }
 
 int HookOf_SprintJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_SPRINT))
-    {
-        if (!g_sprintPrevState)
-        {
-            g_sprintPrevState = true;
-            g_sprintJustDownFrames = 2;
-        }
-    }
-    else g_sprintPrevState = false;
-
-    if (g_sprintJustDownFrames > 0)
-    {
-        g_sprintJustDownFrames--;
-        return 1;
-    }
-
     if (g_pcSettings.enableSprintDoubleTapBoost && g_sprintDoubleTapBoost > 0)
     {
         g_sprintDoubleTapBoost--;
