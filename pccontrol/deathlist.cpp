@@ -107,9 +107,13 @@ void RenderCustomDeathWindow()
     float centerX = g_pcSettings.deathListPosX;
 
     float arialSize = 18.0f * scale;
-    float iconFontSize = 35.0f * scale; // Bisa dinaikkan karena sekarang box akan mengkerut pas di tepi icon
-    float listSpacing = g_pcSettings.deathListSpacing * scale;
+    float listSpacing = g_pcSettings.deathListSpacing;
     float itemSpacing = 10.0f * scale;
+
+    float boxWidth = g_pcSettings.deathListBoxWidth;
+    float boxHeight = g_pcSettings.deathListBoxHeight;
+    float iconTargetSize = g_pcSettings.deathListIconSize;
+    float iconPadding = g_pcSettings.deathListIconPadding;
 
     for (int i = (int)g_deathMessages.size() - 1; i >= 0; --i)
     {
@@ -120,7 +124,7 @@ void RenderCustomDeathWindow()
         ImVec2 kSize = msg.killer.empty() ? ImVec2(0,0) : rendererArial.calculateTextSize(msg.killer, arialSize);
         ImVec2 vSize = rendererArial.calculateTextSize(msg.victim, arialSize);
 
-        // 2. HITUNG UKURAN ASLI ICON MURNI (Kelelawar/Pikselnya Saja)
+        // 2. HITUNG UKURAN ASLI ICON MURNI
         float iconWidth = 0.0f;
         float iconHeight = 0.0f;
         float glyphOffsetX = 0.0f;
@@ -128,57 +132,57 @@ void RenderCustomDeathWindow()
 
         ImFont* font = g_fontWeapon;
         const ImFontGlyph* glyph = font->FindGlyph(iconText[0]);
-        if (glyph) 
+
+        float currentIconFontSize = iconTargetSize;
+
+        if (glyph)
         {
-            // Rasio skala font ImGui
-            float fontScale = iconFontSize / font->FontSize;
-            
-            // Ukuran murni dari koordinat sudut ke sudut visual karakter
+            float fontScale = currentIconFontSize / font->FontSize;
             iconWidth = (glyph->X1 - glyph->X0) * fontScale;
             iconHeight = (glyph->Y1 - glyph->Y0) * fontScale;
             
-            // Offset internal untuk menggambar (agar posisi render presisi)
+            // Cek apakah icon melebihi batas box (dengan padding)
+            float maxWidth = boxWidth - (iconPadding * 2.0f);
+            float maxHeight = boxHeight - (iconPadding * 2.0f);
+
+            if (iconWidth > maxWidth || iconHeight > maxHeight)
+            {
+                float scaleW = maxWidth / iconWidth;
+                float scaleH = maxHeight / iconHeight;
+                float finalScale = (scaleW < scaleH) ? scaleW : scaleH;
+
+                currentIconFontSize *= finalScale;
+                fontScale = currentIconFontSize / font->FontSize;
+                iconWidth = (glyph->X1 - glyph->X0) * fontScale;
+                iconHeight = (glyph->Y1 - glyph->Y0) * fontScale;
+            }
+
             glyphOffsetX = glyph->X0 * fontScale;
             glyphOffsetY = glyph->Y0 * fontScale;
         }
-        else 
-        {
-            // Fallback jika glyph tidak ketemu
-            ImVec2 fallbackSize = rendererWeapon.calculateTextSize(iconText, iconFontSize);
-            iconWidth = fallbackSize.x;
-            iconHeight = fallbackSize.y;
-        }
-
-        // 3. Tentukan Ukuran Box (Bisa ditambah sedikit padding manual jika terlalu mepet)
-        float manualPadding = 3.0f * scale; 
-        float boxWidth = iconWidth + (manualPadding * 2.0f);
-        float boxHeight = iconHeight + (manualPadding * 2.0f);
-        
-        // Buat box jadi persegi sempurna (Square) berdasarkan sisi terpanjang icon
-        float boxSize = (boxWidth > boxHeight) ? boxWidth : boxHeight;
 
         // Posisi Box (Center Horizontal berdasarkan centerX)
-        ImVec2 boxPos = ImVec2(centerX - (boxSize / 2.0f), currentY);
+        ImVec2 boxPos = ImVec2(centerX - (boxWidth / 2.0f), currentY);
 
         // 4. RENDER BOX
-        dl->AddRectFilled(boxPos, ImVec2(boxPos.x + boxSize, boxPos.y + boxSize), 0xFF000000, 6.0f * scale);
+        dl->AddRectFilled(boxPos, ImVec2(boxPos.x + boxWidth, boxPos.y + boxHeight), 0xFF000000, 6.0f);
 
-        // 5. RENDER ICON (Dipaksa Center murni mengabaikan whitespace bawaan font)
+        // 5. RENDER ICON (Center murni)
         ImVec2 iPos = ImVec2(
-            boxPos.x + ((boxSize - iconWidth) / 2.0f) - glyphOffsetX,
-            boxPos.y + ((boxSize - iconHeight) / 2.0f) - glyphOffsetY
+            boxPos.x + ((boxWidth - iconWidth) / 2.0f) - glyphOffsetX,
+            boxPos.y + ((boxHeight - iconHeight) / 2.0f) - glyphOffsetY
         );
-        rendererWeapon.drawText(iPos, ImColor(255, 255, 255, 255), iconText, false, iconFontSize);
+        rendererWeapon.drawText(iPos, ImColor(255, 255, 255, 255), iconText, false, currentIconFontSize);
 
         // 6. RENDER NAMA (Killer di kiri, Victim di kanan)
         if (!msg.killer.empty()) {
-            ImVec2 kPos = ImVec2(boxPos.x - itemSpacing - kSize.x, boxPos.y + ((boxSize - kSize.y) / 2.0f));
+            ImVec2 kPos = ImVec2(boxPos.x - itemSpacing - kSize.x, boxPos.y + ((boxHeight - kSize.y) / 2.0f));
             rendererArial.drawText(kPos, ImColor(msg.killerColor), msg.killer, true, arialSize);
         }
 
-        ImVec2 vPos = ImVec2(boxPos.x + boxSize + itemSpacing, boxPos.y + ((boxSize - vSize.y) / 2.0f));
+        ImVec2 vPos = ImVec2(boxPos.x + boxWidth + itemSpacing, boxPos.y + ((boxHeight - vSize.y) / 2.0f));
         rendererArial.drawText(vPos, ImColor(msg.victimColor), msg.victim, true, arialSize);
 
-        currentY += boxSize + listSpacing;
+        currentY += boxHeight + listSpacing;
     }
 }

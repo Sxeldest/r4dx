@@ -137,6 +137,10 @@ struct PCControlSettings
     float deathListPosX;
     float deathListPosY;
     float deathListSpacing;
+    float deathListBoxWidth;
+    float deathListBoxHeight;
+    float deathListIconSize;
+    float deathListIconPadding;
     float customWidgetOpacity;
 
     CustomWidget widgets[MAX_CUSTOM_WIDGETS];

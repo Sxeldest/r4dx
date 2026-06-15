@@ -14,11 +14,15 @@ PCControlSettings g_pcSettings = {
     1.0f, // dpadSensY
     0.5f, // dpadSmoothness
     60.0f, // dpadDiagonalThreshold
-    1.0f,
-    1500.0f,
-    350.0f,
-    5.0f,
-    1.0f,
+    1.0f,    // deathListFontSize
+    1500.0f, // deathListPosX
+    350.0f,  // deathListPosY
+    5.0f,    // deathListSpacing
+    120.0f,  // deathListBoxWidth
+    40.0f,   // deathListBoxHeight
+    30.0f,   // deathListIconSize
+    5.0f,    // deathListIconPadding
+    1.0f,    // customWidgetOpacity
     {},    // widgets (all false/zero)
     {},    // widgetSlots
     0,     // activeWidgetSlot
@@ -90,6 +94,10 @@ static ConfigEntry* s_deathListFontSize = nullptr;
 static ConfigEntry* s_deathListPosX = nullptr;
 static ConfigEntry* s_deathListPosY = nullptr;
 static ConfigEntry* s_deathListSpacing = nullptr;
+static ConfigEntry* s_deathListBoxWidth = nullptr;
+static ConfigEntry* s_deathListBoxHeight = nullptr;
+static ConfigEntry* s_deathListIconSize = nullptr;
+static ConfigEntry* s_deathListIconPadding = nullptr;
 static ConfigEntry* s_customWidgetOpacity = nullptr;
 static ConfigEntry* s_activeWidgetSlot = nullptr;
 
@@ -198,6 +206,10 @@ void InitPCControlSettings()
     s_deathListPosX = cfg->Bind("DeathListPosX", 1500.0f, kSettingsSection);
     s_deathListPosY = cfg->Bind("DeathListPosY", 350.0f, kSettingsSection);
     s_deathListSpacing = cfg->Bind("DeathListSpacing", 5.0f, kSettingsSection);
+    s_deathListBoxWidth = cfg->Bind("DeathListBoxWidth", 120.0f, kSettingsSection);
+    s_deathListBoxHeight = cfg->Bind("DeathListBoxHeight", 40.0f, kSettingsSection);
+    s_deathListIconSize = cfg->Bind("DeathListIconSize", 30.0f, kSettingsSection);
+    s_deathListIconPadding = cfg->Bind("DeathListIconPadding", 5.0f, kSettingsSection);
     s_customWidgetOpacity = cfg->Bind("CustomWidgetOpacity", 1.0f, kSettingsSection);
     s_activeWidgetSlot = cfg->Bind("ActiveWidgetSlot", 0, kSettingsSection);
     g_pcSettings.activeWidgetSlot = s_activeWidgetSlot->GetInt();
@@ -357,10 +369,14 @@ void InitPCControlSettings()
     g_pcSettings.dpadSensY = ClampSetting(s_dpadSensY->GetFloat(), 0.1f, 2.0f);
     g_pcSettings.dpadSmoothness = ClampSetting(s_dpadSmoothness->GetFloat(), 0.01f, 1.0f);
     g_pcSettings.dpadDiagonalThreshold = ClampSetting(s_dpadDiagonalThreshold->GetFloat(), 10.0f, 90.0f);
-    g_pcSettings.deathListFontSize = ClampSetting(s_deathListFontSize->GetFloat(), 0.1f, 3.0f);
+    g_pcSettings.deathListFontSize = ClampSetting(s_deathListFontSize->GetFloat(), 0.1f, 10.0f);
     g_pcSettings.deathListPosX = ClampSetting(s_deathListPosX->GetFloat(), 0.0f, 3000.0f);
     g_pcSettings.deathListPosY = ClampSetting(s_deathListPosY->GetFloat(), 0.0f, 2000.0f);
-    g_pcSettings.deathListSpacing = ClampSetting(s_deathListSpacing->GetFloat(), 0.0f, 100.0f);
+    g_pcSettings.deathListSpacing = ClampSetting(s_deathListSpacing->GetFloat(), 0.0f, 500.0f);
+    g_pcSettings.deathListBoxWidth = ClampSetting(s_deathListBoxWidth->GetFloat(), 10.0f, 1000.0f);
+    g_pcSettings.deathListBoxHeight = ClampSetting(s_deathListBoxHeight->GetFloat(), 10.0f, 1000.0f);
+    g_pcSettings.deathListIconSize = ClampSetting(s_deathListIconSize->GetFloat(), 5.0f, 500.0f);
+    g_pcSettings.deathListIconPadding = ClampSetting(s_deathListIconPadding->GetFloat(), 0.0f, 100.0f);
     g_pcSettings.customWidgetOpacity = ClampSetting(s_customWidgetOpacity->GetFloat(), 0.0f, 1.0f);
 
     // Sync active slot again just in case
@@ -497,10 +513,14 @@ void InitPCControlSettings()
 
 void SavePCControlSettings()
 {
-    g_pcSettings.deathListFontSize = ClampSetting(g_pcSettings.deathListFontSize, 0.1f, 3.0f);
+    g_pcSettings.deathListFontSize = ClampSetting(g_pcSettings.deathListFontSize, 0.1f, 10.0f);
     g_pcSettings.deathListPosX = ClampSetting(g_pcSettings.deathListPosX, 0.0f, 3000.0f);
     g_pcSettings.deathListPosY = ClampSetting(g_pcSettings.deathListPosY, 0.0f, 2000.0f);
-    g_pcSettings.deathListSpacing = ClampSetting(g_pcSettings.deathListSpacing, 0.0f, 100.0f);
+    g_pcSettings.deathListSpacing = ClampSetting(g_pcSettings.deathListSpacing, 0.0f, 500.0f);
+    g_pcSettings.deathListBoxWidth = ClampSetting(g_pcSettings.deathListBoxWidth, 10.0f, 1000.0f);
+    g_pcSettings.deathListBoxHeight = ClampSetting(g_pcSettings.deathListBoxHeight, 10.0f, 1000.0f);
+    g_pcSettings.deathListIconSize = ClampSetting(g_pcSettings.deathListIconSize, 5.0f, 500.0f);
+    g_pcSettings.deathListIconPadding = ClampSetting(g_pcSettings.deathListIconPadding, 0.0f, 100.0f);
     g_pcSettings.customWidgetOpacity = ClampSetting(g_pcSettings.customWidgetOpacity, 0.0f, 1.0f);
 
     // Save active widgets back to current slot before saving all
@@ -553,6 +573,10 @@ void SavePCControlSettings()
     s_deathListPosX->SetFloat(g_pcSettings.deathListPosX);
     s_deathListPosY->SetFloat(g_pcSettings.deathListPosY);
     s_deathListSpacing->SetFloat(g_pcSettings.deathListSpacing);
+    s_deathListBoxWidth->SetFloat(g_pcSettings.deathListBoxWidth);
+    s_deathListBoxHeight->SetFloat(g_pcSettings.deathListBoxHeight);
+    s_deathListIconSize->SetFloat(g_pcSettings.deathListIconSize);
+    s_deathListIconPadding->SetFloat(g_pcSettings.deathListIconPadding);
     s_customWidgetOpacity->SetFloat(g_pcSettings.customWidgetOpacity);
 
     s_disableLookBehind->SetBool(g_pcSettings.disableLookBehind);
