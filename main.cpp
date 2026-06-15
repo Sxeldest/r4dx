@@ -328,18 +328,26 @@ static void UpdateMacroShoot()
     // MACRO 1
     if (macro1)
     {
-        g_macroHolding = true;
-        if (!g_macro1Active)
+        if (aiming)
         {
-            g_macro1Active = true;
-            g_macroStartTimeMs = now;
+            g_macroHolding = true;
+            if (g_pcSettings.macroShootMode == 1) g_macroAimTriggered = true;
         }
-
-        if (!aiming && !g_macroAimTriggered)
+        else
         {
-            if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
+            g_macroHolding = true;
+            if (!g_macro1Active)
             {
-                g_macroAimTriggered = true;
+                g_macro1Active = true;
+                g_macroStartTimeMs = now;
+            }
+
+            if (!g_macroAimTriggered)
+            {
+                if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
+                {
+                    g_macroAimTriggered = true;
+                }
             }
         }
     }
@@ -350,19 +358,10 @@ static void UpdateMacroShoot()
     }
 
     // MACRO 2
-    static bool macro2Prev = false;
-    if (macro2 && !macro2Prev)
-    {
-        g_macro2StartTimeMs = now;
-        g_macroAimTriggered = true;
-    }
-    macro2Prev = macro2;
-
     if (macro2)
     {
-        uint32_t duration = now - g_macro2StartTimeMs;
-        // If it's a hold (e.g. > 150ms), or if it's already past quick tap check
-        if (duration > 150)
+        g_macroAimTriggered = true;
+        if (aiming)
         {
             g_macroHolding = true;
         }

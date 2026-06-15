@@ -58,6 +58,7 @@ struct WidgetState {
     float currentPosY = 0.0f;
     uint32_t lastActionTime = 0; // For macro delay
     float voiceFade = 0.0f;      // For texture cross-fade (0.0 passive -> 1.0 active)
+    bool ignoreUntilLift = false;
 };
 
 static WidgetState s_widgetStates[MAX_CUSTOM_WIDGETS];
@@ -424,7 +425,7 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
 
                 if (!isPassType) blocked = true;
             }
-            else if (isSlideType && state.activeFinger == -1 && inside && !fingerIsBusy)
+            else if (isSlideType && state.activeFinger == -1 && inside && !fingerIsBusy && !state.ignoreUntilLift)
             {
                 if (!isDPAD)
                 {
@@ -442,10 +443,16 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 if (state.touched && w.activation == WACT_HOLD) state.releaseFrames = 2;
                 state.touched = false;
                 state.activeFinger = -1;
+                state.ignoreUntilLift = false;
                 if (fingerId >= 0 && fingerId < 15) s_fingerOwner[fingerId] = -1;
                 state.targetAnalogX = 0;
                 state.targetAnalogY = 0;
                 if (!isPassType) blocked = true;
+            }
+            else if (state.activeFinger == -1 && !inside)
+            {
+                // If a finger that was ignored is lifted, reset ignore
+                state.ignoreUntilLift = false;
             }
         }
 
@@ -1062,6 +1069,7 @@ void ForceReleaseAction(eWidgetAction action)
             s_widgetStates[i].activeFinger = -1;
             s_widgetStates[i].targetAnalogX = 0;
             s_widgetStates[i].targetAnalogY = 0;
+            s_widgetStates[i].ignoreUntilLift = true; // Mark to ignore until lifted
             for (int f = 0; f < 15; ++f) {
                 if (s_fingerOwner[f] == i) s_fingerOwner[f] = -1;
             }
