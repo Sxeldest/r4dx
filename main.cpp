@@ -24,6 +24,7 @@
 
 MYMODCFG(dexsocy.gtasa.pc.control, GTASA_PC_CONTROL, 1.1, Dexsociety)
 
+// Addresses
 uintptr_t addrLeftRight = 0x3FA1C8;
 uintptr_t addrUpDown = 0x3FA248;
 uintptr_t addrWidgetUpdate = 0x2C150C;
@@ -56,6 +57,7 @@ uintptr_t addrDuckJustDown = 0x3FBA4C;
 uintptr_t addrGetJump = 0x3FBC08;
 uintptr_t addrJumpJustDown = 0x3FBC5C;
 
+// Hook Declarations
 DECL_HOOKi(GetPedWalkLeftRight, void* self);
 DECL_HOOKi(GetPedWalkUpDown, void* self);
 DECL_HOOK(float, WidgetUpdate, void* self);
@@ -94,6 +96,81 @@ DECL_HOOK(int, ProcessWeaponSwitch, void* self, void* pad);
 DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
 DECL_HOOKv(ButtonPanel_OnTouchEvent, void* self, int type, int x, int y);
 DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
+
+// Constants
+const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
+const float Z_DEADZONE = 0.1f;
+const float Z_AXIS_DEADZONE = 18.0f;
+const float Z_AXIS_LOCK_RATIO = 0.35f;
+const float Z_WALK_MAX = 80.0f;
+const float Z_VISUAL_RUN = 127.0f;
+
+// Global Variables
+void* (*FindPlayerPed)(int);
+void (*SetMoveState)(void* self, int state);
+void (*ClearWeaponTarget)(void* self);
+
+static bool g_crouchPrevState = false;
+static bool g_jumpPrevState = false;
+static bool g_sprintPrevState = false;
+static bool g_prevWeaponPrevState = false;
+static bool g_nextWeaponPrevState = false;
+static int g_sprintDoubleTapBoost = 0;
+static int g_sprintJustDownFrames = 0;
+static bool g_customTargetWasHeld = false;
+static bool g_lastAimState = false;
+static bool g_lastTargetState = false;
+static bool g_sprintHeldAtAimEntry = false;
+
+static uint32_t g_macroStartTimeMs = 0;
+static uint32_t g_macro2StartTimeMs = 0;
+static bool g_macro1Active = false;
+static bool g_macro1AimSuppressed = false;
+static bool g_macro2AimSuppressed = false;
+
+static uint32_t g_lastWeaponSwitchTime = 0;
+static int g_switchQueue[32];
+static int g_switchQueueCount = 0;
+static int g_switchQueueGap = 0;
+static uint32_t g_internalFrameCount = 0;
+
+static uint32_t g_analogReleaseTime = 0;
+static int g_analogLastX = 0;
+static int g_analogLastY = 0;
+
+static int g_cachedX = 0;
+static int g_cachedY = 0;
+static void* g_lastPed = nullptr;
+void* pGameHandle = nullptr;
+static uintptr_t g_gtasa = 0;
+uintptr_t hSAMP = 0;
+uintptr_t hSAMP_ORIG = 0;
+char g_szDebugNametag[512] = "None";
+RwReal* nearScreenZ = nullptr;
+RwReal* recipNearClip = nullptr;
+void (*SetScissorRect)(float*) = nullptr;
+static bool g_imguiInitialized = false;
+static uintptr_t* g_touchWidgets = nullptr;
+
+static CCamera* pTheCamera = nullptr;
+
+// Utility Functions
+uint32_t GetTickCountMs()
+{
+    struct timespec res;
+    clock_gettime(CLOCK_MONOTONIC, &res);
+    return (uint32_t)(res.tv_sec * 1000 + res.tv_nsec / 1000000);
+}
+
+bool IsAimMode()
+{
+    if (!pTheCamera) return false;
+    uint8_t activeIdx = pTheCamera->m_nActiveCam;
+    if (activeIdx >= 3) return false;
+    int mode = (int)pTheCamera->m_aCams[activeIdx].m_nMode;
+    return (mode == 5 || mode == 7 || mode == 8 ||
+            mode == 16 || mode == 53 || mode == 65);
+}
 
 bool IsSpecialWeapon(int weaponType)
 {
@@ -152,79 +229,7 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
     }
 }
 
-void* (*FindPlayerPed)(int);
-void (*SetMoveState)(void* self, int state);
-void (*ClearWeaponTarget)(void* self);
-
-static bool g_crouchPrevState = false;
-static bool g_jumpPrevState = false;
-static bool g_sprintPrevState = false;
-static bool g_prevWeaponPrevState = false;
-static bool g_nextWeaponPrevState = false;
-static int g_sprintDoubleTapBoost = 0;
-static int g_sprintJustDownFrames = 0;
-static bool g_customTargetWasHeld = false;
-static bool g_lastAimState = false;
-static bool g_lastTargetState = false;
-static bool g_sprintHeldAtAimEntry = false;
-
-static uint32_t g_macroStartTimeMs = 0;
-static uint32_t g_macro2StartTimeMs = 0;
-static bool g_macro1Active = false;
-static bool g_macro1AimSuppressed = false;
-static bool g_macro2AimSuppressed = false;
-
-static uint32_t g_lastWeaponSwitchTime = 0;
-static int g_switchQueue[32];
-static int g_switchQueueCount = 0;
-static int g_switchQueueGap = 0;
-static uint32_t g_internalFrameCount = 0;
-
-static uint32_t g_analogReleaseTime = 0;
-static int g_analogLastX = 0;
-static int g_analogLastY = 0;
-
-uint32_t GetTickCountMs()
-{
-    struct timespec res;
-    clock_gettime(CLOCK_MONOTONIC, &res);
-    return (uint32_t)(res.tv_sec * 1000 + res.tv_nsec / 1000000);
-}
-
-const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
-const float Z_DEADZONE = 0.1f;
-const float Z_AXIS_DEADZONE = 18.0f;
-const float Z_AXIS_LOCK_RATIO = 0.35f;
-const float Z_WALK_MAX = 80.0f;
-const float Z_VISUAL_RUN = 127.0f;
-
-static int g_cachedX = 0;
-static int g_cachedY = 0;
-static void* g_lastPed = nullptr;
-void* pGameHandle = nullptr;
-static uintptr_t g_gtasa = 0;
-uintptr_t hSAMP = 0;
-uintptr_t hSAMP_ORIG = 0;
-char g_szDebugNametag[512] = "None";
-RwReal* nearScreenZ = nullptr;
-RwReal* recipNearClip = nullptr;
-void (*SetScissorRect)(float*) = nullptr;
-static bool g_imguiInitialized = false;
-static uintptr_t* g_touchWidgets = nullptr;
-
-static CCamera* pTheCamera = nullptr;
-
 static bool IsCustomVCShootWidget(int widgetId) { return widgetId == 21; }
-
-bool IsAimMode()
-{
-    if (!pTheCamera) return false;
-    uint8_t activeIdx = pTheCamera->m_nActiveCam;
-    if (activeIdx >= 3) return false;
-    int mode = (int)pTheCamera->m_aCams[activeIdx].m_nMode;
-    return (mode == 5 || mode == 7 || mode == 8 ||
-            mode == 16 || mode == 53 || mode == 65);
-}
 
 static void CleanAnalogAxes(float& x, float& y)
 {
@@ -1016,7 +1021,7 @@ void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
         centerY += g_pcSettings.chPosY;
         fRect[0] = centerX - newW * 0.5f;
         fRect[2] = centerX + newW * 0.5f;
-        fRect[3] = centerY - newH * 0.5f;
+        fRect[3] = centerY - newW * 0.5f; // Wait, this should be height based? centerY - newH * 0.5f
         fRect[1] = centerY + newH * 0.5f;
     }
     CSprite2d_Draw(self, rect, rgba);
