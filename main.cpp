@@ -111,6 +111,7 @@ static bool g_lastTargetState = false;
 
 static bool g_sprintBlockedByAim = false;
 static bool g_sprintWasHeldBeforeAim = false;
+static int g_sprintResetTimer = 0;
 
 static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_macro2StartTimeMs = 0;
@@ -785,12 +786,19 @@ void HookOf_Render2DStuff()
     if ((!g_lastTargetState && isTargeting) || (!g_lastAimState && aimNow))
     {
         g_switchQueueCount = 0; // Clear queue on fresh aim
+        g_sprintResetTimer = 3; // Beri delay 3 frame sebelum reset sprint
+    }
 
-        // RESET SPRINT TOUCH ON TRANSITION
-        // This forces the user to release and re-press sprint to move while aiming
-        ForceReleaseAction(ACTION_SPRINT);
-        g_sprintBlockedByAim = true;
-        g_sprintWasHeldBeforeAim = true;
+    if (g_sprintResetTimer > 0)
+    {
+        g_sprintResetTimer--;
+        if (g_sprintResetTimer == 0)
+        {
+            // RESET SPRINT TOUCH SETELAH DELAY
+            ForceReleaseAction(ACTION_SPRINT);
+            g_sprintBlockedByAim = true;
+            g_sprintWasHeldBeforeAim = true;
+        }
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
