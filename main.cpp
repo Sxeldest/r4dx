@@ -475,7 +475,6 @@ int HookOf_IsHeldDown(int widgetId, int a2)
         || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
         || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
         || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        || ((widgetId == 31 || widgetId == 168) && IsActionTouched(ACTION_SPRINT))
     )
     {
         result = 1;
@@ -493,11 +492,11 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
         || (widgetId == 2 && IsActionTouched(ACTION_GAS))
         || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+        || (widgetId == 4 && ImGui::IsItemActive()) // Not sure why ImGui is here, but keeping logic consistent
         || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
         || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
         || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
         || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        || ((widgetId == 31 || widgetId == 168) && IsActionTouched(ACTION_SPRINT))
     )
     {
         result = 1;
@@ -518,7 +517,6 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
         || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) > 0)
         || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) > 0)
         || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) > 0)
-        || ((widgetId == 31 || widgetId == 168) && GetActionReleaseFrames(ACTION_SPRINT) > 0)
     )
     {
         result = 1;
@@ -544,11 +542,41 @@ static bool IsCustomTargetHeld()
 
 int HookOf_GetSprint(void* self, int sprintType)
 {
+    if (IsActionTouched(ACTION_SPRINT))
+    {
+        void* player = FindPlayerPed(-1);
+        if (player)
+        {
+            // Hanya blokir SetMoveState saat transisi awal (menekan target tapi belum masuk aim mode)
+            if (IsCustomTargetHeld() && !IsAimMode()) return 0;
+
+            SetMoveState(player, 7);
+        }
+        return 1;
+    }
     return GetSprint(self, sprintType);
 }
 
 int HookOf_SprintJustDown(void* self)
 {
+    if (IsActionTouched(ACTION_SPRINT))
+    {
+        if (IsCustomTargetHeld() && !IsAimMode()) return 0;
+
+        if (!g_sprintPrevState)
+        {
+            g_sprintPrevState = true;
+            g_sprintJustDownFrames = 2;
+        }
+    }
+    else g_sprintPrevState = false;
+
+    if (g_sprintJustDownFrames > 0)
+    {
+        g_sprintJustDownFrames--;
+        return 1;
+    }
+
     if (g_pcSettings.enableSprintDoubleTapBoost && g_sprintDoubleTapBoost > 0)
     {
         g_sprintDoubleTapBoost--;
