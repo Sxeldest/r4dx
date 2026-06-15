@@ -158,6 +158,7 @@ static ConfigEntry* s_chExpansionMax = nullptr;
 static ConfigEntry* s_chExpansionIdle = nullptr;
 
 static ConfigEntry* s_macroShoot1Delay = nullptr;
+static ConfigEntry* s_macroShootMode = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
 
@@ -336,6 +337,7 @@ void InitPCControlSettings()
     s_chExpansionIdle = cfg->Bind("ExpansionIdle", 1.0f, "Crosshair");
 
     s_macroShoot1Delay = cfg->Bind("MacroShoot1Delay", 50.0f, kSettingsSection);
+    s_macroShootMode = cfg->Bind("MacroShootMode", 0, kSettingsSection);
 
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
@@ -416,6 +418,7 @@ void InitPCControlSettings()
     g_pcSettings.chExpansionIdle = s_chExpansionIdle->GetFloat();
 
     g_pcSettings.macroShoot1Delay = s_macroShoot1Delay->GetFloat();
+    g_pcSettings.macroShootMode = s_macroShootMode->GetInt();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
@@ -597,6 +600,7 @@ void SavePCControlSettings()
     s_chExpansionIdle->SetFloat(g_pcSettings.chExpansionIdle);
 
     s_macroShoot1Delay->SetFloat(g_pcSettings.macroShoot1Delay);
+    s_macroShootMode->SetInt(g_pcSettings.macroShootMode);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 

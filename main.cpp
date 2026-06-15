@@ -113,6 +113,7 @@ static bool g_sprintBlockedByAim = false;
 static bool g_sprintWasHeldBeforeAim = false;
 
 static uint32_t g_macroStartTimeMs = 0;
+static uint32_t g_macro2StartTimeMs = 0;
 static bool g_macro1Active = false;
 
 static uint32_t g_lastWeaponSwitchTime = 0;
@@ -323,9 +324,8 @@ static void UpdateMacroShoot()
     uint32_t now = GetTickCountMs();
 
     g_macroHolding = false;
-    // g_macroAimTriggered tidak direset di sini agar bisa toggle
 
-    // Macro 1: Shoot -> Delay -> Toggle Aim
+    // MACRO 1
     if (macro1)
     {
         g_macroHolding = true;
@@ -335,7 +335,6 @@ static void UpdateMacroShoot()
             g_macroStartTimeMs = now;
         }
 
-        // Hanya trigger toggle aim jika belum membidik
         if (!aiming && !g_macroAimTriggered)
         {
             if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
@@ -347,19 +346,30 @@ static void UpdateMacroShoot()
     else
     {
         g_macro1Active = false;
+        if (g_pcSettings.macroShootMode == 0) g_macroAimTriggered = false;
     }
 
-    // Macro 2: Tap/Hold to Toggle Aim + Shoot
+    // MACRO 2
     static bool macro2Prev = false;
     if (macro2 && !macro2Prev)
     {
-        g_macroAimTriggered = !g_macroAimTriggered; // Toggle state
+        g_macro2StartTimeMs = now;
+        g_macroAimTriggered = true;
     }
     macro2Prev = macro2;
 
     if (macro2)
     {
-        g_macroHolding = true;
+        uint32_t duration = now - g_macro2StartTimeMs;
+        // If it's a hold (e.g. > 150ms), or if it's already past quick tap check
+        if (duration > 150)
+        {
+            g_macroHolding = true;
+        }
+    }
+    else
+    {
+        if (g_pcSettings.macroShootMode == 0) g_macroAimTriggered = false;
     }
 }
 
@@ -778,10 +788,16 @@ void HookOf_Render2DStuff()
 
     bool aimNow = IsAimMode();
 
-    // Detect Aim Entry
-    if (!g_lastAimState && aimNow)
+    // Detect Aim Entry (Transition to aiming)
+    if ((!g_lastTargetState && isTargeting) || (!g_lastAimState && aimNow))
     {
         g_switchQueueCount = 0; // Clear queue on fresh aim
+
+        // RESET SPRINT TOUCH ON TRANSITION
+        // This forces the user to release and re-press sprint to move while aiming
+        ForceReleaseAction(ACTION_SPRINT);
+        g_sprintBlockedByAim = true;
+        g_sprintWasHeldBeforeAim = true;
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)

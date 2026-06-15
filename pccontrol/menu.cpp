@@ -359,6 +359,11 @@ void RenderPCControlMenu()
                 changed |= SliderFloatWithButtons("macroShoot1Delay", &g_pcSettings.macroShoot1Delay, 0.0f, 500.0f, "%.0f ms", 5.0f);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda antara menembak dan membidik pada Macro Shoot 1.");
 
+                const char* macroModes[] = { "Auto Exit (Hold)", "Stuck (Toggle)" };
+                ImGui::Text("Macro Aim Mode");
+                ImGui::SetNextItemWidth(-1.0f);
+                changed |= ImGui::Combo("##MacroMode", &g_pcSettings.macroShootMode, macroModes, IM_ARRAYSIZE(macroModes));
+
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Native Overrides");
                 ImGui::Separator();

@@ -193,6 +193,7 @@ struct PCControlSettings
     float chExpansionIdle;
 
     float macroShoot1Delay;
+    int macroShootMode; // 0: Auto Exit, 1: Stuck (Toggle)
 
     // Button Panel Settings
     bool bpEnabled;
