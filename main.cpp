@@ -179,6 +179,19 @@ bool IsSpecialWeapon(int weaponType)
     return (weaponType == 26); // 26 = Sawn-off Shotgun
 }
 
+bool IsMeleeWeapon(int weaponType)
+{
+    // 0: Unarmed, 1-15: Melee/Gifts
+    return (weaponType >= 0 && weaponType <= 15);
+}
+
+int GetCurrentWeapon(void* ped)
+{
+    if (!ped) return 0;
+    int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
+    return *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+}
+
 void HookOf_ProcessPlayerWeapon(void* self, void* ped)
 {
     if (ped)
@@ -502,19 +515,6 @@ int HookOf_JumpJustDown(void* self)
     }
     else g_jumpPrevState = false;
     return JumpJustDown(self);
-}
-
-bool IsMeleeWeapon(int weaponType)
-{
-    // 0: Unarmed, 1-15: Melee/Gifts
-    return (weaponType >= 0 && weaponType <= 15);
-}
-
-int GetCurrentWeapon(void* ped)
-{
-    if (!ped) return 0;
-    int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
-    return *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
 }
 
 int HookOf_IsHeldDown(int widgetId, int a2)
