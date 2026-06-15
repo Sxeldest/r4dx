@@ -191,6 +191,8 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
 
         bool aiming = IsAimMode();
         bool sprintHeld = IsActionTouched(ACTION_SPRINT);
+        bool isShooting = IsActionTouched(ACTION_VC_SHOOT) || g_macroHolding || g_macroAimTriggered;
+        uint8_t weaponState = *(uint8_t*)((uintptr_t)ped + 0x52C);
 
         // Update status sprint held khusus untuk sesi aiming ini
         if (aiming && !sprintHeld) g_sprintHeldAtAimEntry = false;
@@ -210,18 +212,26 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
                 {
                     if (originalState == 7) *pState = 1; // Bypass
                 }
-                // Jika dilepas (g_sprintHeldAtAimEntry jadi false),
-                // biarkan originalState tetap 7 agar pengecekan game aktif.
             }
         }
         else
         {
-            // Senjata Lain: Gunakan logika standar yang kita buat sebelumnya (Bypass hanya di Hipfire)
-            if (!aiming && originalState == 7) *pState = 1;
+            // Senjata Lain & Tangan Kosong:
+            // Bypass hanya jika sedang menekan tombol tembak atau animasi serangan sedang berjalan
+            if (!aiming && originalState == 7 && (isShooting || weaponState != 0))
+            {
+                *pState = 1;
+            }
         }
 
         ProcessPlayerWeapon(self, ped);
-        *pState = originalState; // Restore
+
+        // Hanya restore jika state-nya masih 1 (berarti tidak diubah oleh ProcessPlayerWeapon)
+        // Jika diubah ke 0 atau nilai lain, biarkan saja agar transisi task tidak terganggu.
+        if (originalState == 7 && *pState == 1)
+        {
+            *pState = 7;
+        }
     }
     else
     {
@@ -551,15 +561,15 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
 {
     int result = IsReleased(widgetId, a2, a3);
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && GetActionReleaseFrames(ACTION_VC_SHOOT) > 0)
-        || (widgetId == 1 && GetActionReleaseFrames(ACTION_MACRO_SHOOT_2) > 0)
-        || (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) > 0)
-        || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) > 0)
-        || (widgetId == 3 && GetActionReleaseFrames(ACTION_BRAKE) > 0)
-        || (widgetId == 4 && GetActionReleaseFrames(ACTION_HANDBRAKE) > 0)
-        || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) > 0)
-        || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) > 0)
-        || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) > 0)
+        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && GetActionReleaseFrames(ACTION_VC_SHOOT) == 2)
+        || (widgetId == 1 && GetActionReleaseFrames(ACTION_MACRO_SHOOT_2) == 2)
+        || (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) == 2)
+        || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) == 2)
+        || (widgetId == 3 && GetActionReleaseFrames(ACTION_BRAKE) == 2)
+        || (widgetId == 4 && GetActionReleaseFrames(ACTION_HANDBRAKE) == 2)
+        || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) == 2)
+        || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) == 2)
+        || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) == 2)
     )
     {
         result = 1;
@@ -593,11 +603,6 @@ int HookOf_GetSprint(void* self, int sprintType)
 
     if (sprintTouched)
     {
-        void* player = FindPlayerPed(-1);
-        if (player)
-        {
-            SetMoveState(player, 7);
-        }
         return 1;
     }
     return GetSprint(self, sprintType);
