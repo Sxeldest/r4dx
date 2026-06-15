@@ -551,7 +551,7 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
 {
     int result = IsReleased(widgetId, a2, a3);
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
+        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && GetActionReleaseFrames(ACTION_VC_SHOOT) > 0)
         || (widgetId == 1 && GetActionReleaseFrames(ACTION_MACRO_SHOOT_2) > 0)
         || (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) > 0)
         || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) > 0)
