@@ -183,28 +183,42 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
 {
     if (ped)
     {
+        int* pState = (int*)((uintptr_t)ped + 0x450);
+        int originalState = *pState;
+
         // Ambil info senjata aktif
         int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
         int weaponType = *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
 
-        // Untuk Tangan Kosong (0) dan senjata lainnya, kita tidak lagi menyentuh pState.
-        // Masalah "berhenti mendadak" disebabkan oleh manipulasi pState yang tidak sinkron
-        // dengan mesin game. Kita gunakan Patch Memori di OnModLoad sebagai gantinya.
-        if (weaponType == 0 || !IsSpecialWeapon(weaponType))
-        {
-            ProcessPlayerWeapon(self, ped);
-            return;
-        }
-
-        // Logika khusus untuk Sawn-off Shotgun (Special Weapon) yang mungkin butuh bypass manual
-        int* pState = (int*)((uintptr_t)ped + 0x450);
-        int originalState = *pState;
         bool aiming = IsAimMode();
         bool sprintHeld = IsActionTouched(ACTION_SPRINT);
         bool shouldBypass = false;
 
-        if (!aiming && (originalState == 7 || originalState == 4)) shouldBypass = true;
-        else if (aiming && g_sprintHeldAtAimEntry && sprintHeld && (originalState == 7 || originalState == 4)) shouldBypass = true;
+        if (IsSpecialWeapon(weaponType))
+        {
+            // LOGIKA KHUSUS SAWN-OFF SHOTGUN
+            if (!aiming)
+            {
+                // On-Foot/Hipfire: Selalu izinkan agar tidak berhenti mendadak
+                if (originalState == 7 || originalState == 4) shouldBypass = true;
+            }
+            else
+            {
+                // Mode Aiming: Hanya izinkan jika sprint ditahan sejak awal masuk mode aim
+                if (g_sprintHeldAtAimEntry && sprintHeld)
+                {
+                    if (originalState == 7 || originalState == 4) shouldBypass = true;
+                }
+                // Jika melepas sprint di tengah mode aiming, shouldBypass tetap false.
+                // Game akan mendeteksi State 7 (jika masih transisi) dan memblokir tembakan secara alami.
+            }
+        }
+        else
+        {
+            // TINJU DAN SENJATA LAIN: Tidak ada proteksi
+            // Selalu bypass state lari agar transisi animasi mulus dan tidak berhenti mendadak
+            if (originalState == 7 || originalState == 4) shouldBypass = true;
+        }
 
         if (shouldBypass) *pState = 1;
         ProcessPlayerWeapon(self, ped);
@@ -1149,11 +1163,6 @@ extern "C" void OnModLoad()
         }
 
         HOOK(CTimeCycle_Update, gtasa + 0x41EF28 + 1);
-
-        // Patch CTaskSimplePlayerOnFoot::ProcessPlayerWeapon state check (Hipfire while sprinting)
-        // Kita hapus pengecekan "Jika lari tidak boleh menembak/memukul" di level memori.
-        aml->Write(gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2);
-        aml->Write(gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
 
         HOOK(Render2DStuff, aml->GetSym(pGameHandle, "_Z13Render2dStuffv"));
         HOOKPLT(InitRenderware, gtasa + 0x66F2D0);
