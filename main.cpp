@@ -93,6 +93,64 @@ int (*GetTaskUseGun)(void* self);
 DECL_HOOK(int, ProcessWeaponSwitch, void* self, void* pad);
 DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
 DECL_HOOKv(ButtonPanel_OnTouchEvent, void* self, int type, int x, int y);
+DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
+
+bool IsSpecialWeapon(int weaponType)
+{
+    // Tambahkan ID senjata lain di sini jika diperlukan
+    return (weaponType == 26); // 26 = Sawn-off Shotgun
+}
+
+void HookOf_ProcessPlayerWeapon(void* self, void* ped)
+{
+    if (ped)
+    {
+        int* pState = (int*)((uintptr_t)ped + 0x450);
+        int originalState = *pState;
+
+        // Ambil info senjata aktif
+        int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
+        int weaponType = *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+
+        bool aiming = IsAimMode();
+        bool sprintHeld = IsActionTouched(ACTION_SPRINT);
+
+        // Update status sprint held khusus untuk sesi aiming ini
+        if (aiming && !sprintHeld) g_sprintHeldAtAimEntry = false;
+
+        if (IsSpecialWeapon(weaponType))
+        {
+            if (!aiming)
+            {
+                // MODE ON FOOT (Hipfire): Selalu Bypass
+                if (originalState == 7) *pState = 1;
+            }
+            else
+            {
+                // MODE AIMING:
+                // Jika sprint ditahan dari sebelum masuk aiming DAN masih ditahan
+                if (g_sprintHeldAtAimEntry && sprintHeld)
+                {
+                    if (originalState == 7) *pState = 1; // Bypass
+                }
+                // Jika dilepas (g_sprintHeldAtAimEntry jadi false),
+                // biarkan originalState tetap 7 agar pengecekan game aktif.
+            }
+        }
+        else
+        {
+            // Senjata Lain: Gunakan logika standar yang kita buat sebelumnya (Bypass hanya di Hipfire)
+            if (!aiming && originalState == 7) *pState = 1;
+        }
+
+        ProcessPlayerWeapon(self, ped);
+        *pState = originalState; // Restore
+    }
+    else
+    {
+        ProcessPlayerWeapon(self, ped);
+    }
+}
 
 void* (*FindPlayerPed)(int);
 void (*SetMoveState)(void* self, int state);
@@ -108,6 +166,7 @@ static int g_sprintJustDownFrames = 0;
 static bool g_customTargetWasHeld = false;
 static bool g_lastAimState = false;
 static bool g_lastTargetState = false;
+static bool g_sprintHeldAtAimEntry = false;
 
 static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_macro2StartTimeMs = 0;
@@ -737,19 +796,15 @@ void HookOf_Render2DStuff()
     bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
     bool aimNow = IsAimMode();
 
-    // DYNAMIC PATCH: Allow hipfire while sprinting, but keep original logic for aiming
-    if (g_gtasa && aimNow != g_lastAimState)
+    // Deteksi Entry Point ke Aim Mode
+    if (aimNow && !g_lastAimState)
     {
-        if (aimNow)
-        {
-            aml->Write(g_gtasa + 0x5379EC, (uintptr_t)"\x07\x28", 2); // Restore original: CMP R0, #7
-            aml->Write(g_gtasa + 0x53815E, (uintptr_t)"\x07\x28", 2);
-        }
-        else
-        {
-            aml->Write(g_gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2); // Patch: CMP R0, #255 (Bypass)
-            aml->Write(g_gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
-        }
+        g_sprintHeldAtAimEntry = IsActionTouched(ACTION_SPRINT);
+    }
+
+    if (!aimNow)
+    {
+        g_sprintHeldAtAimEntry = false;
     }
 
     // Detect Aim Entry (Transition to aiming)
@@ -1093,6 +1148,7 @@ extern "C" void OnModLoad()
         ClearWeaponTarget = (void (*)(void*))(aml->GetSym(pGameHandle, "_ZN10CPlayerPed17ClearWeaponTargetEv"));
         if (!ClearWeaponTarget) ClearWeaponTarget = (void (*)(void*))(gtasa + addrClearWeaponTarget + 1);
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
+        HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
 
         HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
