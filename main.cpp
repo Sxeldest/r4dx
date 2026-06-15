@@ -110,6 +110,7 @@ void* (*FindPlayerPed)(int);
 void (*SetMoveState)(void* self, int state);
 void (*ClearWeaponTarget)(void* self);
 
+static uint32_t g_lastFireTime = 0;
 static bool g_crouchPrevState = false;
 static bool g_jumpPrevState = false;
 static bool g_sprintPrevState = false;
@@ -182,56 +183,32 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
 {
     if (ped)
     {
-        int* pState = (int*)((uintptr_t)ped + 0x450);
-        int originalState = *pState;
-
         // Ambil info senjata aktif
         int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
         int weaponType = *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
 
+        // Untuk Tangan Kosong (0) dan senjata lainnya, kita tidak lagi menyentuh pState.
+        // Masalah "berhenti mendadak" disebabkan oleh manipulasi pState yang tidak sinkron
+        // dengan mesin game. Kita gunakan Patch Memori di OnModLoad sebagai gantinya.
+        if (weaponType == 0 || !IsSpecialWeapon(weaponType))
+        {
+            ProcessPlayerWeapon(self, ped);
+            return;
+        }
+
+        // Logika khusus untuk Sawn-off Shotgun (Special Weapon) yang mungkin butuh bypass manual
+        int* pState = (int*)((uintptr_t)ped + 0x450);
+        int originalState = *pState;
         bool aiming = IsAimMode();
         bool sprintHeld = IsActionTouched(ACTION_SPRINT);
-        bool isShooting = IsActionTouched(ACTION_VC_SHOOT) || g_macroHolding || g_macroAimTriggered;
-        uint8_t weaponState = *(uint8_t*)((uintptr_t)ped + 0x52C);
+        bool shouldBypass = false;
 
-        // Update status sprint held khusus untuk sesi aiming ini
-        if (aiming && !sprintHeld) g_sprintHeldAtAimEntry = false;
+        if (!aiming && (originalState == 7 || originalState == 4)) shouldBypass = true;
+        else if (aiming && g_sprintHeldAtAimEntry && sprintHeld && (originalState == 7 || originalState == 4)) shouldBypass = true;
 
-        if (IsSpecialWeapon(weaponType))
-        {
-            if (!aiming)
-            {
-                // MODE ON FOOT (Hipfire): Selalu Bypass
-                if (originalState == 7) *pState = 1;
-            }
-            else
-            {
-                // MODE AIMING:
-                // Jika sprint ditahan dari sebelum masuk aiming DAN masih ditahan
-                if (g_sprintHeldAtAimEntry && sprintHeld)
-                {
-                    if (originalState == 7) *pState = 1; // Bypass
-                }
-            }
-        }
-        else
-        {
-            // Senjata Lain & Tangan Kosong:
-            // Bypass hanya jika sedang menekan tombol tembak atau animasi serangan sedang berjalan
-            if (!aiming && originalState == 7 && (isShooting || weaponState != 0))
-            {
-                *pState = 1;
-            }
-        }
-
+        if (shouldBypass) *pState = 1;
         ProcessPlayerWeapon(self, ped);
-
-        // Hanya restore jika state-nya masih 1 (berarti tidak diubah oleh ProcessPlayerWeapon)
-        // Jika diubah ke 0 atau nilai lain, biarkan saja agar transisi task tidak terganggu.
-        if (originalState == 7 && *pState == 1)
-        {
-            *pState = 7;
-        }
+        if (shouldBypass) *pState = originalState;
     }
     else
     {
@@ -561,9 +538,7 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
 {
     int result = IsReleased(widgetId, a2, a3);
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && GetActionReleaseFrames(ACTION_VC_SHOOT) == 2)
-        || (widgetId == 1 && GetActionReleaseFrames(ACTION_MACRO_SHOOT_2) == 2)
-        || (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) == 2)
+        (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) == 2)
         || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) == 2)
         || (widgetId == 3 && GetActionReleaseFrames(ACTION_BRAKE) == 2)
         || (widgetId == 4 && GetActionReleaseFrames(ACTION_HANDBRAKE) == 2)
@@ -1176,11 +1151,9 @@ extern "C" void OnModLoad()
         HOOK(CTimeCycle_Update, gtasa + 0x41EF28 + 1);
 
         // Patch CTaskSimplePlayerOnFoot::ProcessPlayerWeapon state check (Hipfire while sprinting)
-        // Offset 0x5379EC: CMP R0, #7 -> Change to CMP R0, #255 (Always false, allows shooting)
-        // Offset 0x53815E: CMP R0, #7 -> Change to CMP R0, #255
-        // Logic: if (!IsAimMode()) we patch to 255, if (IsAimMode()) we restore to 7?
-        // Actually, for simplicity and typical PC feel, we just allow it always or
-        // we can hook it. Let's do a conditional patch in Render2DStuff.
+        // Kita hapus pengecekan "Jika lari tidak boleh menembak/memukul" di level memori.
+        aml->Write(gtasa + 0x5379EC, (uintptr_t)"\xFF\x28", 2);
+        aml->Write(gtasa + 0x53815E, (uintptr_t)"\xFF\x28", 2);
 
         HOOK(Render2DStuff, aml->GetSym(pGameHandle, "_Z13Render2dStuffv"));
         HOOKPLT(InitRenderware, gtasa + 0x66F2D0);
