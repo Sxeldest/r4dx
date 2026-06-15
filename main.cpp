@@ -108,13 +108,13 @@ static int g_sprintJustDownFrames = 0;
 static bool g_customTargetWasHeld = false;
 static bool g_lastAimState = false;
 static bool g_lastTargetState = false;
-static bool g_macroHolding = false;
-static bool g_macroAimTriggered = false;
-static bool g_macro2Buffered = false;
-static bool g_macro2ReplayActive = false;
-static int g_macro2ReplayAimFrames = 0;
-static uint32_t g_macroStartFrame = 0;
+
+static bool g_sprintBlockedByAim = false;
+static bool g_sprintWasHeldBeforeAim = false;
+
 static uint32_t g_macroStartTimeMs = 0;
+static bool g_macro1Active = false;
+
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_switchQueue[32];
 static int g_switchQueueCount = 0;
@@ -317,70 +317,44 @@ float HookOf_WidgetUpdate(void* self)
 
 static void UpdateMacroShoot()
 {
-    bool macro1Pressed = IsActionTouched(ACTION_MACRO_SHOOT);
-    bool macro2PhysicalPressed = IsActionTouched(ACTION_MACRO_SHOOT_2);
-    bool macro2Pressed = macro2PhysicalPressed || g_macro2ReplayActive;
+    bool macro1 = IsActionTouched(ACTION_MACRO_SHOOT);
+    bool macro2 = IsActionTouched(ACTION_MACRO_SHOOT_2);
     bool aiming = IsAimMode();
+    uint32_t now = GetTickCountMs();
 
-    if (macro1Pressed)
+    g_macroHolding = false;
+    g_macroAimTriggered = false;
+
+    // Macro 1: Shoot -> Delay -> Aim
+    if (macro1)
     {
-        g_macro2ReplayActive = false;
-        g_macro2ReplayAimFrames = 0;
-
-        if (!g_macroHolding)
+        if (!g_macro1Active)
         {
-            g_macroHolding = true;
-            g_macroStartFrame = g_internalFrameCount;
-            g_macroStartTimeMs = GetTickCountMs();
-            g_macroAimTriggered = false;
+            g_macro1Active = true;
+            g_macroStartTimeMs = now;
         }
 
-        if (!aiming && !g_macroAimTriggered)
+        g_macroHolding = true; // Always forcing Fire when held
+
+        // Only trigger aim if not yet aiming
+        if (!aiming)
         {
-            if (GetTickCountMs() - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
+            if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
                 g_macroAimTriggered = true;
             }
         }
     }
-    else if (macro2Pressed)
-    {
-        if (!aiming && !g_macroAimTriggered)
-        {
-            g_macroAimTriggered = true;
-        }
-        g_macro2Buffered = false;
-        g_macroHolding = aiming;
-
-        if (g_macro2ReplayActive)
-        {
-            if (aiming)
-            {
-                g_macro2ReplayAimFrames++;
-                if (g_macro2ReplayAimFrames >= 2)
-                {
-                    g_macro2ReplayActive = false;
-                    g_macro2ReplayAimFrames = 0;
-                }
-            }
-            else
-            {
-                g_macro2ReplayAimFrames = 0;
-            }
-        }
-    }
     else
     {
-        if (g_macro2Buffered)
-        {
-            g_macro2Buffered = false;
-            g_macro2ReplayActive = true;
-            g_macro2ReplayAimFrames = 0;
-            return;
-        }
+        g_macro1Active = false;
+    }
 
-        g_macroHolding = false;
-        if (!aiming) g_macroAimTriggered = false;
+    // Macro 2: Instant Aim + Shoot (Simplified)
+    if (macro2)
+    {
+        g_macroHolding = true;
+        g_macroAimTriggered = true;
     }
 }
 
@@ -466,7 +440,7 @@ int HookOf_IsHeldDown(int widgetId, int a2)
     int result = IsHeldDown(widgetId, a2);
 
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && (IsActionTouched(ACTION_VC_SHOOT) || g_macroHolding))
+        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
         || (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
         || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
         || (widgetId == 2 && IsActionTouched(ACTION_GAS))
@@ -487,7 +461,7 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     int result = IsTouched(widgetId, a2, a3);
 
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && (IsActionTouched(ACTION_VC_SHOOT) || g_macroHolding))
+        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
         || (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
         || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
         || (widgetId == 2 && IsActionTouched(ACTION_GAS))
@@ -508,7 +482,7 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
 {
     int result = IsReleased(widgetId, a2, a3);
     if (
-        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && (GetActionReleaseFrames(ACTION_VC_SHOOT) > 0 || g_macroHolding))
+        ((IsCustomVCShootWidget(widgetId) || widgetId == 1) && IsActionTouched(ACTION_VC_SHOOT))
         || (widgetId == 1 && GetActionReleaseFrames(ACTION_MACRO_SHOOT_2) > 0)
         || (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) > 0)
         || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) > 0)
@@ -542,13 +516,51 @@ static bool IsCustomTargetHeld()
 
 int HookOf_GetSprint(void* self, int sprintType)
 {
-    if (IsActionTouched(ACTION_SPRINT))
+    bool sprintTouched = IsActionTouched(ACTION_SPRINT);
+    bool targeting = IsCustomTargetHeld();
+    bool aiming = IsAimMode();
+
+    // Logic: Smart Sprint Blocking during Aiming
+    if (targeting || aiming)
+    {
+        // 1. Jika baru mulai targeting/aiming dan sprint sudah tertahan dari sebelumnya
+        if (!g_lastTargetState && sprintTouched)
+        {
+            g_sprintWasHeldBeforeAim = true;
+            g_sprintBlockedByAim = true;
+        }
+
+        // 2. Jika sprint dilepas saat sedang aiming, reset status "held before"
+        if (!sprintTouched)
+        {
+            g_sprintWasHeldBeforeAim = false;
+            g_sprintBlockedByAim = false;
+        }
+
+        // 3. Jika menekan sprint BARU (bukan dari sebelum aim), izinkan lari
+        if (sprintTouched && !g_sprintWasHeldBeforeAim)
+        {
+            g_sprintBlockedByAim = false;
+        }
+    }
+    else
+    {
+        // Reset saat sedang tidak bertarung/aiming
+        g_sprintWasHeldBeforeAim = false;
+        g_sprintBlockedByAim = false;
+    }
+
+    g_lastTargetState = targeting;
+
+    if (sprintTouched && !g_sprintBlockedByAim)
     {
         void* player = FindPlayerPed(-1);
         if (player)
         {
-            // Hanya blokir SetMoveState saat transisi awal (menekan target tapi belum masuk aim mode)
-            if (IsCustomTargetHeld() && !IsAimMode()) return 0;
+            bool isCombat = targeting || IsActionTouched(ACTION_VC_SHOOT);
+
+            // Blokir SetMoveState HANYA saat transisi awal (menekan target/shoot tapi belum masuk aim mode)
+            if (isCombat && !aiming) return 0;
 
             SetMoveState(player, 7);
         }
@@ -559,9 +571,10 @@ int HookOf_GetSprint(void* self, int sprintType)
 
 int HookOf_SprintJustDown(void* self)
 {
-    if (IsActionTouched(ACTION_SPRINT))
+    if (IsActionTouched(ACTION_SPRINT) && !g_sprintBlockedByAim)
     {
-        if (IsCustomTargetHeld() && !IsAimMode()) return 0;
+        bool isCombat = IsCustomTargetHeld() || IsActionTouched(ACTION_VC_SHOOT);
+        if (isCombat && !IsAimMode()) return 0;
 
         if (!g_sprintPrevState)
         {

@@ -8,6 +8,8 @@ bool HandleWidgetDragging(int type, int fingerId, int x, int y);
 
 // State access for hooks
 bool IsActionTouched(eWidgetAction action);
+extern bool g_macroHolding;
+extern bool g_macroAimTriggered;
 int GetActionReleaseFrames(eWidgetAction action);
 void UpdateWidgetReleaseFrames();
 void ResetWidgetToggle(eWidgetAction action);

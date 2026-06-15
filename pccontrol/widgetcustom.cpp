@@ -13,6 +13,9 @@ extern uintptr_t hSAMP;
 extern uintptr_t hSAMP_ORIG;
 extern uintptr_t (*FindPlayerVehicle)(int, bool);
 
+bool g_macroHolding = false;
+bool g_macroAimTriggered = false;
+
 bool IsSAMPDialogVisible()
 {
     if (!hSAMP) return false;
@@ -853,6 +856,10 @@ void UpdateMacroExecution()
 bool IsActionTouched(eWidgetAction action)
 {
     if (g_pcSettings.hideCustomWidgets && action != ACTION_TOGGLE_HUD) return false;
+
+    // Hardcoded Shoot Macros
+    if (action == ACTION_VC_SHOOT && g_macroHolding) return true;
+    if (action == ACTION_TARGET && g_macroAimTriggered) return true;
 
     // Check direct touches
     if ((s_activeActionsMask & (1ULL << (int)action)) != 0) return true;
