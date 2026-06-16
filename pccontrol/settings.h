@@ -203,7 +203,7 @@ struct PCControlSettings
     bool bpEnabled;
 
     bool enableFeintProtect;
-    int feintProtectFrames;
+    int feintProtectMs;
     int macro2ProtectMs;
 
     CustomMacro macros[MAX_MACROS];

@@ -135,8 +135,9 @@ static int g_switchQueueCount = 0;
 static int g_switchQueueGap = 0;
 static uint32_t g_internalFrameCount = 0;
 
-static uint32_t g_feintProtectFrame = 0;
-static uint32_t g_macro2ProtectTime = 0;
+static float g_feintProtectTimer = 0.0f;
+static float g_macro2ProtectTimer = 0.0f;
+static float* pgTimeStep = nullptr;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
 
@@ -332,17 +333,13 @@ int HookOf_GetPedWalkLeftRight(void* self) {
         outY = GetPedWalkUpDown(self);
     }
 
-    if (g_pcSettings.enableFeintProtect && g_feintProtectFrame > 0)
+    if (g_pcSettings.enableFeintProtect && g_feintProtectTimer > 0.0f)
     {
-        if (g_internalFrameCount < g_feintProtectFrame)
+        if (outX == 0 && outY == 0)
         {
-            if (outX == 0 && outY == 0)
-            {
-                outX = g_feintLastX;
-                outY = g_feintLastY;
-            }
+            outX = g_feintLastX;
+            outY = g_feintLastY;
         }
-        else g_feintProtectFrame = 0;
     }
 
     // FASE MONITORING (SAAT AIMING)
@@ -449,6 +446,7 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
+        if (g_macro2ProtectTimer > 0.0f) return;
         if (!g_macro2AimSuppressed) g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
     }
@@ -731,8 +729,10 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
         if (g_pcSettings.enableFeintProtect && IsAimMode())
         {
-            g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-            g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+            // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
+            // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
+            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
+            g_macro2ProtectTimer = (float)g_pcSettings.macro2ProtectMs / 20.0f;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -773,8 +773,10 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
 
         if (g_pcSettings.enableFeintProtect && IsAimMode())
         {
-            g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
-            g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+            // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
+            // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
+            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
+            g_macro2ProtectTimer = (float)g_pcSettings.macro2ProtectMs / 20.0f;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -854,6 +856,22 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     g_internalFrameCount++;
+
+    // Update Timers based on TimeStep
+    if (pgTimeStep)
+    {
+        float ts = *pgTimeStep;
+        if (g_feintProtectTimer > 0.0f)
+        {
+            g_feintProtectTimer -= ts;
+            if (g_feintProtectTimer < 0.0f) g_feintProtectTimer = 0.0f;
+        }
+        if (g_macro2ProtectTimer > 0.0f)
+        {
+            g_macro2ProtectTimer -= ts;
+            if (g_macro2ProtectTimer < 0.0f) g_macro2ProtectTimer = 0.0f;
+        }
+    }
 
     Render2DStuff();
     UpdateWidgetReleaseFrames();
@@ -1180,6 +1198,7 @@ extern "C" void OnModPreLoad()
     recipNearClip = (RwReal*)aml->GetSym(pGameHandle, "_ZN9CSprite2d13RecipNearClipE");
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (uintptr_t*)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
+    pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer11ms_fTimeStepE");
 }
 
 extern "C" void OnModLoad()

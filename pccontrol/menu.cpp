@@ -338,8 +338,8 @@ void RenderPCControlMenu()
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
                 changed |= ImGui::Checkbox("Enable Feint Protect", &g_pcSettings.enableFeintProtect);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog saat ganti senjata dalam mode bidik.");
-                ImGui::Text("Feint Protect Frames");
-                changed |= SliderIntWithButtons("feintProtectFrames", &g_pcSettings.feintProtectFrames, 0, 120, "%d frames", 1);
+                ImGui::Text("Feint Protect Delay (ms)");
+                changed |= SliderIntWithButtons("feintProtectMs", &g_pcSettings.feintProtectMs, 0, 2000, "%d ms", 10);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
