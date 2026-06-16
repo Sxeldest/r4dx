@@ -204,7 +204,7 @@ struct PCControlSettings
 
     bool enableFeintProtect;
     int feintProtectMs;
-    int macro2ProtectMs;
+    int shootAgainProtectMs;
 
     CustomMacro macros[MAX_MACROS];
 

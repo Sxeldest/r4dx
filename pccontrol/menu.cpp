@@ -340,6 +340,9 @@ void RenderPCControlMenu()
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog saat ganti senjata dalam mode bidik.");
                 ImGui::Text("Feint Protect Delay (ms)");
                 changed |= SliderIntWithButtons("feintProtectMs", &g_pcSettings.feintProtectMs, 0, 2000, "%d ms", 10);
+                ImGui::Text("Shoot Again Protect (ms)");
+                changed |= SliderIntWithButtons("shootAgainProtectMs", &g_pcSettings.shootAgainProtectMs, 0, 2000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda proteksi tembak kembali setelah ganti senjata.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");

@@ -83,7 +83,7 @@ PCControlSettings g_pcSettings = {
 
     true,   // enableFeintProtect
     500,    // feintProtectMs
-    250,    // macro2ProtectMs
+    250,    // shootAgainProtectMs
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -179,7 +179,7 @@ static ConfigEntry* s_bpEnabled = nullptr;
 
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectMs = nullptr;
-static ConfigEntry* s_macro2ProtectMs = nullptr;
+static ConfigEntry* s_shootAgainProtectMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -304,7 +304,7 @@ void InitPCControlSettings()
             g_pcSettings.widgetSlots[s][i].posY = s_slotWidgetPosY[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].size = s_slotWidgetSize[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].areaW = s_slotWidgetAreaW[s][i]->GetFloat();
-            g_pcSettings.widgetSlots[s][i].areaH = g_pcSettings.widgetSlots[s][i].areaH = s_slotWidgetAreaH[s][i]->GetFloat();
+            g_pcSettings.widgetSlots[s][i].areaH = s_slotWidgetAreaH[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconPosX = s_slotWidgetIconPosX[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconPosY = s_slotWidgetIconPosY[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconSize = s_slotWidgetIconSize[s][i]->GetFloat();
@@ -366,7 +366,7 @@ void InitPCControlSettings()
 
     s_enableFeintProtect = cfg->Bind("EnableFeintProtect", true, kSettingsSection);
     s_feintProtectMs = cfg->Bind("FeintProtectMs", 500, kSettingsSection);
-    s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 250, kSettingsSection);
+    s_shootAgainProtectMs = cfg->Bind("ShootAgainProtectMs", 250, kSettingsSection);
 
     for (int i = 0; i < 4; ++i) {
         char key[32];
@@ -455,7 +455,7 @@ void InitPCControlSettings()
 
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectMs = s_feintProtectMs->GetInt();
-    g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
+    g_pcSettings.shootAgainProtectMs = s_shootAgainProtectMs->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -649,7 +649,7 @@ void SavePCControlSettings()
 
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectMs->SetInt(g_pcSettings.feintProtectMs);
-    s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
+    s_shootAgainProtectMs->SetInt(g_pcSettings.shootAgainProtectMs);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {

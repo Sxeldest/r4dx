@@ -136,7 +136,7 @@ static int g_switchQueueGap = 0;
 static uint32_t g_internalFrameCount = 0;
 
 static float g_feintProtectTimer = 0.0f;
-static float g_macro2ProtectTimer = 0.0f;
+static float g_shootAgainProtectTimer = 0.0f;
 static float* pgTimeStep = nullptr;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
@@ -429,7 +429,7 @@ static void UpdateMacroShoot()
             g_macroStartTimeMs = now;
         }
 
-        if (!g_macroAimTriggered && !g_macro1AimSuppressed)
+        if (!g_macroAimTriggered && !g_macro1AimSuppressed && g_shootAgainProtectTimer <= 0.0f)
         {
             if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
@@ -446,8 +446,7 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
-        if (g_macro2ProtectTimer > 0.0f) return;
-        if (!g_macro2AimSuppressed) g_macroAimTriggered = true;
+        if (g_shootAgainProtectTimer <= 0.0f && !g_macro2AimSuppressed) g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
     }
     else
@@ -542,7 +541,7 @@ int HookOf_IsHeldDown(int widgetId, int a2)
     bool isMelee = IsMeleeWeapon(weapon);
     bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
 
-    if (vcShootTouched)
+    if (vcShootTouched && g_shootAgainProtectTimer <= 0.0f)
     {
         if (isMelee)
         {
@@ -554,18 +553,37 @@ int HookOf_IsHeldDown(int widgetId, int a2)
         }
     }
 
-    if (
-        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
-        || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-        || (widgetId == 2 && IsActionTouched(ACTION_GAS))
-        || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-        || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-        || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-        || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-        || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-    )
+    if (g_shootAgainProtectTimer <= 0.0f)
     {
-        result = 1;
+        if (
+            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+    | (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
+    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        )
+        {
+            result = 1;
+        }
+    }
+    else
+    {
+        // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
+        if (
+            (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
+    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        )
+        {
+            result = 1;
+        }
     }
     return result;
 }
@@ -579,7 +597,7 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     bool isMelee = IsMeleeWeapon(weapon);
     bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
 
-    if (vcShootTouched)
+    if (vcShootTouched && g_shootAgainProtectTimer <= 0.0f)
     {
         if (isMelee)
         {
@@ -591,19 +609,39 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         }
     }
 
-    if (
-        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
-        || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-        || (widgetId == 2 && IsActionTouched(ACTION_GAS))
-        || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-        || (widgetId == 4 && ImGui::IsItemActive())
-        || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-        || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-        || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-        || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-    )
+    if (g_shootAgainProtectTimer <= 0.0f)
     {
-        result = 1;
+        if (
+            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+    | (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
+    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+    | (widgetId == 4 && ImGui::IsItemActive())
+    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        )
+        {
+            result = 1;
+        }
+    }
+    else
+    {
+        // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
+        if (
+            (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
+    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+    | (widgetId == 4 && ImGui::IsItemActive())
+    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+        )
+        {
+            result = 1;
+        }
     }
     return result;
 }
@@ -633,6 +671,8 @@ static bool IsCustomSprintTouched()
 
 static bool IsCustomTargetHeld()
 {
+    if (g_shootAgainProtectTimer > 0.0f) return false;
+
     if (IsActionTouched(ACTION_TARGET))
         return true;
     
@@ -732,7 +772,7 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
             // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
             g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
-            g_macro2ProtectTimer = (float)g_pcSettings.macro2ProtectMs / 20.0f;
+            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / 20.0f;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -776,7 +816,7 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
             // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
             g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
-            g_macro2ProtectTimer = (float)g_pcSettings.macro2ProtectMs / 20.0f;
+            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / 20.0f;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -866,10 +906,10 @@ void HookOf_Render2DStuff()
             g_feintProtectTimer -= ts;
             if (g_feintProtectTimer < 0.0f) g_feintProtectTimer = 0.0f;
         }
-        if (g_macro2ProtectTimer > 0.0f)
+        if (g_shootAgainProtectTimer > 0.0f)
         {
-            g_macro2ProtectTimer -= ts;
-            if (g_macro2ProtectTimer < 0.0f) g_macro2ProtectTimer = 0.0f;
+            g_shootAgainProtectTimer -= ts;
+            if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
         }
     }
 
