@@ -202,6 +202,10 @@ struct PCControlSettings
     // Button Panel Settings
     bool bpEnabled;
 
+    bool enableFeintProtect;
+    int feintProtectFrames;
+    int macro2ProtectMs;
+
     CustomMacro macros[MAX_MACROS];
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];

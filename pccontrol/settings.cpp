@@ -77,6 +77,10 @@ PCControlSettings g_pcSettings = {
 
     // Button Panel Settings
     false,  // bpEnabled
+
+    true,   // enableFeintProtect
+    30,     // feintProtectFrames
+    250,    // macro2ProtectMs
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -169,6 +173,10 @@ static ConfigEntry* s_macroShoot1Delay = nullptr;
 static ConfigEntry* s_macroShootMode = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
+
+static ConfigEntry* s_enableFeintProtect = nullptr;
+static ConfigEntry* s_feintProtectFrames = nullptr;
+static ConfigEntry* s_macro2ProtectMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -353,6 +361,10 @@ void InitPCControlSettings()
 
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
+    s_enableFeintProtect = cfg->Bind("EnableFeintProtect", true, kSettingsSection);
+    s_feintProtectFrames = cfg->Bind("FeintProtectFrames", 30, kSettingsSection);
+    s_macro2ProtectMs = cfg->Bind("Macro2ProtectMs", 250, kSettingsSection);
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -437,6 +449,10 @@ void InitPCControlSettings()
     g_pcSettings.macroShootMode = s_macroShootMode->GetInt();
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
+
+    g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
+    g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
+    g_pcSettings.macro2ProtectMs = s_macro2ProtectMs->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -627,6 +643,10 @@ void SavePCControlSettings()
     s_macroShootMode->SetInt(g_pcSettings.macroShootMode);
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
+
+    s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
+    s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
+    s_macro2ProtectMs->SetInt(g_pcSettings.macro2ProtectMs);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {

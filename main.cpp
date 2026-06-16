@@ -135,6 +135,11 @@ static int g_switchQueueCount = 0;
 static int g_switchQueueGap = 0;
 static uint32_t g_internalFrameCount = 0;
 
+static uint32_t g_feintProtectFrame = 0;
+static uint32_t g_macro2ProtectTime = 0;
+static int g_feintLastX = 0;
+static int g_feintLastY = 0;
+
 static uint32_t g_analogReleaseTime = 0;
 static int g_analogLastX = 0;
 static int g_analogLastY = 0;
@@ -325,6 +330,19 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     {
         outX = GetPedWalkLeftRight(self);
         outY = GetPedWalkUpDown(self);
+    }
+
+    if (g_pcSettings.enableFeintProtect && g_feintProtectFrame > 0)
+    {
+        if (g_internalFrameCount < g_feintProtectFrame)
+        {
+            if (outX == 0 && outY == 0)
+            {
+                outX = g_feintLastX;
+                outY = g_feintLastY;
+            }
+        }
+        else g_feintProtectFrame = 0;
     }
 
     // FASE MONITORING (SAAT AIMING)
@@ -710,6 +728,14 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
         g_prevWeaponFrames = 2;
         g_switchQueueGap = 3;
         g_lastWeaponSwitchTime = GetTickCountMs();
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        {
+            g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+            g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
     }
 
     if (g_prevWeaponFrames > 0)
@@ -744,6 +770,14 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
         g_nextWeaponFrames = 2;
         g_switchQueueGap = 3;
         g_lastWeaponSwitchTime = GetTickCountMs();
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        {
+            g_feintProtectFrame = g_internalFrameCount + g_pcSettings.feintProtectFrames;
+            g_macro2ProtectTime = GetTickCountMs() + g_pcSettings.macro2ProtectMs;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
     }
 
     if (g_nextWeaponFrames > 0)
