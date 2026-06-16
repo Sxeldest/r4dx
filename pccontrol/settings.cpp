@@ -85,6 +85,10 @@ PCControlSettings g_pcSettings = {
     500,    // feintProtectMs
     250,    // shootAgainProtectMs
 
+    true,   // enableAnalogWeaponProtect
+    100,    // analogWeaponProtectDelayMs
+    250,    // analogWeaponProtectDurationMs
+
     false,  // enableAutoRun
     150,    // sprintProtectEntryMs
     250,    // sprintProtectExitMs
@@ -185,6 +189,10 @@ static ConfigEntry* s_bpEnabled = nullptr;
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectMs = nullptr;
 static ConfigEntry* s_shootAgainProtectMs = nullptr;
+
+static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
+static ConfigEntry* s_analogWeaponProtectDelayMs = nullptr;
+static ConfigEntry* s_analogWeaponProtectDurationMs = nullptr;
 
 static ConfigEntry* s_enableAutoRun = nullptr;
 static ConfigEntry* s_sprintProtectEntryMs = nullptr;
@@ -378,6 +386,10 @@ void InitPCControlSettings()
     s_feintProtectMs = cfg->Bind("FeintProtectMs", 500, kSettingsSection);
     s_shootAgainProtectMs = cfg->Bind("ShootAgainProtectMs", 250, kSettingsSection);
 
+    s_enableAnalogWeaponProtect = cfg->Bind("EnableAnalogWeaponProtect", true, kSettingsSection);
+    s_analogWeaponProtectDelayMs = cfg->Bind("AnalogWeaponProtectDelayMs", 100, kSettingsSection);
+    s_analogWeaponProtectDurationMs = cfg->Bind("AnalogWeaponProtectDurationMs", 250, kSettingsSection);
+
     s_enableAutoRun = cfg->Bind("EnableAutoRun", false, kSettingsSection);
     s_sprintProtectEntryMs = cfg->Bind("SprintProtectEntryMs", 150, kSettingsSection);
     s_sprintProtectExitMs = cfg->Bind("SprintProtectExitMs", 250, kSettingsSection);
@@ -471,6 +483,10 @@ void InitPCControlSettings()
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectMs = s_feintProtectMs->GetInt();
     g_pcSettings.shootAgainProtectMs = s_shootAgainProtectMs->GetInt();
+
+    g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
+    g_pcSettings.analogWeaponProtectDelayMs = s_analogWeaponProtectDelayMs->GetInt();
+    g_pcSettings.analogWeaponProtectDurationMs = s_analogWeaponProtectDurationMs->GetInt();
 
     g_pcSettings.enableAutoRun = s_enableAutoRun->GetBool();
     g_pcSettings.sprintProtectEntryMs = s_sprintProtectEntryMs->GetInt();
@@ -670,6 +686,10 @@ void SavePCControlSettings()
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectMs->SetInt(g_pcSettings.feintProtectMs);
     s_shootAgainProtectMs->SetInt(g_pcSettings.shootAgainProtectMs);
+
+    s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
+    s_analogWeaponProtectDelayMs->SetInt(g_pcSettings.analogWeaponProtectDelayMs);
+    s_analogWeaponProtectDurationMs->SetInt(g_pcSettings.analogWeaponProtectDurationMs);
 
     s_enableAutoRun->SetBool(g_pcSettings.enableAutoRun);
     s_sprintProtectEntryMs->SetInt(g_pcSettings.sprintProtectEntryMs);

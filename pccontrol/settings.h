@@ -206,6 +206,10 @@ struct PCControlSettings
     int feintProtectMs;
     int shootAgainProtectMs;
 
+    bool enableAnalogWeaponProtect;
+    int analogWeaponProtectDelayMs;
+    int analogWeaponProtectDurationMs;
+
     bool enableAutoRun;
     int sprintProtectEntryMs;
     int sprintProtectExitMs;

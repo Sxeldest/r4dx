@@ -345,6 +345,18 @@ void RenderPCControlMenu()
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda proteksi tembak kembali setelah ganti senjata.");
 
                 ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog Weapon Protection");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Enable Analog Weapon Protect", &g_pcSettings.enableAnalogWeaponProtect);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog agar tetap terkunci saat ganti senjata.");
+
+                ImGui::Text("Protect Delay (ms)");
+                changed |= SliderIntWithButtons("analogWeaponProtectDelayMs", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
+
+                ImGui::Text("Protect Duration (ms)");
+                changed |= SliderIntWithButtons("analogWeaponProtectDurationMs", &g_pcSettings.analogWeaponProtectDurationMs, 0, 2000, "%d ms", 10);
+
+                ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
                 ImGui::Separator();
                 ImGui::Text("Horizontal Responsiveness");

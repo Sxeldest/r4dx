@@ -138,6 +138,9 @@ static uint32_t g_internalFrameCount = 0;
 static float g_feintProtectTimer = 0.0f;
 static float g_shootAgainProtectTimer = 0.0f;
 
+static float g_analogWeaponProtectDelayTimer = 0.0f;
+static float g_analogWeaponProtectTimer = 0.0f;
+
 static float g_sprintProtectExitTimer = 0.0f;
 static float g_sprintProtectExitDelayTimer = 0.0f;
 static bool g_sprintProtectJustDownSent = false;
@@ -341,6 +344,15 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     }
 
     if (g_pcSettings.enableFeintProtect && g_feintProtectTimer > 0.0f)
+    {
+        if (outX == 0 && outY == 0)
+        {
+            outX = g_feintLastX;
+            outY = g_feintLastY;
+        }
+    }
+
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectTimer > 0.0f && g_analogWeaponProtectDelayTimer <= 0.0f)
     {
         if (outX == 0 && outY == 0)
         {
@@ -852,6 +864,24 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
+
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
+        {
+            float tsUnit = 20.0f;
+            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
+            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
+
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
+        {
+            float tsUnit = 20.0f;
+            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
+            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
     }
 
     if (g_prevWeaponFrames > 0)
@@ -893,6 +923,24 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
             float tsUnit = 20.0f;
             g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
             g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
+
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
+        {
+            float tsUnit = 20.0f;
+            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
+            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
+            g_feintLastX = g_cachedX;
+            g_feintLastY = g_cachedY;
+        }
+
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
+        {
+            float tsUnit = 20.0f;
+            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
+            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -988,6 +1036,17 @@ void HookOf_Render2DStuff()
     {
         g_shootAgainProtectTimer -= ts;
         if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
+    }
+
+    if (g_analogWeaponProtectDelayTimer > 0.0f)
+    {
+        g_analogWeaponProtectDelayTimer -= ts;
+        if (g_analogWeaponProtectDelayTimer < 0.0f) g_analogWeaponProtectDelayTimer = 0.0f;
+    }
+    else if (g_analogWeaponProtectTimer > 0.0f)
+    {
+        g_analogWeaponProtectTimer -= ts;
+        if (g_analogWeaponProtectTimer < 0.0f) g_analogWeaponProtectTimer = 0.0f;
     }
 
     if (g_macroSprintTimer > 0.0f)
