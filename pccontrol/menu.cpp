@@ -338,10 +338,10 @@ void RenderPCControlMenu()
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
                 changed |= ImGui::Checkbox("Enable Feint Protect", &g_pcSettings.enableFeintProtect);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog saat ganti senjata dalam mode bidik.");
-                ImGui::Text("Feint Protect Delay (ms)");
-                changed |= SliderIntWithButtons("feintProtectMs", &g_pcSettings.feintProtectMs, 0, 2000, "%d ms", 10);
-                ImGui::Text("Shoot Again Protect (ms)");
-                changed |= SliderIntWithButtons("shootAgainProtectMs", &g_pcSettings.shootAgainProtectMs, 0, 2000, "%d ms", 10);
+                ImGui::Text("Feint Protect Delay (Frames)");
+                changed |= SliderIntWithButtons("feintProtectFrames", &g_pcSettings.feintProtectFrames, 0, 100, "%d f", 1);
+                ImGui::Text("Shoot Again Protect (Frames)");
+                changed |= SliderIntWithButtons("shootAgainProtectFrames", &g_pcSettings.shootAgainProtectFrames, 0, 100, "%d f", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda proteksi tembak kembali setelah ganti senjata.");
 
                 ImGui::Spacing();
@@ -350,11 +350,11 @@ void RenderPCControlMenu()
                 changed |= ImGui::Checkbox("Enable Analog Weapon Protect", &g_pcSettings.enableAnalogWeaponProtect);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog agar tetap terkunci saat ganti senjata.");
 
-                ImGui::Text("Protect Delay (ms)");
-                changed |= SliderIntWithButtons("analogWeaponProtectDelayMs", &g_pcSettings.analogWeaponProtectDelayMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Protect Delay (Frames)");
+                changed |= SliderIntWithButtons("analogWeaponProtectDelayFrames", &g_pcSettings.analogWeaponProtectDelayFrames, 0, 100, "%d f", 1);
 
-                ImGui::Text("Protect Duration (ms)");
-                changed |= SliderIntWithButtons("analogWeaponProtectDurationMs", &g_pcSettings.analogWeaponProtectDurationMs, 0, 2000, "%d ms", 10);
+                ImGui::Text("Protect Duration (Frames)");
+                changed |= SliderIntWithButtons("analogWeaponProtectDurationFrames", &g_pcSettings.analogWeaponProtectDurationFrames, 0, 100, "%d f", 1);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
@@ -396,16 +396,16 @@ void RenderPCControlMenu()
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Sprint Protection Settings");
                 ImGui::Separator();
-                ImGui::Text("Sprint Entry Protection (ms)");
-                changed |= SliderIntWithButtons("sprintProtectEntryMs", &g_pcSettings.sprintProtectEntryMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Sprint Entry Protection (Frames)");
+                changed |= SliderIntWithButtons("sprintProtectEntryFrames", &g_pcSettings.sprintProtectEntryFrames, 0, 100, "%d f", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mempertahankan status lari sejenak saat mulai membidik.");
 
-                ImGui::Text("Sprint Exit Delay (ms)");
-                changed |= SliderIntWithButtons("sprintProtectExitDelayMs", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Sprint Exit Delay (Frames)");
+                changed |= SliderIntWithButtons("sprintProtectExitDelayFrames", &g_pcSettings.sprintProtectExitDelayFrames, 0, 100, "%d f", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum melepas lari setelah berhenti membidik.");
 
-                ImGui::Text("Sprint Exit Protection (ms)");
-                changed |= SliderIntWithButtons("sprintProtectExitMs", &g_pcSettings.sprintProtectExitMs, 0, 1000, "%d ms", 10);
+                ImGui::Text("Sprint Exit Protection (Frames)");
+                changed |= SliderIntWithButtons("sprintProtectExitFrames", &g_pcSettings.sprintProtectExitFrames, 0, 100, "%d f", 1);
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi transisi lari saat melepas bidikan.");
 
                 ImGui::Spacing();

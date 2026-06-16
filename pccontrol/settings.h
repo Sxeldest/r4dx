@@ -203,17 +203,17 @@ struct PCControlSettings
     bool bpEnabled;
 
     bool enableFeintProtect;
-    int feintProtectMs;
-    int shootAgainProtectMs;
+    int feintProtectFrames;
+    int shootAgainProtectFrames;
 
     bool enableAnalogWeaponProtect;
-    int analogWeaponProtectDelayMs;
-    int analogWeaponProtectDurationMs;
+    int analogWeaponProtectDelayFrames;
+    int analogWeaponProtectDurationFrames;
 
     bool enableAutoRun;
-    int sprintProtectEntryMs;
-    int sprintProtectExitMs;
-    int sprintProtectExitDelayMs;
+    int sprintProtectEntryFrames;
+    int sprintProtectExitFrames;
+    int sprintProtectExitDelayFrames;
 
     CustomMacro macros[MAX_MACROS];
 

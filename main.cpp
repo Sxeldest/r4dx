@@ -135,23 +135,22 @@ static int g_switchQueueCount = 0;
 static int g_switchQueueGap = 0;
 static uint32_t g_internalFrameCount = 0;
 
-static float g_feintProtectTimer = 0.0f;
-static float g_shootAgainProtectTimer = 0.0f;
+static int g_feintProtectFrames = 0;
+static int g_shootAgainProtectFrames = 0;
 
-static float g_analogWeaponProtectDelayTimer = 0.0f;
-static float g_analogWeaponProtectTimer = 0.0f;
+static int g_analogWeaponProtectFrames = 0;
 
-static float g_sprintProtectExitTimer = 0.0f;
-static float g_sprintProtectExitDelayTimer = 0.0f;
+static int g_sprintProtectExitFrames = 0;
+static int g_sprintProtectExitDelayFrames = 0;
 static bool g_sprintProtectJustDownSent = false;
-static float g_sprintReleaseTimer = 0.0f;
+static int g_sprintReleaseFrames = 0;
 static float g_macroSprintTimer = 0.0f;
 
 static float* pgTimeStep = nullptr;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
 
-static uint32_t g_analogReleaseTime = 0;
+static int g_analogIdleFrames = 0;
 static int g_analogLastX = 0;
 static int g_analogLastY = 0;
 
@@ -343,7 +342,7 @@ int HookOf_GetPedWalkLeftRight(void* self) {
         outY = GetPedWalkUpDown(self);
     }
 
-    if (g_pcSettings.enableFeintProtect && g_feintProtectTimer > 0.0f)
+    if (g_pcSettings.enableFeintProtect && g_feintProtectFrames > 0)
     {
         if (outX == 0 && outY == 0)
         {
@@ -352,7 +351,7 @@ int HookOf_GetPedWalkLeftRight(void* self) {
         }
     }
 
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectTimer > 0.0f)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectFrames > 0)
     {
         if (outX == 0 && outY == 0)
         {
@@ -373,16 +372,16 @@ int HookOf_GetPedWalkLeftRight(void* self) {
                 g_analogLastX = (int)((float)outX / mag * 127.0f);
                 g_analogLastY = (int)((float)outY / mag * 127.0f);
             }
-            g_analogReleaseTime = 0;
+            g_analogIdleFrames = 0;
         }
-        else if (g_analogReleaseTime == 0)
+        else
         {
-            g_analogReleaseTime = GetTickCountMs();
+            g_analogIdleFrames++;
         }
     }
     else
     {
-        g_analogReleaseTime = 0;
+        g_analogIdleFrames = 0;
     }
 
     g_cachedX = outX;
@@ -457,8 +456,7 @@ static void UpdateMacroShoot()
         }
 
         // Match pccontrol: g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
-        float tsUnit = 20.0f;
-        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / tsUnit;
+        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
     }
     else
     {
@@ -469,11 +467,10 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
-        if (g_shootAgainProtectTimer <= 0.0f && !g_macro2AimSuppressed) g_macroAimTriggered = true;
+        if (g_shootAgainProtectFrames <= 0 && !g_macro2AimSuppressed) g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
 
-        float tsUnit = 20.0f;
-        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / tsUnit;
+        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
     }
     else
     {
@@ -688,9 +685,9 @@ int HookOf_GetSprint(void* self, int sprintType)
     if (g_macroSprintTimer > 0.0f) sprintProtected = true;
 
     // 1. Exit Protection
-    if (g_sprintProtectExitTimer > 0.0f)
+    if (g_sprintProtectExitFrames > 0)
     {
-        if (g_sprintProtectExitDelayTimer <= 0.0f)
+        if (g_sprintProtectExitDelayFrames <= 0)
         {
             sprintProtected = true;
         }
@@ -699,8 +696,7 @@ int HookOf_GetSprint(void* self, int sprintType)
     // 2. Entry Protection
     if (IsActionTouched(ACTION_TARGET) && !aiming)
     {
-        float entryLimit = (float)g_pcSettings.sprintProtectEntryMs / 20.0f;
-        if (g_sprintReleaseTimer > 0.0f && g_sprintReleaseTimer < entryLimit) sprintProtected = true;
+        if (g_sprintReleaseFrames > 0 && g_sprintReleaseFrames < g_pcSettings.sprintProtectEntryFrames) sprintProtected = true;
     }
 
     // 3. Auto Run Logic
@@ -708,7 +704,7 @@ int HookOf_GetSprint(void* self, int sprintType)
     if (g_pcSettings.enableAutoRun && !aiming)
     {
         bool allowedByExit = true;
-        if (g_sprintProtectExitTimer > 0.0f && g_sprintProtectExitDelayTimer > 0.0f) allowedByExit = false;
+        if (g_sprintProtectExitFrames > 0 && g_sprintProtectExitDelayFrames > 0) allowedByExit = false;
 
         if (allowedByExit)
         {
@@ -746,7 +742,7 @@ int HookOf_SprintJustDown(void* self)
     }
 
     // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
-    if (g_sprintProtectExitTimer > 0.0f && g_sprintProtectExitDelayTimer <= 0.0f && !g_sprintProtectJustDownSent)
+    if (g_sprintProtectExitFrames > 0 && g_sprintProtectExitDelayFrames <= 0 && !g_sprintProtectJustDownSent)
     {
         g_sprintProtectJustDownSent = true;
         return 1;
@@ -806,28 +802,19 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
         if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
         {
-            uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-            if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+            if (g_analogIdleFrames > 0 && g_analogIdleFrames <= g_pcSettings.analogWeaponProtectDelayFrames)
             {
-                float tsUnit = 20.0f;
-                g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
                 g_feintLastX = g_analogLastX;
                 g_feintLastY = g_analogLastY;
-
-                // Also trigger feint protect if enabled to keep it in sync
-                if (g_pcSettings.enableFeintProtect)
-                {
-                    g_feintProtectTimer = g_analogWeaponProtectTimer + (float)g_pcSettings.feintProtectMs / tsUnit;
-                }
+                g_feintProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames + g_pcSettings.feintProtectFrames;
+                g_analogWeaponProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames;
             }
         }
 
-        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectTimer <= 0.0f)
+        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectFrames <= 0)
         {
-            // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
-            float tsUnit = 20.0f;
-            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
-            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
+            g_feintProtectFrames = g_pcSettings.feintProtectFrames;
+            g_shootAgainProtectFrames = g_pcSettings.shootAgainProtectFrames;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -868,28 +855,19 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
 
         if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
         {
-            uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
-            if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+            if (g_analogIdleFrames > 0 && g_analogIdleFrames <= g_pcSettings.analogWeaponProtectDelayFrames)
             {
-                float tsUnit = 20.0f;
-                g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
                 g_feintLastX = g_analogLastX;
                 g_feintLastY = g_analogLastY;
-
-                // Also trigger feint protect if enabled to keep it in sync
-                if (g_pcSettings.enableFeintProtect)
-                {
-                    g_feintProtectTimer = g_analogWeaponProtectTimer + (float)g_pcSettings.feintProtectMs / tsUnit;
-                }
+                g_feintProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames + g_pcSettings.feintProtectFrames;
+                g_analogWeaponProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames;
             }
         }
 
-        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectTimer <= 0.0f)
+        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectFrames <= 0)
         {
-            // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
-            float tsUnit = 20.0f;
-            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
-            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
+            g_feintProtectFrames = g_pcSettings.feintProtectFrames;
+            g_shootAgainProtectFrames = g_pcSettings.shootAgainProtectFrames;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -973,25 +951,12 @@ void HookOf_Render2DStuff()
     // Update Timers based on TimeStep
     float ts = (pgTimeStep && *pgTimeStep > 0.01f) ? *pgTimeStep : 1.0f;
 
-    if (IsActionTouched(ACTION_SPRINT)) g_sprintReleaseTimer = 0.0f;
-    else g_sprintReleaseTimer += ts;
+    if (IsActionTouched(ACTION_SPRINT)) g_sprintReleaseFrames = 0;
+    else g_sprintReleaseFrames++;
 
-    if (g_feintProtectTimer > 0.0f)
-    {
-        g_feintProtectTimer -= ts;
-        if (g_feintProtectTimer < 0.0f) g_feintProtectTimer = 0.0f;
-    }
-    if (g_shootAgainProtectTimer > 0.0f)
-    {
-        g_shootAgainProtectTimer -= ts;
-        if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
-    }
-
-    if (g_analogWeaponProtectTimer > 0.0f)
-    {
-        g_analogWeaponProtectTimer -= ts;
-        if (g_analogWeaponProtectTimer < 0.0f) g_analogWeaponProtectTimer = 0.0f;
-    }
+    if (g_feintProtectFrames > 0) g_feintProtectFrames--;
+    if (g_shootAgainProtectFrames > 0) g_shootAgainProtectFrames--;
+    if (g_analogWeaponProtectFrames > 0) g_analogWeaponProtectFrames--;
 
     if (g_macroSprintTimer > 0.0f)
     {
@@ -999,15 +964,13 @@ void HookOf_Render2DStuff()
         if (g_macroSprintTimer < 0.0f) g_macroSprintTimer = 0.0f;
     }
 
-    if (g_sprintProtectExitDelayTimer > 0.0f)
+    if (g_sprintProtectExitDelayFrames > 0)
     {
-        g_sprintProtectExitDelayTimer -= ts;
-        if (g_sprintProtectExitDelayTimer < 0.0f) g_sprintProtectExitDelayTimer = 0.0f;
+        g_sprintProtectExitDelayFrames--;
     }
-    else if (g_sprintProtectExitTimer > 0.0f)
+    else if (g_sprintProtectExitFrames > 0)
     {
-        g_sprintProtectExitTimer -= ts;
-        if (g_sprintProtectExitTimer < 0.0f) g_sprintProtectExitTimer = 0.0f;
+        g_sprintProtectExitFrames--;
     }
 
     Render2DStuff();
@@ -1051,9 +1014,8 @@ void HookOf_Render2DStuff()
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
 
-        float tsUnit = 20.0f;
-        g_sprintProtectExitDelayTimer = (float)g_pcSettings.sprintProtectExitDelayMs / tsUnit;
-        g_sprintProtectExitTimer = (float)g_pcSettings.sprintProtectExitMs / tsUnit;
+        g_sprintProtectExitDelayFrames = g_pcSettings.sprintProtectExitDelayFrames;
+        g_sprintProtectExitFrames = g_pcSettings.sprintProtectExitFrames;
         g_sprintProtectJustDownSent = false;
     }
 
