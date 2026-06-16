@@ -137,6 +137,11 @@ static uint32_t g_internalFrameCount = 0;
 
 static float g_feintProtectTimer = 0.0f;
 static float g_shootAgainProtectTimer = 0.0f;
+
+static float g_sprintProtectEntryTimer = 0.0f;
+static float g_sprintProtectExitTimer = 0.0f;
+static float g_sprintProtectExitDelayTimer = 0.0f;
+
 static float* pgTimeStep = nullptr;
 static int g_feintLastX = 0;
 static int g_feintLastY = 0;
@@ -702,10 +707,21 @@ int HookOf_GetSprint(void* self, int sprintType)
 
     g_lastTargetState = targeting;
 
-    if (sprintTouched)
+    if (sprintTouched) return 1;
+
+    // Auto Run Logic
+    if (g_pcSettings.enableAutoRun && !aiming && !IsActionTouched(ACTION_WALK))
+    {
+        float mag = sqrtf((float)g_cachedX * g_cachedX + (float)g_cachedY * g_cachedY);
+        if (mag > 110.0f) return 1;
+    }
+
+    // Sprint Protection Logic
+    if (g_sprintProtectEntryTimer > 0.0f || g_sprintProtectExitDelayTimer > 0.0f || g_sprintProtectExitTimer > 0.0f)
     {
         return 1;
     }
+
     return GetSprint(self, sprintType);
 }
 
@@ -922,6 +938,22 @@ void HookOf_Render2DStuff()
         if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
     }
 
+    if (g_sprintProtectEntryTimer > 0.0f)
+    {
+        g_sprintProtectEntryTimer -= ts;
+        if (g_sprintProtectEntryTimer < 0.0f) g_sprintProtectEntryTimer = 0.0f;
+    }
+    if (g_sprintProtectExitDelayTimer > 0.0f)
+    {
+        g_sprintProtectExitDelayTimer -= ts;
+        if (g_sprintProtectExitDelayTimer < 0.0f) g_sprintProtectExitDelayTimer = 0.0f;
+    }
+    else if (g_sprintProtectExitTimer > 0.0f)
+    {
+        g_sprintProtectExitTimer -= ts;
+        if (g_sprintProtectExitTimer < 0.0f) g_sprintProtectExitTimer = 0.0f;
+    }
+
     Render2DStuff();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
@@ -944,11 +976,20 @@ void HookOf_Render2DStuff()
     if (aimNow && !g_lastAimState)
     {
         g_sprintHeldAtAimEntry = IsActionTouched(ACTION_SPRINT);
+
+        // Trigger Sprint Entry Protection
+        float tsUnit = 20.0f;
+        g_sprintProtectEntryTimer = (float)g_pcSettings.sprintProtectEntryMs / tsUnit;
     }
 
-    if (!aimNow)
+    if (!aimNow && g_lastAimState)
     {
         g_sprintHeldAtAimEntry = false;
+
+        // Trigger Sprint Exit Protection
+        float tsUnit = 20.0f;
+        g_sprintProtectExitDelayTimer = (float)g_pcSettings.sprintProtectExitDelayMs / tsUnit;
+        g_sprintProtectExitTimer = (float)g_pcSettings.sprintProtectExitMs / tsUnit;
     }
 
     // Detect Aim Entry (Transition to aiming)

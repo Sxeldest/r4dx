@@ -378,6 +378,23 @@ void RenderPCControlMenu()
                 ImGui::SameLine();
                 changed |= ImGui::Checkbox("Disable Auto-Jump", &g_pcSettings.disableNativeJump);
                 changed |= ImGui::Checkbox("Sprint Double Tap Boost", &g_pcSettings.enableSprintDoubleTapBoost);
+                changed |= ImGui::Checkbox("Enable Auto-Run", &g_pcSettings.enableAutoRun);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Otomatis lari saat analog digerakkan.");
+
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Sprint Protection Settings");
+                ImGui::Separator();
+                ImGui::Text("Sprint Entry Protection (ms)");
+                changed |= SliderIntWithButtons("sprintProtectEntryMs", &g_pcSettings.sprintProtectEntryMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mempertahankan status lari sejenak saat mulai membidik.");
+
+                ImGui::Text("Sprint Exit Delay (ms)");
+                changed |= SliderIntWithButtons("sprintProtectExitDelayMs", &g_pcSettings.sprintProtectExitDelayMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda sebelum melepas lari setelah berhenti membidik.");
+
+                ImGui::Text("Sprint Exit Protection (ms)");
+                changed |= SliderIntWithButtons("sprintProtectExitMs", &g_pcSettings.sprintProtectExitMs, 0, 1000, "%d ms", 10);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Durasi transisi lari saat melepas bidikan.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Miscellaneous");

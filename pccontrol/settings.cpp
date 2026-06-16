@@ -84,6 +84,11 @@ PCControlSettings g_pcSettings = {
     true,   // enableFeintProtect
     500,    // feintProtectMs
     250,    // shootAgainProtectMs
+
+    false,  // enableAutoRun
+    150,    // sprintProtectEntryMs
+    250,    // sprintProtectExitMs
+    100,    // sprintProtectExitDelayMs
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -180,6 +185,11 @@ static ConfigEntry* s_bpEnabled = nullptr;
 static ConfigEntry* s_enableFeintProtect = nullptr;
 static ConfigEntry* s_feintProtectMs = nullptr;
 static ConfigEntry* s_shootAgainProtectMs = nullptr;
+
+static ConfigEntry* s_enableAutoRun = nullptr;
+static ConfigEntry* s_sprintProtectEntryMs = nullptr;
+static ConfigEntry* s_sprintProtectExitMs = nullptr;
+static ConfigEntry* s_sprintProtectExitDelayMs = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -368,6 +378,11 @@ void InitPCControlSettings()
     s_feintProtectMs = cfg->Bind("FeintProtectMs", 500, kSettingsSection);
     s_shootAgainProtectMs = cfg->Bind("ShootAgainProtectMs", 250, kSettingsSection);
 
+    s_enableAutoRun = cfg->Bind("EnableAutoRun", false, kSettingsSection);
+    s_sprintProtectEntryMs = cfg->Bind("SprintProtectEntryMs", 150, kSettingsSection);
+    s_sprintProtectExitMs = cfg->Bind("SprintProtectExitMs", 250, kSettingsSection);
+    s_sprintProtectExitDelayMs = cfg->Bind("SprintProtectExitDelayMs", 100, kSettingsSection);
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -456,6 +471,11 @@ void InitPCControlSettings()
     g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
     g_pcSettings.feintProtectMs = s_feintProtectMs->GetInt();
     g_pcSettings.shootAgainProtectMs = s_shootAgainProtectMs->GetInt();
+
+    g_pcSettings.enableAutoRun = s_enableAutoRun->GetBool();
+    g_pcSettings.sprintProtectEntryMs = s_sprintProtectEntryMs->GetInt();
+    g_pcSettings.sprintProtectExitMs = s_sprintProtectExitMs->GetInt();
+    g_pcSettings.sprintProtectExitDelayMs = s_sprintProtectExitDelayMs->GetInt();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -650,6 +670,11 @@ void SavePCControlSettings()
     s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
     s_feintProtectMs->SetInt(g_pcSettings.feintProtectMs);
     s_shootAgainProtectMs->SetInt(g_pcSettings.shootAgainProtectMs);
+
+    s_enableAutoRun->SetBool(g_pcSettings.enableAutoRun);
+    s_sprintProtectEntryMs->SetInt(g_pcSettings.sprintProtectEntryMs);
+    s_sprintProtectExitMs->SetInt(g_pcSettings.sprintProtectExitMs);
+    s_sprintProtectExitDelayMs->SetInt(g_pcSettings.sprintProtectExitDelayMs);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {

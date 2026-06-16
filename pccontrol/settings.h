@@ -206,6 +206,11 @@ struct PCControlSettings
     int feintProtectMs;
     int shootAgainProtectMs;
 
+    bool enableAutoRun;
+    int sprintProtectEntryMs;
+    int sprintProtectExitMs;
+    int sprintProtectExitDelayMs;
+
     CustomMacro macros[MAX_MACROS];
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];
