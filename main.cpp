@@ -352,7 +352,7 @@ int HookOf_GetPedWalkLeftRight(void* self) {
         }
     }
 
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectTimer > 0.0f && g_analogWeaponProtectDelayTimer <= 0.0f)
+    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectTimer > 0.0f)
     {
         if (outX == 0 && outY == 0)
         {
@@ -448,7 +448,7 @@ static void UpdateMacroShoot()
             g_macroStartTimeMs = now;
         }
 
-        if (!g_macroAimTriggered && !g_macro1AimSuppressed && g_shootAgainProtectTimer <= 0.0f)
+        if (!g_macroAimTriggered && !g_macro1AimSuppressed)
         {
             if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
@@ -562,12 +562,6 @@ int HookOf_JumpJustDown(void* self)
 
 int HookOf_IsHeldDown(int widgetId, int a2)
 {
-    if (g_shootAgainProtectTimer > 0.0f)
-    {
-        // Block shooting widgets when protected
-        if (widgetId == 1 || IsCustomVCShootWidget(widgetId)) return 0;
-    }
-
     int result = IsHeldDown(widgetId, a2);
 
     void* ped = FindPlayerPed(-1);
@@ -575,7 +569,7 @@ int HookOf_IsHeldDown(int widgetId, int a2)
     bool isMelee = IsMeleeWeapon(weapon);
     bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
 
-    if (vcShootTouched && g_shootAgainProtectTimer <= 0.0f)
+    if (vcShootTouched)
     {
         if (isMelee)
         {
@@ -587,10 +581,8 @@ int HookOf_IsHeldDown(int widgetId, int a2)
         }
     }
 
-    if (g_shootAgainProtectTimer <= 0.0f)
-    {
-        if (
-            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+    if (
+        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
  || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
  || (widgetId == 2 && IsActionTouched(ACTION_GAS))
  || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
@@ -598,38 +590,15 @@ int HookOf_IsHeldDown(int widgetId, int a2)
  || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
  || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
  || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        )
-        {
-            result = 1;
-        }
-    }
-    else
+    )
     {
-        // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
-        if (
-            (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
- || (widgetId == 2 && IsActionTouched(ACTION_GAS))
- || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
- || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
- || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
- || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
- || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        )
-        {
-            result = 1;
-        }
+        result = 1;
     }
     return result;
 }
 
 int HookOf_IsTouched(int widgetId, void* a2, int a3)
 {
-    if (g_shootAgainProtectTimer > 0.0f)
-    {
-        // Block shooting widgets when protected
-        if (widgetId == 1 || IsCustomVCShootWidget(widgetId)) return 0;
-    }
-
     int result = IsTouched(widgetId, a2, a3);
 
     void* ped = FindPlayerPed(-1);
@@ -637,7 +606,7 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     bool isMelee = IsMeleeWeapon(weapon);
     bool vcShootTouched = IsActionTouched(ACTION_VC_SHOOT);
 
-    if (vcShootTouched && g_shootAgainProtectTimer <= 0.0f)
+    if (vcShootTouched)
     {
         if (isMelee)
         {
@@ -649,10 +618,8 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         }
     }
 
-    if (g_shootAgainProtectTimer <= 0.0f)
-    {
-        if (
-            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+    if (
+        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
  || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
  || (widgetId == 2 && IsActionTouched(ACTION_GAS))
  || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
@@ -661,27 +628,9 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
  || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
  || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
  || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        )
-        {
-            result = 1;
-        }
-    }
-    else
+    )
     {
-        // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
-        if (
-            (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
- || (widgetId == 2 && IsActionTouched(ACTION_GAS))
- || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
- || (widgetId == 4 && ImGui::IsItemActive())
- || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
- || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
- || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
- || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-        )
-        {
-            result = 1;
-        }
+        result = 1;
     }
     return result;
 }
@@ -855,30 +804,30 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
         g_switchQueueGap = 3;
         g_lastWeaponSwitchTime = GetTickCountMs();
 
-        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+        {
+            uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+            if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+            {
+                float tsUnit = 20.0f;
+                g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
+                g_feintLastX = g_analogLastX;
+                g_feintLastY = g_analogLastY;
+
+                // Also trigger feint protect if enabled to keep it in sync
+                if (g_pcSettings.enableFeintProtect)
+                {
+                    g_feintProtectTimer = g_analogWeaponProtectTimer + (float)g_pcSettings.feintProtectMs / tsUnit;
+                }
+            }
+        }
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectTimer <= 0.0f)
         {
             // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
             float tsUnit = 20.0f;
             g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
             g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
-        }
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
-        {
-            float tsUnit = 20.0f;
-            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
-            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
-        }
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
-        {
-            float tsUnit = 20.0f;
-            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
-            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -917,30 +866,30 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
         g_switchQueueGap = 3;
         g_lastWeaponSwitchTime = GetTickCountMs();
 
-        if (g_pcSettings.enableFeintProtect && IsAimMode())
+        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+        {
+            uint32_t idleTime = GetTickCountMs() - g_analogReleaseTime;
+            if (g_analogReleaseTime != 0 && idleTime <= (uint32_t)g_pcSettings.analogWeaponProtectDelayMs)
+            {
+                float tsUnit = 20.0f;
+                g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
+                g_feintLastX = g_analogLastX;
+                g_feintLastY = g_analogLastY;
+
+                // Also trigger feint protect if enabled to keep it in sync
+                if (g_pcSettings.enableFeintProtect)
+                {
+                    g_feintProtectTimer = g_analogWeaponProtectTimer + (float)g_pcSettings.feintProtectMs / tsUnit;
+                }
+            }
+        }
+
+        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectTimer <= 0.0f)
         {
             // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
             float tsUnit = 20.0f;
             g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
             g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
-        }
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
-        {
-            float tsUnit = 20.0f;
-            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
-            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
-        }
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode())
-        {
-            float tsUnit = 20.0f;
-            g_analogWeaponProtectDelayTimer = (float)g_pcSettings.analogWeaponProtectDelayMs / tsUnit;
-            g_analogWeaponProtectTimer = (float)g_pcSettings.analogWeaponProtectDurationMs / tsUnit;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -1038,12 +987,7 @@ void HookOf_Render2DStuff()
         if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
     }
 
-    if (g_analogWeaponProtectDelayTimer > 0.0f)
-    {
-        g_analogWeaponProtectDelayTimer -= ts;
-        if (g_analogWeaponProtectDelayTimer < 0.0f) g_analogWeaponProtectDelayTimer = 0.0f;
-    }
-    else if (g_analogWeaponProtectTimer > 0.0f)
+    if (g_analogWeaponProtectTimer > 0.0f)
     {
         g_analogWeaponProtectTimer -= ts;
         if (g_analogWeaponProtectTimer < 0.0f) g_analogWeaponProtectTimer = 0.0f;
