@@ -657,7 +657,7 @@ static bool IsCustomSprintTouched()
 
 static bool IsCustomTargetHeld()
 {
-    if (g_shootAgainProtectTimer > 0.0f) return false;
+    if (g_shootAgainProtectFrames > 0.0f) return false;
 
     if (IsActionTouched(ACTION_TARGET))
         return true;
