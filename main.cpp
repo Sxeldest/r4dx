@@ -534,6 +534,12 @@ int HookOf_JumpJustDown(void* self)
 
 int HookOf_IsHeldDown(int widgetId, int a2)
 {
+    if (g_shootAgainProtectTimer > 0.0f)
+    {
+        // Block shooting widgets when protected
+        if (widgetId == 1 || IsCustomVCShootWidget(widgetId)) return 0;
+    }
+
     int result = IsHeldDown(widgetId, a2);
 
     void* ped = FindPlayerPed(-1);
@@ -557,13 +563,13 @@ int HookOf_IsHeldDown(int widgetId, int a2)
     {
         if (
             (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
-    | (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
-    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+ || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+ || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+ || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+ || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+ || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+ || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+ || (widgetId == 7 && IsActionTouched(ACTION_HORN))
         )
         {
             result = 1;
@@ -574,12 +580,12 @@ int HookOf_IsHeldDown(int widgetId, int a2)
         // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
         if (
             (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
-    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+ || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+ || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+ || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+ || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+ || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+ || (widgetId == 7 && IsActionTouched(ACTION_HORN))
         )
         {
             result = 1;
@@ -590,6 +596,12 @@ int HookOf_IsHeldDown(int widgetId, int a2)
 
 int HookOf_IsTouched(int widgetId, void* a2, int a3)
 {
+    if (g_shootAgainProtectTimer > 0.0f)
+    {
+        // Block shooting widgets when protected
+        if (widgetId == 1 || IsCustomVCShootWidget(widgetId)) return 0;
+    }
+
     int result = IsTouched(widgetId, a2, a3);
 
     void* ped = FindPlayerPed(-1);
@@ -613,14 +625,14 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     {
         if (
             (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
-    | (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
-    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-    | (widgetId == 4 && ImGui::IsItemActive())
-    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+ || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+ || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+ || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+ || (widgetId == 4 && ImGui::IsItemActive())
+ || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+ || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+ || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+ || (widgetId == 7 && IsActionTouched(ACTION_HORN))
         )
         {
             result = 1;
@@ -631,13 +643,13 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         // Tetap izinkan tombol non-tembak meskipun sedang terproteksi tembak
         if (
             (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
-    | (widgetId == 2 && IsActionTouched(ACTION_GAS))
-    | (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
-    | (widgetId == 4 && ImGui::IsItemActive())
-    | (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
-    | (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
-    | (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
-    | (widgetId == 7 && IsActionTouched(ACTION_HORN))
+ || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+ || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+ || (widgetId == 4 && ImGui::IsItemActive())
+ || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+ || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+ || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+ || (widgetId == 7 && IsActionTouched(ACTION_HORN))
         )
         {
             result = 1;
@@ -769,10 +781,10 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
 
         if (g_pcSettings.enableFeintProtect && IsAimMode())
         {
-            // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
-            // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
-            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
-            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / 20.0f;
+            // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
+            float tsUnit = 20.0f;
+            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
+            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -813,10 +825,10 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
 
         if (g_pcSettings.enableFeintProtect && IsAimMode())
         {
-            // Kita asumsikan 50.0f adalah base timestep GTA SA (1.0 unit = 20ms)
-            // Jadi: ms / 20 = jumlah unit timestep yang dibutuhkan
-            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / 20.0f;
-            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / 20.0f;
+            // Konversi MS ke unit TimeStep GTA (1.0 unit = 20ms pada 50 FPS standar)
+            float tsUnit = 20.0f;
+            g_feintProtectTimer = (float)g_pcSettings.feintProtectMs / tsUnit;
+            g_shootAgainProtectTimer = (float)g_pcSettings.shootAgainProtectMs / tsUnit;
             g_feintLastX = g_cachedX;
             g_feintLastY = g_cachedY;
         }
@@ -898,19 +910,16 @@ void HookOf_Render2DStuff()
     g_internalFrameCount++;
 
     // Update Timers based on TimeStep
-    if (pgTimeStep)
+    float ts = (pgTimeStep && *pgTimeStep > 0.01f) ? *pgTimeStep : 1.0f;
+    if (g_feintProtectTimer > 0.0f)
     {
-        float ts = *pgTimeStep;
-        if (g_feintProtectTimer > 0.0f)
-        {
-            g_feintProtectTimer -= ts;
-            if (g_feintProtectTimer < 0.0f) g_feintProtectTimer = 0.0f;
-        }
-        if (g_shootAgainProtectTimer > 0.0f)
-        {
-            g_shootAgainProtectTimer -= ts;
-            if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
-        }
+        g_feintProtectTimer -= ts;
+        if (g_feintProtectTimer < 0.0f) g_feintProtectTimer = 0.0f;
+    }
+    if (g_shootAgainProtectTimer > 0.0f)
+    {
+        g_shootAgainProtectTimer -= ts;
+        if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
     }
 
     Render2DStuff();
@@ -1238,7 +1247,7 @@ extern "C" void OnModPreLoad()
     recipNearClip = (RwReal*)aml->GetSym(pGameHandle, "_ZN9CSprite2d13RecipNearClipE");
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (uintptr_t*)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
-    pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer11ms_fTimeStepE");
+    pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer12ms_fTimeStepE");
 }
 
 extern "C" void OnModLoad()
