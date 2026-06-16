@@ -138,9 +138,11 @@ static uint32_t g_internalFrameCount = 0;
 static float g_feintProtectTimer = 0.0f;
 static float g_shootAgainProtectTimer = 0.0f;
 
-static float g_sprintProtectEntryTimer = 0.0f;
 static float g_sprintProtectExitTimer = 0.0f;
 static float g_sprintProtectExitDelayTimer = 0.0f;
+static bool g_sprintProtectJustDownSent = false;
+static float g_sprintReleaseTimer = 0.0f;
+static float g_macroSprintTimer = 0.0f;
 
 static float* pgTimeStep = nullptr;
 static int g_feintLastX = 0;
@@ -441,6 +443,10 @@ static void UpdateMacroShoot()
                 g_macroAimTriggered = true;
             }
         }
+
+        // Match pccontrol: g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
+        float tsUnit = 20.0f;
+        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / tsUnit;
     }
     else
     {
@@ -453,10 +459,15 @@ static void UpdateMacroShoot()
     {
         if (g_shootAgainProtectTimer <= 0.0f && !g_macro2AimSuppressed) g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
+
+        float tsUnit = 20.0f;
+        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / tsUnit;
     }
     else
     {
         if (g_pcSettings.macroShootMode == 0) g_macroAimTriggered = false;
+
+        if (!macro1) g_macroSprintTimer = 0.0f;
     }
 }
 
@@ -709,16 +720,46 @@ int HookOf_GetSprint(void* self, int sprintType)
 
     if (sprintTouched) return 1;
 
-    // Auto Run Logic
-    if (g_pcSettings.enableAutoRun && !aiming && !IsActionTouched(ACTION_WALK))
+    // Sprint Protection Logic
+    bool sprintProtected = false;
+
+    // 0. Macro Sprint
+    if (g_macroSprintTimer > 0.0f) sprintProtected = true;
+
+    // 1. Exit Protection
+    if (g_sprintProtectExitTimer > 0.0f)
     {
-        float mag = sqrtf((float)g_cachedX * g_cachedX + (float)g_cachedY * g_cachedY);
-        if (mag > 110.0f) return 1;
+        if (g_sprintProtectExitDelayTimer <= 0.0f)
+        {
+            sprintProtected = true;
+        }
     }
 
-    // Sprint Protection Logic
-    if (g_sprintProtectEntryTimer > 0.0f || g_sprintProtectExitDelayTimer > 0.0f || g_sprintProtectExitTimer > 0.0f)
+    // 2. Entry Protection
+    if (IsActionTouched(ACTION_TARGET) && !aiming)
     {
+        float entryLimit = (float)g_pcSettings.sprintProtectEntryMs / 20.0f;
+        if (g_sprintReleaseTimer > 0.0f && g_sprintReleaseTimer < entryLimit) sprintProtected = true;
+    }
+
+    // 3. Auto Run Logic
+    bool autoRunActive = false;
+    if (g_pcSettings.enableAutoRun && !aiming)
+    {
+        bool allowedByExit = true;
+        if (g_sprintProtectExitTimer > 0.0f && g_sprintProtectExitDelayTimer > 0.0f) allowedByExit = false;
+
+        if (allowedByExit)
+        {
+            float mag = sqrtf((float)g_cachedX * g_cachedX + (float)g_cachedY * g_cachedY);
+            if (mag > 110.0f && !IsActionTouched(ACTION_WALK)) autoRunActive = true;
+        }
+    }
+
+    if (sprintProtected || autoRunActive)
+    {
+        void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
+        if (player) SetMoveState(player, 7);
         return 1;
     }
 
@@ -740,6 +781,13 @@ int HookOf_SprintJustDown(void* self)
     if (g_sprintJustDownFrames > 0)
     {
         g_sprintJustDownFrames--;
+        return 1;
+    }
+
+    // Trigger sprint otomatis saat keluar Aim jika fitur protect aktif
+    if (g_sprintProtectExitTimer > 0.0f && g_sprintProtectExitDelayTimer <= 0.0f && !g_sprintProtectJustDownSent)
+    {
+        g_sprintProtectJustDownSent = true;
         return 1;
     }
 
@@ -927,6 +975,10 @@ void HookOf_Render2DStuff()
 
     // Update Timers based on TimeStep
     float ts = (pgTimeStep && *pgTimeStep > 0.01f) ? *pgTimeStep : 1.0f;
+
+    if (IsActionTouched(ACTION_SPRINT)) g_sprintReleaseTimer = 0.0f;
+    else g_sprintReleaseTimer += ts;
+
     if (g_feintProtectTimer > 0.0f)
     {
         g_feintProtectTimer -= ts;
@@ -938,11 +990,12 @@ void HookOf_Render2DStuff()
         if (g_shootAgainProtectTimer < 0.0f) g_shootAgainProtectTimer = 0.0f;
     }
 
-    if (g_sprintProtectEntryTimer > 0.0f)
+    if (g_macroSprintTimer > 0.0f)
     {
-        g_sprintProtectEntryTimer -= ts;
-        if (g_sprintProtectEntryTimer < 0.0f) g_sprintProtectEntryTimer = 0.0f;
+        g_macroSprintTimer -= ts;
+        if (g_macroSprintTimer < 0.0f) g_macroSprintTimer = 0.0f;
     }
+
     if (g_sprintProtectExitDelayTimer > 0.0f)
     {
         g_sprintProtectExitDelayTimer -= ts;
@@ -976,20 +1029,11 @@ void HookOf_Render2DStuff()
     if (aimNow && !g_lastAimState)
     {
         g_sprintHeldAtAimEntry = IsActionTouched(ACTION_SPRINT);
-
-        // Trigger Sprint Entry Protection
-        float tsUnit = 20.0f;
-        g_sprintProtectEntryTimer = (float)g_pcSettings.sprintProtectEntryMs / tsUnit;
     }
 
     if (!aimNow && g_lastAimState)
     {
         g_sprintHeldAtAimEntry = false;
-
-        // Trigger Sprint Exit Protection
-        float tsUnit = 20.0f;
-        g_sprintProtectExitDelayTimer = (float)g_pcSettings.sprintProtectExitDelayMs / tsUnit;
-        g_sprintProtectExitTimer = (float)g_pcSettings.sprintProtectExitMs / tsUnit;
     }
 
     // Detect Aim Entry (Transition to aiming)
@@ -1003,6 +1047,11 @@ void HookOf_Render2DStuff()
     {
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
+
+        float tsUnit = 20.0f;
+        g_sprintProtectExitDelayTimer = (float)g_pcSettings.sprintProtectExitDelayMs / tsUnit;
+        g_sprintProtectExitTimer = (float)g_pcSettings.sprintProtectExitMs / tsUnit;
+        g_sprintProtectJustDownSent = false;
     }
 
     if (g_lastAimState && !aimNow)
