@@ -23,7 +23,11 @@ LOCAL_SRC_FILES := \
     ImGui/imgui_tables.cpp \
     ImGui/imgui_widgets.cpp \
     ImGui/backends/imgui_impl_renderware.cpp \
-    ImGui/RW/RenderWare.cpp
+    ImGui/RW/RenderWare.cpp \
+    SAMP/SAMPManager.cpp \
+    SAMP/sampapi.cpp \
+    SAMP/sampcommands.cpp \
+    SAMP/raknet/BitStream.cpp
 LOCAL_CFLAGS += -O2 -mfloat-abi=softfp -DNDEBUG -std=c++17
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH) \
@@ -32,6 +36,7 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/game \
     $(LOCAL_PATH)/ImGui \
     $(LOCAL_PATH)/ImGui/backends \
-    $(LOCAL_PATH)/ImGui/RW
+    $(LOCAL_PATH)/ImGui/RW \
+    $(LOCAL_PATH)/SAMP
 LOCAL_LDLIBS += -llog
 include $(BUILD_SHARED_LIBRARY)

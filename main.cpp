@@ -21,6 +21,7 @@
 #include "pccontrol/timecyc.h"
 #include "pccontrol/widgetcustom.h"
 #include "pccontrol/debug_ui.h"
+#include "SAMP/SAMPManager.h"
 
 MYMODCFG(dexsocy.gtasa.pc.control, GTASA_PC_CONTROL, 1.1, Dexsociety)
 
@@ -946,6 +947,7 @@ bool HookOf_InitRenderware()
 
 void HookOf_Render2DStuff()
 {
+    SAMP::SAMPManager::Get().Process();
     g_internalFrameCount++;
 
     // Update Timers based on TimeStep
@@ -1384,6 +1386,8 @@ extern "C" void OnModLoad()
 
         HOOK(SAMP_RenderNametag, hSAMP + addrSAMP_RenderNametag + 1);
         DeathListHookLoad(hSAMP, false);
+
+        SAMP::SAMPManager::Get().Init();
     }
     if (hSAMP_ORIG) DeathListHookLoad(hSAMP_ORIG, true);
 }
