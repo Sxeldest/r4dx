@@ -30,8 +30,8 @@ bool PCControlGUI::initialize()
 
     ImGuiIO& io = ImGui::GetIO();
     ImFontConfig fontCfg;
-    fontCfg.OversampleH = 4;
-    fontCfg.OversampleV = 4;
+    fontCfg.OversampleH = 3;
+    fontCfg.OversampleV = 2;
     fontCfg.PixelSnapH = true;
 
     char path[512];
