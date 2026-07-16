@@ -333,6 +333,16 @@ void RenderPCControlMenu()
             {
                 ImGui::BeginChild("GeneralScroll", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Mouse & Camera");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Enable Camera Patch", &g_pcSettings.enableCameraPatch);
+                changed |= SliderFloatWithButtons("camSensX", &g_pcSettings.camSensX, 0.1f, 100.0f, "Horiz Sens: %.2f", 0.05f);
+                changed |= SliderFloatWithButtons("camSensY", &g_pcSettings.camSensY, 0.1f, 100.0f, "Vert Sens: %.2f", 0.05f);
+                changed |= SliderFloatWithButtons("aimSensX", &g_pcSettings.aimSensX, 0.1f, 100.0f, "Aim Sens X: %.2f", 0.05f);
+                changed |= SliderFloatWithButtons("aimSensY", &g_pcSettings.aimSensY, 0.1f, 100.0f, "Aim Sens Y: %.2f", 0.05f);
+                changed |= SliderFloatWithButtons("camSmoothness", &g_pcSettings.smoothness, 0.1f, 50.0f, "Smoothness: %.2f", 0.05f);
+
+                ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Controls & Patches");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);

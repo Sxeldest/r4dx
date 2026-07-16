@@ -125,10 +125,16 @@ struct MemoryPatch
 struct PCControlSettings
 {
     bool showMenu;
+    bool enableCameraPatch;
     bool disableNativeCrouch;
     bool disableNativeJump;
     bool enableAnalogPatch;
     bool enableSprintDoubleTapBoost;
+    float camSensX;
+    float camSensY;
+    float aimSensX;
+    float aimSensY;
+    float smoothness;
     float dpadSensX;
     float dpadSensY;
     float dpadSmoothness;

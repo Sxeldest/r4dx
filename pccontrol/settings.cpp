@@ -6,10 +6,16 @@
 
 PCControlSettings g_pcSettings = {
     false, // showMenu
+    true,  // enableCameraPatch
     false, // disableNativeCrouch
     false, // disableNativeJump
     true,  // enableAnalogPatch
     true,  // enableSprintDoubleTapBoost
+    30.0f,  // camSensX
+    20.0f,  // camSensY
+    20.5f,  // aimSensX
+    10.5f,  // aimSensY
+    15.0f,  // smoothness
     1.0f, // dpadSensX
     1.0f, // dpadSensY
     0.5f, // dpadSmoothness
@@ -99,6 +105,12 @@ static const char* kSettingsSection = "PCControl";
 static const char* kNametagSection = "Nametags";
 
 static ConfigEntry* s_disableNativeCrouch = nullptr;
+static ConfigEntry* s_enableCameraPatch = nullptr;
+static ConfigEntry* s_camSensX = nullptr;
+static ConfigEntry* s_camSensY = nullptr;
+static ConfigEntry* s_aimSensX = nullptr;
+static ConfigEntry* s_aimSensY = nullptr;
+static ConfigEntry* s_smoothness = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
 static ConfigEntry* s_analogPatch = nullptr;
 static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
@@ -222,6 +234,13 @@ static float ClampSetting(float value, float min, float max)
 void InitPCControlSettings()
 {
     cfg->Init();
+
+    s_enableCameraPatch = cfg->Bind("EnableCameraPatch", true, kSettingsSection);
+    s_camSensX = cfg->Bind("CamSensX", 1.0f, kSettingsSection);
+    s_camSensY = cfg->Bind("CamSensY", 1.0f, kSettingsSection);
+    s_aimSensX = cfg->Bind("AimSensX", 0.5f, kSettingsSection);
+    s_aimSensY = cfg->Bind("AimSensY", 0.5f, kSettingsSection);
+    s_smoothness = cfg->Bind("CameraSmoothness", 0.5f, kSettingsSection);
 
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
     s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
@@ -402,6 +421,13 @@ void InitPCControlSettings()
         sprintf(key, "APColor_%d", i);
         s_ntAPColor[i] = cfg->Bind(key, g_pcSettings.ntAPColor[i], kNametagSection);
     }
+
+    g_pcSettings.enableCameraPatch = s_enableCameraPatch->GetBool();
+    g_pcSettings.camSensX = s_camSensX->GetFloat();
+    g_pcSettings.camSensY = s_camSensY->GetFloat();
+    g_pcSettings.aimSensX = s_aimSensX->GetFloat();
+    g_pcSettings.aimSensY = s_aimSensY->GetFloat();
+    g_pcSettings.smoothness = s_smoothness->GetFloat();
 
     g_pcSettings.disableNativeCrouch = s_disableNativeCrouch->GetBool();
     g_pcSettings.disableNativeJump = s_disableNativeJump->GetBool();
@@ -615,6 +641,13 @@ void SavePCControlSettings()
     }
 
     s_activeWidgetSlot->SetInt(g_pcSettings.activeWidgetSlot);
+
+    s_enableCameraPatch->SetBool(g_pcSettings.enableCameraPatch);
+    s_camSensX->SetFloat(g_pcSettings.camSensX);
+    s_camSensY->SetFloat(g_pcSettings.camSensY);
+    s_aimSensX->SetFloat(g_pcSettings.aimSensX);
+    s_aimSensY->SetFloat(g_pcSettings.aimSensY);
+    s_smoothness->SetFloat(g_pcSettings.smoothness);
 
     s_disableNativeCrouch->SetBool(g_pcSettings.disableNativeCrouch);
     s_disableNativeJump->SetBool(g_pcSettings.disableNativeJump);

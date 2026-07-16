@@ -9,6 +9,7 @@ LOCAL_SRC_FILES := \
     pccontrol/menu.cpp \
     pccontrol/deathlist.cpp \
     pccontrol/gui.cpp \
+    pccontrol/camera.cpp \
     pccontrol/command.cpp \
     pccontrol/timecyc.cpp \
     pccontrol/widgetcustom.cpp \
