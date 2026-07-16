@@ -127,6 +127,7 @@ static bool g_sprintHeldAtAimEntry = false;
 static uint32_t g_macroStartTimeMs = 0;
 static uint32_t g_macro2StartTimeMs = 0;
 static bool g_macro1Active = false;
+static bool g_macro2Active = false;
 static bool g_macro1AimSuppressed = false;
 static bool g_macro2AimSuppressed = false;
 
@@ -398,6 +399,7 @@ static void UpdateMacroShoot()
         {
             g_macro1Active = true;
             g_macroStartTimeMs = now;
+            g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
         }
 
         if (!g_macroAimTriggered)
@@ -407,9 +409,6 @@ static void UpdateMacroShoot()
                 g_macroAimTriggered = true;
             }
         }
-
-        // Match pccontrol: g_macroSprintFrame = g_internalFrameCount + (uint32_t)g_pcSettings.macro1DelayFrames;
-        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
     }
     else
     {
@@ -420,13 +419,17 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
+        if (!g_macro2Active)
+        {
+            g_macro2Active = true;
+            g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
+        }
         g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
-
-        g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
     }
     else
     {
+        g_macro2Active = false;
         if (g_pcSettings.macroShootMode == 0) g_macroAimTriggered = false;
 
         if (!macro1) g_macroSprintTimer = 0.0f;
@@ -633,7 +636,11 @@ int HookOf_GetSprint(void* self, int sprintType)
     bool sprintProtected = false;
 
     // 0. Macro Sprint
-    if (g_macroSprintTimer > 0.0f) sprintProtected = true;
+    if (g_macroSprintTimer > 0.0f)
+    {
+        float mag = sqrtf((float)g_cachedX * g_cachedX + (float)g_cachedY * g_cachedY);
+        if (mag > 50.0f) sprintProtected = true;
+    }
 
     // 1. Exit Protection
     if (g_sprintProtectExitFrames > 0)
