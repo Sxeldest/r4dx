@@ -239,14 +239,8 @@ void HookOf_ProcessPlayerWeapon(void* self, void* ped)
                 }
             }
         }
-        else if (!IsMeleeWeapon(weaponType))
-        {
-            // SENJATA API LAINNYA (Kecuali Melee & Sawn-off)
-            // Selalu bypass state lari agar transisi animasi mulus dan tidak berhenti mendadak
-            if (originalState == 7 || originalState == 4) shouldBypass = true;
-        }
 
-        // UNTUK MELEE / TINJU: shouldBypass tetap false (Tidak ada proteksi sesuai permintaan user)
+        // UNTUK SENJATA LAIN & MELEE: shouldBypass tetap false (Bypass dihapus sesuai permintaan user)
 
         if (shouldBypass) *pState = 1;
         ProcessPlayerWeapon(self, ped);
