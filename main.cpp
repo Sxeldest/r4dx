@@ -210,46 +210,7 @@ int GetCurrentWeapon(void* ped)
 
 void HookOf_ProcessPlayerWeapon(void* self, void* ped)
 {
-    if (ped)
-    {
-        int* pState = (int*)((uintptr_t)ped + 0x450);
-        int originalState = *pState;
-
-        // Ambil info senjata aktif
-        int weaponType = GetCurrentWeapon(ped);
-
-        bool aiming = IsAimMode();
-        bool sprintHeld = IsActionTouched(ACTION_SPRINT);
-        bool shouldBypass = false;
-
-        if (IsSpecialWeapon(weaponType))
-        {
-            // LOGIKA KHUSUS SAWN-OFF SHOTGUN
-            if (!aiming)
-            {
-                // On-Foot/Hipfire: Selalu izinkan agar tidak berhenti mendadak
-                if (originalState == 7 || originalState == 4) shouldBypass = true;
-            }
-            else
-            {
-                // Mode Aiming: Hanya izinkan jika sprint ditahan sejak awal masuk mode aim
-                if (g_sprintHeldAtAimEntry && sprintHeld)
-                {
-                    if (originalState == 7 || originalState == 4) shouldBypass = true;
-                }
-            }
-        }
-
-        // UNTUK SENJATA LAIN & MELEE: shouldBypass tetap false (Bypass dihapus sesuai permintaan user)
-
-        if (shouldBypass) *pState = 1;
-        ProcessPlayerWeapon(self, ped);
-        if (shouldBypass) *pState = originalState;
-    }
-    else
-    {
-        ProcessPlayerWeapon(self, ped);
-    }
+    ProcessPlayerWeapon(self, ped);
 }
 
 static bool IsCustomVCShootWidget(int widgetId) { return widgetId == 21; }
@@ -429,9 +390,6 @@ static void UpdateMacroShoot()
 
     g_macroHolding = false;
 
-    if (!macro1) g_macro1AimSuppressed = false;
-    if (!macro2) g_macro2AimSuppressed = false;
-
     // MACRO 1
     if (macro1)
     {
@@ -442,7 +400,7 @@ static void UpdateMacroShoot()
             g_macroStartTimeMs = now;
         }
 
-        if (!g_macroAimTriggered && !g_macro1AimSuppressed)
+        if (!g_macroAimTriggered)
         {
             if (now - g_macroStartTimeMs >= (uint32_t)g_pcSettings.macroShoot1Delay)
             {
@@ -462,7 +420,7 @@ static void UpdateMacroShoot()
     // MACRO 2
     if (macro2)
     {
-        if (g_shootAgainProtectFrames <= 0 && !g_macro2AimSuppressed) g_macroAimTriggered = true;
+        g_macroAimTriggered = true;
         if (aiming) g_macroHolding = true;
 
         g_macroSprintTimer = (float)g_pcSettings.macroShoot1Delay / 20.0f;
@@ -652,8 +610,6 @@ static bool IsCustomSprintTouched()
 
 static bool IsCustomTargetHeld()
 {
-    if (g_shootAgainProtectFrames > 0.0f) return false;
-
     if (IsActionTouched(ACTION_TARGET))
         return true;
     
@@ -1037,8 +993,6 @@ void HookOf_Render2DStuff()
         // PROTECTION: Jika keluar aiming karena jatuh/terdorong/apapun,
         // RESET status makro agar tidak memaksa masuk mode aiming lagi secara otomatis.
         g_macroAimTriggered = false;
-        if (IsActionTouched(ACTION_MACRO_SHOOT)) g_macro1AimSuppressed = true;
-        if (IsActionTouched(ACTION_MACRO_SHOOT_2)) g_macro2AimSuppressed = true;
     }
 
     g_lastAimState = aimNow;
