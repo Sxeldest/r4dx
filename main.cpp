@@ -651,8 +651,8 @@ int HookOf_GetSprint(void* self, int sprintType)
         }
     }
 
-    // 2. Entry Protection
-    if (IsActionTouched(ACTION_TARGET) && !aiming)
+    // 2. Entry Protection (SAMA DENGAN TOMBOL TARGET)
+    if (targeting && !aiming)
     {
         if (g_sprintReleaseFrames > 0 && g_sprintReleaseFrames < g_pcSettings.sprintProtectEntryFrames) sprintProtected = true;
     }
@@ -907,6 +907,8 @@ void HookOf_Render2DStuff()
     SAMP::SAMPManager::Get().Process();
     g_internalFrameCount++;
 
+    UpdateMacroShoot();
+
     // Update Timers based on TimeStep
     float ts = (pgTimeStep && *pgTimeStep > 0.01f) ? *pgTimeStep : 1.0f;
 
@@ -935,7 +937,6 @@ void HookOf_Render2DStuff()
     Render2DStuff();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
-    UpdateMacroShoot();
 
     if (g_switchQueueGap > 0) g_switchQueueGap--;
 
