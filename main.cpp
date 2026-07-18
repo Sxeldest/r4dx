@@ -127,11 +127,8 @@ static bool g_lastTargetState = false;
 static bool g_sprintHeldAtAimEntry = false;
 
 static uint32_t g_macroStartTimeMs = 0;
-static uint32_t g_macro2StartTimeMs = 0;
 static bool g_macro1Active = false;
 static bool g_macro2Active = false;
-static bool g_macro1AimSuppressed = false;
-static bool g_macro2AimSuppressed = false;
 
 static uint32_t g_lastWeaponSwitchTime = 0;
 static int g_switchQueue[32];
@@ -954,7 +951,7 @@ void HookOf_Render2DStuff()
         ResetWidgetToggle(ACTION_EXIT_AIM);
     }
 
-    bool isTargeting = IsActionTouched(ACTION_TARGET) || g_macroAimTriggered;
+    bool isTargeting = IsCustomTargetHeld();
     bool aimNow = IsAimMode();
 
     // Deteksi Entry Point ke Aim Mode
