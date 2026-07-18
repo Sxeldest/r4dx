@@ -993,6 +993,11 @@ void HookOf_Render2DStuff()
             {
                 *(uint16_t*)(playerData + 0x34) &= ~0x0008;
                 *(uint8_t*)(playerData + 0x85) = 0;
+
+                // FIX: Isi sprint buffer agar Step 2 (Release-then-Exit)
+                // memiliki momentum yang sama dengan Step 1 (Hold-then-Exit).
+                // Nilai 1.0f mensimulasikan 1 frame akselerasi sprint.
+                *(float*)(playerData + 0x1C) = 0.5f;
             }
 
             if (ClearWeaponTarget)
