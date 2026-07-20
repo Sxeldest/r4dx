@@ -108,6 +108,8 @@ static ConfigEntry* s_aimSensX = nullptr;
 static ConfigEntry* s_aimSensY = nullptr;
 static ConfigEntry* s_smoothness = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
+static ConfigEntry* s_analogPatch = nullptr;
+static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
 static ConfigEntry* s_deathListFontSize = nullptr;
 static ConfigEntry* s_deathListPosX = nullptr;
 static ConfigEntry* s_deathListPosY = nullptr;
@@ -233,10 +235,10 @@ void InitPCControlSettings()
     s_smoothness = cfg->Bind("CameraSmoothness", 0.5f, kSettingsSection);
 
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
-    s_disableNativeJump = cfg->Bind(\"DisableNativeJump\", false, kSettingsSection);
-    s_analogPatch = cfg->Bind(\"AnalogPatch\", true, kSettingsSection);
-    s_sprintDoubleTapBoost = cfg->Bind(\"SprintDoubleTapBoost\", true, kSettingsSection);
-    s_deathListFontSize = cfg->Bind(\"DeathListFontSize\", 1.0f, kSettingsSection);
+    s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
+    s_analogPatch = cfg->Bind("AnalogPatch", true, kSettingsSection);
+    s_sprintDoubleTapBoost = cfg->Bind("SprintDoubleTapBoost", true, kSettingsSection);
+    s_deathListFontSize = cfg->Bind("DeathListFontSize", 1.0f, kSettingsSection);
     s_deathListPosX = cfg->Bind("DeathListPosX", 1500.0f, kSettingsSection);
     s_deathListPosY = cfg->Bind("DeathListPosY", 350.0f, kSettingsSection);
     s_deathListSpacing = cfg->Bind("DeathListSpacing", 5.0f, kSettingsSection);
