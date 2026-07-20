@@ -477,10 +477,10 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 // Snap ke nilai ekstrim agar lebih responsif layaknya DPAD digital.
                 // Output dikalikan dengan sensitivity (SensX/SensY).
 
-                // Gunakan Diagonal Resistance (Threshold) & Sensitivity hanya saat aiming
-                float threshold = IsCameraInAimMode() ? g_pcSettings.dpadDiagonalThreshold : 45.0f;
-                float sensX = IsCameraInAimMode() ? g_pcSettings.dpadSensX : 1.0f;
-                float sensY = IsCameraInAimMode() ? g_pcSettings.dpadSensY : 1.0f;
+                // Gunakan Diagonal Resistance (Threshold) & Sensitivity default agar responsif
+                float threshold = 45.0f;
+                float sensX = 1.0f;
+                float sensY = 1.0f;
 
                 float outX = 0, outY = 0;
                 if (fabsf(tx) >= threshold) outX = (tx > 0) ? 127.0f : -127.0f;
@@ -954,8 +954,8 @@ void UpdateWidgetReleaseFrames()
 
         if (s_widgetStates[i].releaseFrames > 0) s_widgetStates[i].releaseFrames--;
 
-        // Analog Smoothing (Jiggle Responsiveness) - Only active when aiming
-        float smooth = IsCameraInAimMode() ? g_pcSettings.dpadSmoothness : 1.0f;
+        // Analog Smoothing - Full Responsive (Always 1.0f)
+        float smooth = 1.0f;
         s_widgetStates[i].analogX = s_widgetStates[i].analogX * (1.0f - smooth) + s_widgetStates[i].targetAnalogX * smooth;
         s_widgetStates[i].analogY = s_widgetStates[i].analogY * (1.0f - smooth) + s_widgetStates[i].targetAnalogY * smooth;
 

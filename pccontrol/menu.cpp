@@ -367,21 +367,6 @@ void RenderPCControlMenu()
                 changed |= SliderIntWithButtons("analogWeaponProtectDurationFrames", &g_pcSettings.analogWeaponProtectDurationFrames, 0, 100, "%d f", 1);
 
                 ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog & DPAD Responsiveness");
-                ImGui::Separator();
-                ImGui::Text("Horizontal Responsiveness");
-                changed |= SliderFloatWithButtons("dpadSensX", &g_pcSettings.dpadSensX, 0.1f, 2.0f, "%.2f", 0.05f);
-                ImGui::Text("Vertical Responsiveness");
-                changed |= SliderFloatWithButtons("dpadSensY", &g_pcSettings.dpadSensY, 0.1f, 2.0f, "%.2f", 0.05f);
-                ImGui::Text("Aim Jiggle Smoothness");
-                changed |= SliderFloatWithButtons("dpadSmoothness", &g_pcSettings.dpadSmoothness, 0.01f, 1.0f, "%.2f", 0.01f);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Only active when AIMING.\nLow = Smooth jiggle (Delay), High = Snap (Instant)");
-
-                ImGui::Text("Diagonal Resistance");
-                changed |= SliderFloatWithButtons("dpadDiagonalThreshold", &g_pcSettings.dpadDiagonalThreshold, 10.0f, 90.0f, "%.0f", 1.0f);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Higher = Harder to trigger diagonal movement (Stay straight).\nRecommended: 60-70");
-
-                ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Shoot 1 Settings");
                 ImGui::Separator();
                 ImGui::Text("Fire-to-Aim Delay (ms)");

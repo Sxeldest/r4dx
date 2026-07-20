@@ -16,10 +16,6 @@ PCControlSettings g_pcSettings = {
     20.5f,  // aimSensX
     10.5f,  // aimSensY
     15.0f,  // smoothness
-    1.0f, // dpadSensX
-    1.0f, // dpadSensY
-    0.5f, // dpadSmoothness
-    60.0f, // dpadDiagonalThreshold
     1.0f,    // deathListFontSize
     1500.0f, // deathListPosX
     350.0f,  // deathListPosY
@@ -112,12 +108,6 @@ static ConfigEntry* s_aimSensX = nullptr;
 static ConfigEntry* s_aimSensY = nullptr;
 static ConfigEntry* s_smoothness = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
-static ConfigEntry* s_analogPatch = nullptr;
-static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
-static ConfigEntry* s_dpadSensX = nullptr;
-static ConfigEntry* s_dpadSensY = nullptr;
-static ConfigEntry* s_dpadSmoothness = nullptr;
-static ConfigEntry* s_dpadDiagonalThreshold = nullptr;
 static ConfigEntry* s_deathListFontSize = nullptr;
 static ConfigEntry* s_deathListPosX = nullptr;
 static ConfigEntry* s_deathListPosY = nullptr;
@@ -243,14 +233,10 @@ void InitPCControlSettings()
     s_smoothness = cfg->Bind("CameraSmoothness", 0.5f, kSettingsSection);
 
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
-    s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
-    s_analogPatch = cfg->Bind("AnalogPatch", true, kSettingsSection);
-    s_sprintDoubleTapBoost = cfg->Bind("SprintDoubleTapBoost", true, kSettingsSection);
-    s_dpadSensX = cfg->Bind("DpadSensX", 1.0f, kSettingsSection);
-    s_dpadSensY = cfg->Bind("DpadSensY", 1.0f, kSettingsSection);
-    s_dpadSmoothness = cfg->Bind("DpadSmoothness", 0.5f, kSettingsSection);
-    s_dpadDiagonalThreshold = cfg->Bind("DpadDiagonalThreshold", 60.0f, kSettingsSection);
-    s_deathListFontSize = cfg->Bind("DeathListFontSize", 1.0f, kSettingsSection);
+    s_disableNativeJump = cfg->Bind(\"DisableNativeJump\", false, kSettingsSection);
+    s_analogPatch = cfg->Bind(\"AnalogPatch\", true, kSettingsSection);
+    s_sprintDoubleTapBoost = cfg->Bind(\"SprintDoubleTapBoost\", true, kSettingsSection);
+    s_deathListFontSize = cfg->Bind(\"DeathListFontSize\", 1.0f, kSettingsSection);
     s_deathListPosX = cfg->Bind("DeathListPosX", 1500.0f, kSettingsSection);
     s_deathListPosY = cfg->Bind("DeathListPosY", 350.0f, kSettingsSection);
     s_deathListSpacing = cfg->Bind("DeathListSpacing", 5.0f, kSettingsSection);
@@ -433,10 +419,6 @@ void InitPCControlSettings()
     g_pcSettings.disableNativeJump = s_disableNativeJump->GetBool();
     g_pcSettings.enableAnalogPatch = s_analogPatch->GetBool();
     g_pcSettings.enableSprintDoubleTapBoost = s_sprintDoubleTapBoost->GetBool();
-    g_pcSettings.dpadSensX = ClampSetting(s_dpadSensX->GetFloat(), 0.1f, 2.0f);
-    g_pcSettings.dpadSensY = ClampSetting(s_dpadSensY->GetFloat(), 0.1f, 2.0f);
-    g_pcSettings.dpadSmoothness = ClampSetting(s_dpadSmoothness->GetFloat(), 0.01f, 1.0f);
-    g_pcSettings.dpadDiagonalThreshold = ClampSetting(s_dpadDiagonalThreshold->GetFloat(), 10.0f, 90.0f);
     g_pcSettings.deathListFontSize = ClampSetting(s_deathListFontSize->GetFloat(), 0.1f, 10.0f);
     g_pcSettings.deathListPosX = ClampSetting(s_deathListPosX->GetFloat(), 0.0f, 3000.0f);
     g_pcSettings.deathListPosY = ClampSetting(s_deathListPosY->GetFloat(), 0.0f, 2000.0f);
@@ -653,10 +635,6 @@ void SavePCControlSettings()
     s_disableNativeJump->SetBool(g_pcSettings.disableNativeJump);
     s_analogPatch->SetBool(g_pcSettings.enableAnalogPatch);
     s_sprintDoubleTapBoost->SetBool(g_pcSettings.enableSprintDoubleTapBoost);
-    s_dpadSensX->SetFloat(g_pcSettings.dpadSensX);
-    s_dpadSensY->SetFloat(g_pcSettings.dpadSensY);
-    s_dpadSmoothness->SetFloat(g_pcSettings.dpadSmoothness);
-    s_dpadDiagonalThreshold->SetFloat(g_pcSettings.dpadDiagonalThreshold);
     s_deathListFontSize->SetFloat(g_pcSettings.deathListFontSize);
     s_deathListPosX->SetFloat(g_pcSettings.deathListPosX);
     s_deathListPosY->SetFloat(g_pcSettings.deathListPosY);

@@ -135,10 +135,6 @@ struct PCControlSettings
     float aimSensX;
     float aimSensY;
     float smoothness;
-    float dpadSensX;
-    float dpadSensY;
-    float dpadSmoothness;
-    float dpadDiagonalThreshold;
     float deathListFontSize;
     float deathListPosX;
     float deathListPosY;
