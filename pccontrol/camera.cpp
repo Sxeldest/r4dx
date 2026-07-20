@@ -18,7 +18,7 @@ static int* s_menuOpened = nullptr;
 static bool* s_userPause = nullptr;
 static int s_displayX = 0;
 static int s_displayY = 0;
-static bool s_lookWidgetTouched = false;
+static int s_activeCameraFinger = -1;
 static bool s_firstInit = true;
 static float s_smoothH = 0.0f;
 static float s_smoothV = 0.0f;
@@ -143,9 +143,7 @@ void CameraPatchOnRender2D()
 
     CCam& cam = s_theCamera->m_aCams[activeIdx];
 
-    CWidget* lookWidget = s_widgets[175];
-    bool isCurrentlyTouched = s_lookWidgetTouched;
-    if (lookWidget && lookWidget->bIsTouched) isCurrentlyTouched = true;
+    bool isCurrentlyTouched = (s_activeCameraFinger != -1);
 
     // nControlMode offset corresponds to WhoIsInControlOfTheCamera
     s_theCamera->WhoIsInControlOfTheCamera = 1;
@@ -179,28 +177,7 @@ void CameraPatchOnRender2D()
     bool isMoving = false;
     if (isCurrentlyTouched)
     {
-        int fingerId = lookWidget ? lookWidget->nTouchID : -1;
-        float halfScreenX = (float)s_displayX * 0.5f;
-
-        if (fingerId >= 0 && fingerId < 15 && s_lastTouchX[fingerId] < halfScreenX)
-        {
-            fingerId = -1;
-        }
-
-        if (fingerId < 0 || fingerId >= 15)
-        {
-            for (int i = 0; i < 15; ++i)
-            {
-                if (s_lastTouchX[i] > halfScreenX)
-                {
-                    if (fabsf(s_fingerDeltaX[i]) > 0.0f || fabsf(s_fingerDeltaY[i]) > 0.0f)
-                    {
-                        fingerId = i;
-                        break;
-                    }
-                }
-            }
-        }
+        int fingerId = s_activeCameraFinger;
 
         if (fingerId >= 0 && fingerId < 15)
         {
@@ -266,16 +243,27 @@ void CameraPatchOnTouchEvent(int type, int fingerId, int x, int y)
         s_lastTouchY[fingerId] = (float)y;
         s_fingerDeltaX[fingerId] = 0.0f;
         s_fingerDeltaY[fingerId] = 0.0f;
+        if (s_activeCameraFinger == -1)
+        {
+            s_activeCameraFinger = fingerId;
+        }
     }
     else if (type == 3)
     {
-        s_fingerDeltaX[fingerId] += (float)(x - s_lastTouchX[fingerId]);
-        s_fingerDeltaY[fingerId] += (float)(y - s_lastTouchY[fingerId]);
+        if (fingerId == s_activeCameraFinger)
+        {
+            s_fingerDeltaX[fingerId] += (float)(x - s_lastTouchX[fingerId]);
+            s_fingerDeltaY[fingerId] += (float)(y - s_lastTouchY[fingerId]);
+        }
         s_lastTouchX[fingerId] = (float)x;
         s_lastTouchY[fingerId] = (float)y;
     }
     else if (type == 1)
     {
+        if (fingerId == s_activeCameraFinger)
+        {
+            s_activeCameraFinger = -1;
+        }
         s_fingerDeltaX[fingerId] = 0.0f;
         s_fingerDeltaY[fingerId] = 0.0f;
     }
@@ -283,10 +271,6 @@ void CameraPatchOnTouchEvent(int type, int fingerId, int x, int y)
 
 void CameraPatchOnIsTouched(int widgetId, int result)
 {
-    if (widgetId == 175)
-    {
-        s_lookWidgetTouched = (result != 0);
-    }
 }
 
 bool IsCameraInAimMode()
