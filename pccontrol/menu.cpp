@@ -769,27 +769,6 @@ void RenderPCControlMenu()
                 ImGui::Text("Scale");
                 changed |= SliderFloatWithButtons("deathListScale", &g_pcSettings.deathListFontSize, 0.1f, 10.0f, "%.2f", 0.05f);
 
-                ImGui::Text("Screen X");
-                changed |= SliderFloatWithButtons("KillfeedX", &g_pcSettings.deathListPosX, 0.0f, 3000.0f, "%.0f", 1.0f);
-
-                ImGui::Text("Screen Y");
-                changed |= SliderFloatWithButtons("KillfeedY", &g_pcSettings.deathListPosY, 0.0f, 2000.0f, "%.0f", 1.0f);
-
-                ImGui::Text("Line Spacing");
-                changed |= SliderFloatWithButtons("KillfeedSpacing", &g_pcSettings.deathListSpacing, 0.0f, 500.0f);
-
-                ImGui::Text("Box Width");
-                changed |= SliderFloatWithButtons("KillfeedBoxW", &g_pcSettings.deathListBoxWidth, 10.0f, 1000.0f);
-
-                ImGui::Text("Box Height");
-                changed |= SliderFloatWithButtons("KillfeedBoxH", &g_pcSettings.deathListBoxHeight, 10.0f, 1000.0f);
-
-                ImGui::Text("Target Icon Size");
-                changed |= SliderFloatWithButtons("KillfeedIconSize", &g_pcSettings.deathListIconSize, 5.0f, 500.0f);
-
-                ImGui::Text("Icon Padding");
-                changed |= SliderFloatWithButtons("KillfeedIconPadding", &g_pcSettings.deathListIconPadding, 0.0f, 100.0f);
-
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "TimeCycle Overrides");
                 ImGui::Separator();

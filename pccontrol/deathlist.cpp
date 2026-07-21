@@ -12,34 +12,61 @@ std::vector<DeathMessage> g_deathMessages;
 ImFont* g_fontArial = nullptr;
 ImFont* g_fontWeapon = nullptr;
 
+#define MAX_DISP_DEATH_MESSAGES 5
+#define SPECIAL_ENTRY_CONNECT 200
+#define SPECIAL_ENTRY_DISCONNECT 201
+
 static const char* GetWeaponIcon(uint8_t id)
 {
-    // Pemetaan Karakter yang benar untuk gtaweap3.ttf
-    switch(id)
-    {
-        case 0: return "%";          // Fist
-        case 22: return "6";         // Colt 45
-        case 23: return "2";         // Silenced
-        case 24: return "3";         // Desert Eagle (Gunakan titik)
-        case 25: return "=";         // Shotgun
-        case 26: return "0";         // Sawnoff
-        case 27: return "+";         // Spas-12
-        case 28: return "9";         // Micro Uzi
-        case 29: return "8";         // MP5
-        case 30: return "H";         // AK-47
-        case 31: return "5";         // M4
-        case 33: return ".";         // Country Rifle
-        case 34: return "A";         // Sniper Rifle
-        case 35: return "4";         // Rocket Launcher
-        case 36: return "]";         // Heatseeker
-        case 37: return "*";         // Flamethrower
-        case 38: return "F";         // Minigun
-        case 16: return "@";         // Grenade
-        case 18: return "'";         // Molotov
-        case 41: return "/";         // Spraycan
-        case 42: return ",";         // Fire Extinguisher
-        default: return "K";
+    switch (id) {
+        case 0: return "%";
+        case 1: return "B";
+        case 2: return ">";
+        case 3: return "(";
+        case 4: return "C";
+        case 5: return "?";
+        case 6: return "&";
+        case 7: return "\"";
+        case 8: return "!";
+        case 9: return "1";
+        case 10:
+        case 11:
+        case 12:
+        case 13: return "E";
+        case 14: return "$";
+        case 15: return "#";
+        case 16: return "@";
+        case 17: return "D";
+        case 22: return "6";
+        case 23: return "2";
+        case 24: return "3";
+        case 25: return "=";
+        case 26: return "0";
+        case 27: return "+";
+        case 28: return "I";
+        case 29: return "8";
+        case 30: return "H";
+        case 31: return "5";
+        case 32: return "7";
+        case 33: return ".";
+        case 34: return "A";
+        case 35: return "4";
+        case 36: return ")";
+        case 37: return "P";
+        case 38: return "F";
+        case 39: return "<";
+        case 40: return ";";
+        case 41: return "/";
+        case 42: return ",";
+        case 46: return ":";
+        case 49: return "L";
+        case 50: return "R";
+        case 51: return "Q";
+        case 54: return "K";
+        case SPECIAL_ENTRY_CONNECT:
+        case SPECIAL_ENTRY_DISCONNECT: return "N";
     }
+    return "J";
 }
 
 static void HandleInterceptedDeath(const char* killer, uint32_t kColor, const char* victim, uint32_t vColor, int weapon, const char* libName)
@@ -50,13 +77,12 @@ static void HandleInterceptedDeath(const char* killer, uint32_t kColor, const ch
     msg.killerColor = kColor | 0xFF000000;
     msg.victimColor = vColor | 0xFF000000;
 
-    // Simpan raw weapon ID, normalisasi dilakukan di GetWeaponIcon agar lebih aman
     msg.weapon = (uint8_t)(weapon & 0xFF);
     msg.libName = libName;
-    msg.time = 100.0f;
+    msg.time = 10000.0f; // Standard fade out time
 
     g_deathMessages.push_back(msg);
-    if(g_deathMessages.size() > 5) g_deathMessages.erase(g_deathMessages.begin());
+    if(g_deathMessages.size() > MAX_DISP_DEATH_MESSAGES) g_deathMessages.erase(g_deathMessages.begin());
 
     logger->Info("[%s] Death Captured: %s -> %s (Weapon ID: %d)", libName, msg.killer.c_str(), msg.victim.c_str(), msg.weapon);
 }
@@ -102,87 +128,87 @@ void RenderCustomDeathWindow()
     ImGuiRenderer rendererArial(dl, g_fontArial);
     ImGuiRenderer rendererWeapon(dl, g_fontWeapon);
 
-    float scale = g_pcSettings.deathListFontSize;
-    float currentY = g_pcSettings.deathListPosY;
-    float centerX = g_pcSettings.deathListPosX;
+    ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+    float globalScale = g_pcSettings.deathListFontSize;
 
-    float arialSize = 18.0f * scale;
-    float listSpacing = g_pcSettings.deathListSpacing;
-    float itemSpacing = 10.0f * scale;
+    // SAMP PC logic: 12 if width < 1024, else 14
+    float iFontSize = ((displaySize.x < 1024.0f) ? 12.0f : 14.0f) * globalScale;
 
-    float boxWidth = g_pcSettings.deathListBoxWidth;
-    float boxHeight = g_pcSettings.deathListBoxHeight;
-    float iconTargetSize = g_pcSettings.deathListIconSize;
-    float iconPadding = g_pcSettings.deathListIconPadding;
+    // SAMP PC weapon font sizes
+    float weaponFontSize1 = iFontSize + (8.0f * globalScale);  // m_pWeaponFont
+    float weaponFontSize2 = iFontSize + (12.0f * globalScale); // m_pWeaponFont2
 
-    for (int i = (int)g_deathMessages.size() - 1; i >= 0; --i)
+    // PC position: top 30%, left 75%
+    float iVerticalBase = displaySize.y * 0.3f;
+    float iHorizontalBase = displaySize.x * 0.75f;
+
+    // Alignment length calculation based on "LONGESTNICKNICK_NICKNICK"
+    ImVec2 rectLongestNick = rendererArial.calculateTextSize("LONGESTNICKNICK_NICKNICK", iFontSize);
+    float m_iLongestNickLength = rectLongestNick.x;
+
+    // Weapon icon container size based on character "G"
+    ImVec2 symbolSize = rendererWeapon.calculateTextSize("G", weaponFontSize2);
+    float field_12F = symbolSize.x;
+    float field_133 = symbolSize.y;
+
+    // Adjust horizontal base if it goes out of screen
+    float totalWidth = field_12F + 2.0f * m_iLongestNickLength;
+    if ((totalWidth + iHorizontalBase) > displaySize.x) {
+        iHorizontalBase = displaySize.x - totalWidth;
+    }
+
+    float currentY = iVerticalBase;
+    float weaponPaddingTop = 5.0f * globalScale;
+
+    for (const auto& msg : g_deathMessages)
     {
-        auto& msg = g_deathMessages[i];
         const char* iconText = GetWeaponIcon(msg.weapon);
+        float rectTop = currentY;
 
-        // 1. Hitung ukuran teks biasa untuk nama pemain
-        ImVec2 kSize = msg.killer.empty() ? ImVec2(0,0) : rendererArial.calculateTextSize(msg.killer, arialSize);
-        ImVec2 vSize = rendererArial.calculateTextSize(msg.victim, arialSize);
+        float iconBoxLeft = iHorizontalBase + m_iLongestNickLength + (3.0f * globalScale);
 
-        // 2. HITUNG UKURAN ASLI ICON MURNI
-        float iconWidth = 0.0f;
-        float iconHeight = 0.0f;
-        float glyphOffsetX = 0.0f;
-        float glyphOffsetY = 0.0f;
-
-        ImFont* font = g_fontWeapon;
-        const ImFontGlyph* glyph = font->FindGlyph(iconText[0]);
-
-        float currentIconFontSize = iconTargetSize;
-
-        if (glyph)
+        if (!msg.killer.empty() && !msg.victim.empty())
         {
-            float fontScale = currentIconFontSize / font->FontSize;
-            iconWidth = (glyph->X1 - glyph->X0) * fontScale;
-            iconHeight = (glyph->Y1 - glyph->Y0) * fontScale;
+            // Killer (Right justified in m_iLongestNickLength block)
+            ImVec2 kSize = rendererArial.calculateTextSize(msg.killer, iFontSize);
+            float kLeft = iHorizontalBase + (m_iLongestNickLength - kSize.x);
+            rendererArial.drawText(ImVec2(kLeft, rectTop), ImColor(msg.killerColor), msg.killer, true, iFontSize);
             
-            // Cek apakah icon melebihi batas box (dengan padding)
-            float maxWidth = boxWidth - (iconPadding * 2.0f);
-            float maxHeight = boxHeight - (iconPadding * 2.0f);
+            // Weapon Icon Block
+            // 1. Draw "G" background (box/outline)
+            rendererWeapon.drawText(ImVec2(iconBoxLeft, rectTop - weaponPaddingTop), ImColor(0, 0, 0, 255), "G", false, weaponFontSize2);
 
-            if (iconWidth > maxWidth || iconHeight > maxHeight)
-            {
-                float scaleW = maxWidth / iconWidth;
-                float scaleH = maxHeight / iconHeight;
-                float finalScale = (scaleW < scaleH) ? scaleW : scaleH;
+            // 2. Draw actual weapon icon centered in that "G" box
+            ImVec2 iconSize = rendererWeapon.calculateTextSize(iconText, weaponFontSize1);
+            float iconPosX = iconBoxLeft + (field_12F - iconSize.x) / 2.0f;
+            float iconPosY = (rectTop - weaponPaddingTop) + (field_133 - iconSize.y) / 2.0f;
+            rendererWeapon.drawText(ImVec2(iconPosX, iconPosY), ImColor(255, 255, 255, 255), iconText, false, weaponFontSize1);
 
-                currentIconFontSize *= finalScale;
-                fontScale = currentIconFontSize / font->FontSize;
-                iconWidth = (glyph->X1 - glyph->X0) * fontScale;
-                iconHeight = (glyph->Y1 - glyph->Y0) * fontScale;
-            }
+            // Victim
+            float vLeft = iconBoxLeft + field_12F;
+            rendererArial.drawText(ImVec2(vLeft, rectTop), ImColor(msg.victimColor), msg.victim, true, iFontSize);
+        }
+        else if (msg.killer.empty() && !msg.victim.empty())
+        {
+            // Suicide, Connect, or Disconnect
+            ImVec2 vSize = rendererArial.calculateTextSize(msg.victim, iFontSize);
+            float vLeft = iHorizontalBase + (m_iLongestNickLength - vSize.x);
+            rendererArial.drawText(ImVec2(vLeft, rectTop), ImColor(msg.victimColor), msg.victim, true, iFontSize);
 
-            glyphOffsetX = glyph->X0 * fontScale;
-            glyphOffsetY = glyph->Y0 * fontScale;
+            ImColor iconColor(255, 255, 255, 255);
+            if (msg.weapon == SPECIAL_ENTRY_CONNECT) iconColor = ImColor(17, 17, 170, 255);      // 0xFF1111AA
+            else if (msg.weapon == SPECIAL_ENTRY_DISCONNECT) iconColor = ImColor(170, 17, 17, 255); // 0xFFAA1111
+
+            // Background "G"
+            rendererWeapon.drawText(ImVec2(iconBoxLeft, rectTop - weaponPaddingTop), ImColor(0, 0, 0, 255), "G", false, weaponFontSize2);
+
+            // Icon
+            ImVec2 iconSize = rendererWeapon.calculateTextSize(iconText, weaponFontSize1);
+            float iconPosX = iconBoxLeft + (field_12F - iconSize.x) / 2.0f;
+            float iconPosY = (rectTop - weaponPaddingTop) + (field_133 - iconSize.y) / 2.0f;
+            rendererWeapon.drawText(ImVec2(iconPosX, iconPosY), iconColor, iconText, false, weaponFontSize1);
         }
 
-        // Posisi Box (Center Horizontal berdasarkan centerX)
-        ImVec2 boxPos = ImVec2(centerX - (boxWidth / 2.0f), currentY);
-
-        // 4. RENDER BOX
-        dl->AddRectFilled(boxPos, ImVec2(boxPos.x + boxWidth, boxPos.y + boxHeight), 0xFF000000, 6.0f);
-
-        // 5. RENDER ICON (Center murni)
-        ImVec2 iPos = ImVec2(
-            boxPos.x + ((boxWidth - iconWidth) / 2.0f) - glyphOffsetX,
-            boxPos.y + ((boxHeight - iconHeight) / 2.0f) - glyphOffsetY
-        );
-        rendererWeapon.drawText(iPos, ImColor(255, 255, 255, 255), iconText, false, currentIconFontSize);
-
-        // 6. RENDER NAMA (Killer di kiri, Victim di kanan)
-        if (!msg.killer.empty()) {
-            ImVec2 kPos = ImVec2(boxPos.x - itemSpacing - kSize.x, boxPos.y + ((boxHeight - kSize.y) / 2.0f));
-            rendererArial.drawText(kPos, ImColor(msg.killerColor), msg.killer, true, arialSize);
-        }
-
-        ImVec2 vPos = ImVec2(boxPos.x + boxWidth + itemSpacing, boxPos.y + ((boxHeight - vSize.y) / 2.0f));
-        rendererArial.drawText(vPos, ImColor(msg.victimColor), msg.victim, true, arialSize);
-
-        currentY += boxHeight + listSpacing;
+        currentY += field_133 + (5.0f * globalScale);
     }
 }
