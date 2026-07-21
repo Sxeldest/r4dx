@@ -361,7 +361,7 @@ bool SAMPManager::HandleIncomingRPC(uint8_t id, RakNet::BitStream* bs)
             bs->Read(name, nameLen);
             name[nameLen] = '\0';
 
-            m_players[playerId] = { playerId, name, color, isNPC != 0, 0, 0, 100, 0, {0, 0, 0}, false, {}, {}, std::chrono::steady_clock::now() };
+            m_players[playerId] = { playerId, name, color, isNPC != 0, 0, 0, 100, 0, {0, 0, 0}, false, {}, {}, {}, std::chrono::steady_clock::now() };
             LOGI("Player joined: %s (%d)", name, playerId);
             break;
         }
@@ -429,6 +429,10 @@ bool SAMPManager::HandleOutcomingRPC(uint8_t id, RakNet::BitStream* bs)
 
 void SAMPManager::HandleIncomingPacket(uint8_t id, RakNet::BitStream* bs)
 {
+    // Detect if packet is timestamped (Standard SAMP behavior)
+    bool isTimestamped = (bs->GetData()[0] == RakNet::ID_TIMESTAMP);
+    uint32_t startBitOffset = isTimestamped ? (8 + 32 + 8) : 8; // ID + Time + ActualID OR just ID
+
     switch (id)
     {
         case RakNet::ID_CONNECTION_REQUEST_ACCEPTED:
@@ -443,14 +447,44 @@ void SAMPManager::HandleIncomingPacket(uint8_t id, RakNet::BitStream* bs)
         {
             uint16_t playerId = 0;
             bs->ResetReadPointer();
-            bs->IgnoreBits(8);
+            bs->SetReadOffset(startBitOffset);
             bs->Read(playerId);
 
             auto it = m_players.find(playerId);
             if (it != m_players.end())
             {
                 game::sync::onfoot sync {};
+                uint32_t dataBitOffset = bs->GetReadOffset();
                 bs->Read(reinterpret_cast<char*>(&sync), sizeof(sync));
+
+                // IMPROVED FIX: Aiming/Jogging Sync Bug
+                // Check if aiming (keys_aim) OR firing (keys_secondaryFire_shoot)
+                if (sync.stSampKeys.keys_aim || sync.stSampKeys.keys_secondaryFire_shoot)
+                {
+                    // If they are not pushing analog sticks aggressively
+                    if (abs(sync.lrAnalog) < 2500 && abs(sync.udAnalog) < 2500)
+                    {
+                        // Force absolute zero movement to break "running in place" animation
+                        sync.fMoveSpeed[0] = 0.0f;
+                        sync.fMoveSpeed[1] = 0.0f;
+                        sync.fMoveSpeed[2] = 0.0f;
+                        sync.lrAnalog = 0;
+                        sync.udAnalog = 0;
+
+                        // If they are sending a running animation while shooting, clear it
+                        // (Common in some mobile clients)
+                        sync.sCurrentAnimationID = 0;
+
+                        // Apply fix back to raw packet buffer
+                        unsigned char* rawData = bs->GetData();
+                        if (rawData)
+                        {
+                            // Packets are byte-aligned after the first 3 bytes (or 8 with timestamp)
+                            memcpy(rawData + (dataBitOffset / 8), &sync, sizeof(sync));
+                        }
+                    }
+                }
+
                 it->second.lastOnfootSync = sync;
                 it->second.health = sync.byteHealth;
                 it->second.armor = sync.byteArmor;
@@ -458,6 +492,26 @@ void SAMPManager::HandleIncomingPacket(uint8_t id, RakNet::BitStream* bs)
                 it->second.position[1] = sync.fPosition[1];
                 it->second.position[2] = sync.fPosition[2];
                 it->second.lastUpdate = std::chrono::steady_clock::now();
+            }
+            break;
+        }
+        case RakNet::ID_AIM_SYNC:
+        {
+            uint16_t playerId = 0;
+            bs->ResetReadPointer();
+            bs->SetReadOffset(startBitOffset);
+            bs->Read(playerId);
+
+            auto it = m_players.find(playerId);
+            if (it != m_players.end())
+            {
+                game::sync::aim sync {};
+                bs->Read(reinterpret_cast<char*>(&sync), sizeof(sync));
+                it->second.lastAimSync = sync;
+
+                // For "Straight Aim" fix, we would normally need to manually update
+                // the ped's aiming pitch, but zeroing MoveSpeed usually helps
+                // libsamp apply it correctly.
             }
             break;
         }

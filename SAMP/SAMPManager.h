@@ -32,6 +32,7 @@ struct PlayerData {
 
     game::sync::onfoot lastOnfootSync;
     game::sync::vehicle lastVehicleSync;
+    game::sync::aim lastAimSync;
     std::chrono::steady_clock::time_point lastUpdate;
 };
 
