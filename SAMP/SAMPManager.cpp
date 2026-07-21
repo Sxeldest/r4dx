@@ -11,6 +11,7 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 extern IAML* aml;
+extern void ProcessIncomingDeathRPC(RakNet::BitStream* bs);
 
 namespace SAMP {
 
@@ -370,6 +371,11 @@ bool SAMPManager::HandleIncomingRPC(uint8_t id, RakNet::BitStream* bs)
             bs->ResetReadPointer();
             bs->Read(playerId);
             m_players.erase(playerId);
+            break;
+        }
+        case RakNet::RPC_ScrDeathMessage:
+        {
+            ::ProcessIncomingDeathRPC(bs);
             break;
         }
         case RakNet::RPC_UpdateScoresPingsIPs:

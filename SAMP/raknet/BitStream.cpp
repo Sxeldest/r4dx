@@ -227,7 +227,9 @@ void BitStream::Write1( void )
 
 bool BitStream::ReadBit( void )
 {
-	return ( bool ) ( data[ readOffset >> 3 ] & ( 0x80 >> ( readOffset++ & 7 ) ) );
+	bool result = ( bool ) ( data[ readOffset >> 3 ] & ( 0x80 >> ( readOffset & 7 ) ) );
+	readOffset++;
+	return result;
 }
 
 void BitStream::WriteAlignedBytes( const unsigned char* input, const int numberOfBytesToWrite )

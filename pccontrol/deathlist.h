@@ -13,7 +13,6 @@ struct DeathMessage {
     uint32_t victimColor;
     uint8_t weapon;
     std::string libName;
-    float time; // Untuk fade out
 };
 
 extern std::vector<DeathMessage> g_deathMessages;

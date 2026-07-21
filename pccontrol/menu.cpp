@@ -766,8 +766,7 @@ void RenderPCControlMenu()
 
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Death List (Killfeed)");
                 ImGui::Separator();
-                ImGui::Text("Scale");
-                changed |= SliderFloatWithButtons("deathListScale", &g_pcSettings.deathListFontSize, 0.1f, 10.0f, "%.2f", 0.05f);
+                ImGui::TextDisabled("Using SA-MP PC default sizes.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "TimeCycle Overrides");

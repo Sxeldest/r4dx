@@ -26,6 +26,7 @@ LOCAL_SRC_FILES := \
     ImGui/backends/imgui_impl_renderware.cpp \
     ImGui/RW/RenderWare.cpp \
     SAMP/SAMPManager.cpp \
+    SAMP/samp_mobile.cpp \
     SAMP/sampapi.cpp \
     SAMP/sampcommands.cpp \
     SAMP/raknet/BitStream.cpp
