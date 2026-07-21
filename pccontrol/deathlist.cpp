@@ -160,17 +160,21 @@ void RenderCustomDeathWindow()
     ImGuiRenderer rendererWeapon(dl, g_fontWeapon);
 
     ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+    float globalScale = g_pcSettings.deathListFontSize;
 
     // SAMP PC logic: 12 if width < 1024, else 14
-    float iFontSize = (displaySize.x < 1024.0f) ? 12.0f : 14.0f;
+    float iFontSize = ((displaySize.x < 1024.0f) ? 12.0f : 14.0f) * globalScale;
 
     // SAMP PC weapon font sizes
-    float weaponFontSize1 = iFontSize + 8.0f;
-    float weaponFontSize2 = iFontSize + 12.0f;
+    float weaponFontSize1 = iFontSize + (8.0f * globalScale);
+    float weaponFontSize2 = iFontSize + (12.0f * globalScale);
 
-    float iVerticalBase = displaySize.y * 0.3f;
-    float iHorizontalBase = displaySize.x * 0.75f;
+    // Manual positioning from settings
+    float iVerticalBase = g_pcSettings.deathListPosY;
+    float iHorizontalBase = g_pcSettings.deathListPosX;
 
+    // We still use longest nick for alignment relative to iHorizontalBase
+    // but the iHorizontalBase itself is now manually controlled and fixed.
     ImVec2 rectLongestNick = rendererArial.calculateTextSize("LONGESTNICKNICK_NICKNICK", iFontSize);
     float m_iLongestNickLength = rectLongestNick.x;
 
@@ -178,23 +182,18 @@ void RenderCustomDeathWindow()
     float field_12F = symbolSize.x;
     float field_133 = symbolSize.y;
 
-    float totalWidth = field_12F + 2.0f * m_iLongestNickLength;
-    if ((totalWidth + iHorizontalBase) > displaySize.x) {
-        iHorizontalBase = displaySize.x - totalWidth;
-    }
-
     float currentY = iVerticalBase;
-    float weaponPaddingTop = 5.0f;
+    float weaponPaddingTop = 5.0f * globalScale;
 
     for (const auto& msg : g_deathMessages)
     {
         const char* iconText = GetWeaponIcon(msg.weapon);
         float rectTop = currentY;
-        float iconBoxLeft = iHorizontalBase + m_iLongestNickLength + 3.0f;
+        float iconBoxLeft = iHorizontalBase + m_iLongestNickLength + (3.0f * globalScale);
 
         if (!msg.killer.empty() && (msg.weapon != SPECIAL_ENTRY_CONNECT && msg.weapon != SPECIAL_ENTRY_DISCONNECT))
         {
-            // Killer
+            // Killer (Right justified)
             ImVec2 kSize = rendererArial.calculateTextSize(msg.killer, iFontSize);
             float kLeft = iHorizontalBase + (m_iLongestNickLength - kSize.x);
             rendererArial.drawText(ImVec2(kLeft, rectTop), GetImColorFromSAMP(msg.killerColor), msg.killer, true, iFontSize);
@@ -228,6 +227,6 @@ void RenderCustomDeathWindow()
             rendererWeapon.drawText(ImVec2(iconPosX, iconPosY), iconColor, iconText, false, weaponFontSize1);
         }
 
-        currentY += field_133 + 5.0f;
+        currentY += field_133 + (5.0f * globalScale);
     }
 }
