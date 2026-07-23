@@ -206,6 +206,7 @@ struct PCControlSettings
 
     bool enableAutoRun;
     bool disableHudGamma;
+    bool enableGepengHud;
     int sprintProtectEntryFrames;
     int sprintProtectExitFrames;
     int sprintProtectExitDelayFrames;

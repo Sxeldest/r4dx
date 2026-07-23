@@ -101,6 +101,7 @@ DECL_HOOKv(ButtonPanel_OnTouchEvent, void* self, int type, int x, int y);
 DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
 
 DECL_HOOKv(emu_GammaSet, uint8_t gamma);
+DECL_HOOKv(CalculateAspectRatio, void* self);
 
 // Constants
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
@@ -150,7 +151,7 @@ static int g_cachedX = 0;
 static int g_cachedY = 0;
 static void* g_lastPed = nullptr;
 void* pGameHandle = nullptr;
-static void* pHudColours = nullptr;
+static float* pfAspectRatio = nullptr;
 static uintptr_t g_gtasa = 0;
 uintptr_t hSAMP = 0;
 uintptr_t hSAMP_ORIG = 0;
@@ -207,6 +208,15 @@ void HookOf_emu_GammaSet(uint8_t gamma)
         gamma = 0;
     }
     emu_GammaSet(gamma);
+}
+
+void HookOf_CalculateAspectRatio(void* self)
+{
+    CalculateAspectRatio(self);
+    if (g_pcSettings.enableGepengHud && pfAspectRatio)
+    {
+        *pfAspectRatio = 1.3333333f; // Force 4:3 ratio to stretch HUD
+    }
 }
 
 void HookOf_ProcessPlayerWeapon(void* self, void* ped)
@@ -1240,6 +1250,8 @@ extern "C" void OnModLoad()
         HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
+        HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
+        pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
 
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
         HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));

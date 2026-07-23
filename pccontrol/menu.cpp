@@ -347,6 +347,9 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
                 changed |= ImGui::Checkbox("Disable HUD Gamma", &g_pcSettings.disableHudGamma);
+                changed |= ImGui::Checkbox("Stretched HUD (Gepeng)", &g_pcSettings.enableGepengHud);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mematikan koreksi aspek rasio sehingga HUD akan melebar (gepeng) mengikuti lebar layar, seperti tampilan PC tanpa fix.");
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mematikan peningkatan kecerahan otomatis (Gamma Boost) pada HUD agar tekstur ikon terlihat asli (tidak terlalu terang).");
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mematikan peningkatan kecerahan otomatis (Gamma Boost) pada HUD agar tekstur ikon terlihat asli (tidak terlalu terang).");
 
                 ImGui::Spacing();

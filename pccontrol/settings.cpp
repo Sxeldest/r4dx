@@ -85,6 +85,7 @@ PCControlSettings g_pcSettings = {
 
     false,  // enableAutoRun
     true,   // disableHudGamma
+    false,  // enableGepengHud
     8,      // sprintProtectEntryFrames
     12,     // sprintProtectExitFrames
     5,      // sprintProtectExitDelayFrames
@@ -185,6 +186,7 @@ static ConfigEntry* s_bpEnabled = nullptr;
 
 static ConfigEntry* s_enableAutoRun = nullptr;
 static ConfigEntry* s_disableHudGamma = nullptr;
+static ConfigEntry* s_enableGepengHud = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
@@ -377,6 +379,7 @@ void InitPCControlSettings()
 
     s_enableAutoRun = cfg->Bind("EnableAutoRun", false, kSettingsSection);
     s_disableHudGamma = cfg->Bind("DisableHudGamma", true, kSettingsSection);
+    s_enableGepengHud = cfg->Bind("EnableGepengHud", false, kSettingsSection);
     s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntryFrames", 8, kSettingsSection);
     s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 12, kSettingsSection);
     s_sprintProtectExitDelayFrames = cfg->Bind("SprintProtectExitDelayFrames", 5, kSettingsSection);
@@ -471,6 +474,7 @@ void InitPCControlSettings()
 
     g_pcSettings.enableAutoRun = s_enableAutoRun->GetBool();
     g_pcSettings.disableHudGamma = s_disableHudGamma->GetBool();
+    g_pcSettings.enableGepengHud = s_enableGepengHud->GetBool();
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
     g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
     g_pcSettings.sprintProtectExitDelayFrames = s_sprintProtectExitDelayFrames->GetInt();
@@ -670,6 +674,7 @@ void SavePCControlSettings()
 
     s_enableAutoRun->SetBool(g_pcSettings.enableAutoRun);
     s_disableHudGamma->SetBool(g_pcSettings.disableHudGamma);
+    s_enableGepengHud->SetBool(g_pcSettings.enableGepengHud);
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
     s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
     s_sprintProtectExitDelayFrames->SetInt(g_pcSettings.sprintProtectExitDelayFrames);
