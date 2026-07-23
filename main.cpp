@@ -136,24 +136,14 @@ static int g_switchQueueCount = 0;
 static int g_switchQueueGap = 0;
 static uint32_t g_internalFrameCount = 0;
 
-static int g_feintProtectFrames = 0;
-static int g_shootAgainProtectFrames = 0;
-
-static int g_analogWeaponProtectFrames = 0;
-
 static int g_sprintProtectExitFrames = 0;
 static int g_sprintProtectExitDelayFrames = 0;
+static int g_aimEntryFrameCount = 0;
 static bool g_sprintProtectJustDownSent = false;
 static int g_sprintReleaseFrames = 0;
 static float g_macroSprintTimer = 0.0f;
 
 static float* pgTimeStep = nullptr;
-static int g_feintLastX = 0;
-static int g_feintLastY = 0;
-
-static int g_analogIdleFrames = 0;
-static int g_analogLastX = 0;
-static int g_analogLastY = 0;
 
 static int g_cachedX = 0;
 static int g_cachedY = 0;
@@ -296,48 +286,6 @@ int HookOf_GetPedWalkLeftRight(void* self) {
     {
         outX = GetPedWalkLeftRight(self);
         outY = GetPedWalkUpDown(self);
-    }
-
-    if (g_pcSettings.enableFeintProtect && g_feintProtectFrames > 0)
-    {
-        if (outX == 0 && outY == 0)
-        {
-            outX = g_feintLastX;
-            outY = g_feintLastY;
-        }
-    }
-
-    if (g_pcSettings.enableAnalogWeaponProtect && g_analogWeaponProtectFrames > 0)
-    {
-        if (outX == 0 && outY == 0)
-        {
-            outX = g_feintLastX;
-            outY = g_feintLastY;
-        }
-    }
-
-    // FASE MONITORING (SAAT AIMING)
-    if (IsAimMode())
-    {
-        if (outX != 0 || outY != 0)
-        {
-            // Ambil arah mentok (Full Magnitude)
-            float mag = sqrtf((float)outX * outX + (float)outY * outY);
-            if (mag > 0.1f)
-            {
-                g_analogLastX = (int)((float)outX / mag * 127.0f);
-                g_analogLastY = (int)((float)outY / mag * 127.0f);
-            }
-            g_analogIdleFrames = 0;
-        }
-        else
-        {
-            g_analogIdleFrames++;
-        }
-    }
-    else
-    {
-        g_analogIdleFrames = 0;
     }
 
     g_cachedX = outX;
@@ -749,31 +697,20 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 1 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        // Pop and Start
-        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-        g_switchQueueCount--;
-
-        g_prevWeaponFrames = 2;
-        g_switchQueueGap = 3;
-        g_lastWeaponSwitchTime = GetTickCountMs();
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+        // Protection check
+        if (IsAimMode() && g_aimEntryFrameCount < g_pcSettings.weaponSwitchProtectFrames)
         {
-            if (g_analogIdleFrames > 0 && g_analogIdleFrames <= g_pcSettings.analogWeaponProtectDelayFrames)
-            {
-                g_feintLastX = g_analogLastX;
-                g_feintLastY = g_analogLastY;
-                g_feintProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames + g_pcSettings.feintProtectFrames;
-                g_analogWeaponProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames;
-            }
+            // Still in protection window, wait.
         }
-
-        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectFrames <= 0)
+        else
         {
-            g_feintProtectFrames = g_pcSettings.feintProtectFrames;
-            g_shootAgainProtectFrames = g_pcSettings.shootAgainProtectFrames;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
+            // Pop and Start
+            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+            g_switchQueueCount--;
+
+            g_prevWeaponFrames = 2;
+            g_switchQueueGap = 3;
+            g_lastWeaponSwitchTime = GetTickCountMs();
         }
     }
 
@@ -802,31 +739,20 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 2 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        // Pop and Start
-        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-        g_switchQueueCount--;
-
-        g_nextWeaponFrames = 2;
-        g_switchQueueGap = 3;
-        g_lastWeaponSwitchTime = GetTickCountMs();
-
-        if (g_pcSettings.enableAnalogWeaponProtect && IsAimMode() && g_cachedX == 0 && g_cachedY == 0)
+        // Protection check
+        if (IsAimMode() && g_aimEntryFrameCount < g_pcSettings.weaponSwitchProtectFrames)
         {
-            if (g_analogIdleFrames > 0 && g_analogIdleFrames <= g_pcSettings.analogWeaponProtectDelayFrames)
-            {
-                g_feintLastX = g_analogLastX;
-                g_feintLastY = g_analogLastY;
-                g_feintProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames + g_pcSettings.feintProtectFrames;
-                g_analogWeaponProtectFrames = g_pcSettings.analogWeaponProtectDurationFrames;
-            }
+            // Still in protection window, wait.
         }
-
-        if (g_pcSettings.enableFeintProtect && IsAimMode() && g_analogWeaponProtectFrames <= 0)
+        else
         {
-            g_feintProtectFrames = g_pcSettings.feintProtectFrames;
-            g_shootAgainProtectFrames = g_pcSettings.shootAgainProtectFrames;
-            g_feintLastX = g_cachedX;
-            g_feintLastY = g_cachedY;
+            // Pop and Start
+            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+            g_switchQueueCount--;
+
+            g_nextWeaponFrames = 2;
+            g_switchQueueGap = 3;
+            g_lastWeaponSwitchTime = GetTickCountMs();
         }
     }
 
@@ -915,10 +841,6 @@ void HookOf_Render2DStuff()
     if (IsActionTouched(ACTION_SPRINT)) g_sprintReleaseFrames = 0;
     else g_sprintReleaseFrames++;
 
-    if (g_feintProtectFrames > 0) g_feintProtectFrames--;
-    if (g_shootAgainProtectFrames > 0) g_shootAgainProtectFrames--;
-    if (g_analogWeaponProtectFrames > 0) g_analogWeaponProtectFrames--;
-
     if (g_macroSprintTimer > 0.0f)
     {
         g_macroSprintTimer -= ts;
@@ -956,6 +878,15 @@ void HookOf_Render2DStuff()
     if (aimNow && !g_lastAimState)
     {
         g_sprintHeldAtAimEntry = IsActionTouched(ACTION_SPRINT);
+        g_aimEntryFrameCount = 0;
+    }
+    else if (aimNow)
+    {
+        g_aimEntryFrameCount++;
+    }
+    else
+    {
+        g_aimEntryFrameCount = 0;
     }
 
     if (!aimNow && g_lastAimState)
@@ -966,7 +897,7 @@ void HookOf_Render2DStuff()
     // Detect Aim Entry (Transition to aiming)
     if ((!g_lastTargetState && isTargeting) || (!g_lastAimState && aimNow))
     {
-        g_switchQueueCount = 0; // Clear queue on fresh aim
+        // g_switchQueueCount = 0; // Removed to allow weapon switch protection to work with early inputs
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
@@ -1217,10 +1148,12 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
     bool switchRequested = false;
 
-    // Logika standar jika tidak dalam proteksi analog:
-    if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
-        (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
-        (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_switchQueueCount > 0))
+    bool canSwitchNow = !IsAimMode() || g_aimEntryFrameCount >= g_pcSettings.weaponSwitchProtectFrames;
+
+    if (g_prevWeaponFrames > 0 || g_nextWeaponFrames > 0 ||
+        (canSwitchNow && (g_switchQueueCount > 0 ||
+                         (IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
+                         (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState))))
     {
         switchRequested = true;
     }

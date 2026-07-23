@@ -204,15 +204,8 @@ struct PCControlSettings
     // Button Panel Settings
     bool bpEnabled;
 
-    bool enableFeintProtect;
-    int feintProtectFrames;
-    int shootAgainProtectFrames;
-
-    bool enableAnalogWeaponProtect;
-    int analogWeaponProtectDelayFrames;
-    int analogWeaponProtectDurationFrames;
-
     bool enableAutoRun;
+    int weaponSwitchProtectFrames;
     int sprintProtectEntryFrames;
     int sprintProtectExitFrames;
     int sprintProtectExitDelayFrames;

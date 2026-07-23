@@ -346,25 +346,9 @@ void RenderPCControlMenu()
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Controls & Patches");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
-                changed |= ImGui::Checkbox("Enable Feint Protect", &g_pcSettings.enableFeintProtect);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog saat ganti senjata dalam mode bidik.");
-                ImGui::Text("Feint Protect Delay (Frames)");
-                changed |= SliderIntWithButtons("feintProtectFrames", &g_pcSettings.feintProtectFrames, 0, 100, "%d f", 1);
-                ImGui::Text("Shoot Again Protect (Frames)");
-                changed |= SliderIntWithButtons("shootAgainProtectFrames", &g_pcSettings.shootAgainProtectFrames, 0, 100, "%d f", 1);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Jeda proteksi tembak kembali setelah ganti senjata.");
-
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Analog Weapon Protection");
-                ImGui::Separator();
-                changed |= ImGui::Checkbox("Enable Analog Weapon Protect", &g_pcSettings.enableAnalogWeaponProtect);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Memproteksi arah analog agar tetap terkunci saat ganti senjata.");
-
-                ImGui::Text("Protect Delay (Frames)");
-                changed |= SliderIntWithButtons("analogWeaponProtectDelayFrames", &g_pcSettings.analogWeaponProtectDelayFrames, 0, 100, "%d f", 1);
-
-                ImGui::Text("Protect Duration (Frames)");
-                changed |= SliderIntWithButtons("analogWeaponProtectDurationFrames", &g_pcSettings.analogWeaponProtectDurationFrames, 0, 100, "%d f", 1);
+                ImGui::Text("Weapon Switch Protect (Frames)");
+                changed |= SliderIntWithButtons("weaponSwitchProtectFrames", &g_pcSettings.weaponSwitchProtectFrames, 0, 100, "%d f", 1);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menunda switch senjata saat baru masuk mode aiming untuk mencegah 'feint' yang tidak disengaja.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Shoot 1 Settings");

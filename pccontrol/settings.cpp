@@ -83,15 +83,8 @@ PCControlSettings g_pcSettings = {
     // Button Panel Settings
     false,  // bpEnabled
 
-    true,   // enableFeintProtect
-    25,     // feintProtectFrames
-    12,     // shootAgainProtectFrames
-
-    true,   // enableAnalogWeaponProtect
-    5,      // analogWeaponProtectDelayFrames
-    12,     // analogWeaponProtectDurationFrames
-
     false,  // enableAutoRun
+    12,     // weaponSwitchProtectFrames
     8,      // sprintProtectEntryFrames
     12,     // sprintProtectExitFrames
     5,      // sprintProtectExitDelayFrames
@@ -190,15 +183,8 @@ static ConfigEntry* s_macroShootMode = nullptr;
 
 static ConfigEntry* s_bpEnabled = nullptr;
 
-static ConfigEntry* s_enableFeintProtect = nullptr;
-static ConfigEntry* s_feintProtectFrames = nullptr;
-static ConfigEntry* s_shootAgainProtectFrames = nullptr;
-
-static ConfigEntry* s_enableAnalogWeaponProtect = nullptr;
-static ConfigEntry* s_analogWeaponProtectDelayFrames = nullptr;
-static ConfigEntry* s_analogWeaponProtectDurationFrames = nullptr;
-
 static ConfigEntry* s_enableAutoRun = nullptr;
+static ConfigEntry* s_weaponSwitchProtectFrames = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
@@ -389,15 +375,8 @@ void InitPCControlSettings()
 
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
-    s_enableFeintProtect = cfg->Bind("EnableFeintProtect", true, kSettingsSection);
-    s_feintProtectFrames = cfg->Bind("FeintProtectFrames", 25, kSettingsSection);
-    s_shootAgainProtectFrames = cfg->Bind("ShootAgainProtectFrames", 12, kSettingsSection);
-
-    s_enableAnalogWeaponProtect = cfg->Bind("EnableAnalogWeaponProtect", true, kSettingsSection);
-    s_analogWeaponProtectDelayFrames = cfg->Bind("AnalogWeaponProtectDelayFrames", 5, kSettingsSection);
-    s_analogWeaponProtectDurationFrames = cfg->Bind("AnalogWeaponProtectDurationFrames", 12, kSettingsSection);
-
     s_enableAutoRun = cfg->Bind("EnableAutoRun", false, kSettingsSection);
+    s_weaponSwitchProtectFrames = cfg->Bind("WeaponSwitchProtectFrames", 12, kSettingsSection);
     s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntryFrames", 8, kSettingsSection);
     s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 12, kSettingsSection);
     s_sprintProtectExitDelayFrames = cfg->Bind("SprintProtectExitDelayFrames", 5, kSettingsSection);
@@ -490,15 +469,8 @@ void InitPCControlSettings()
 
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
-    g_pcSettings.enableFeintProtect = s_enableFeintProtect->GetBool();
-    g_pcSettings.feintProtectFrames = s_feintProtectFrames->GetInt();
-    g_pcSettings.shootAgainProtectFrames = s_shootAgainProtectFrames->GetInt();
-
-    g_pcSettings.enableAnalogWeaponProtect = s_enableAnalogWeaponProtect->GetBool();
-    g_pcSettings.analogWeaponProtectDelayFrames = s_analogWeaponProtectDelayFrames->GetInt();
-    g_pcSettings.analogWeaponProtectDurationFrames = s_analogWeaponProtectDurationFrames->GetInt();
-
     g_pcSettings.enableAutoRun = s_enableAutoRun->GetBool();
+    g_pcSettings.weaponSwitchProtectFrames = (int)ClampSetting(s_weaponSwitchProtectFrames->GetInt(), 0, 100);
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
     g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
     g_pcSettings.sprintProtectExitDelayFrames = s_sprintProtectExitDelayFrames->GetInt();
@@ -696,15 +668,9 @@ void SavePCControlSettings()
 
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 
-    s_enableFeintProtect->SetBool(g_pcSettings.enableFeintProtect);
-    s_feintProtectFrames->SetInt(g_pcSettings.feintProtectFrames);
-    s_shootAgainProtectFrames->SetInt(g_pcSettings.shootAgainProtectFrames);
-
-    s_enableAnalogWeaponProtect->SetBool(g_pcSettings.enableAnalogWeaponProtect);
-    s_analogWeaponProtectDelayFrames->SetInt(g_pcSettings.analogWeaponProtectDelayFrames);
-    s_analogWeaponProtectDurationFrames->SetInt(g_pcSettings.analogWeaponProtectDurationFrames);
-
     s_enableAutoRun->SetBool(g_pcSettings.enableAutoRun);
+    g_pcSettings.weaponSwitchProtectFrames = ClampSetting(g_pcSettings.weaponSwitchProtectFrames, 0, 100);
+    s_weaponSwitchProtectFrames->SetInt(g_pcSettings.weaponSwitchProtectFrames);
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
     s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
     s_sprintProtectExitDelayFrames->SetInt(g_pcSettings.sprintProtectExitDelayFrames);
