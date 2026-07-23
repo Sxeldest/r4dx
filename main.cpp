@@ -674,8 +674,6 @@ int HookOf_GetSprint(void* self, int sprintType)
 
     if (sprintProtected || autoRunActive)
     {
-        void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
-        if (player) SetMoveState(player, 7);
         return 1;
     }
 
