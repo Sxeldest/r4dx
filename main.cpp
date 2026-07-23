@@ -159,6 +159,7 @@ RwReal* nearScreenZ = nullptr;
 RwReal* recipNearClip = nullptr;
 void (*SetScissorRect)(float*) = nullptr;
 static bool g_imguiInitialized = false;
+static bool g_inRender2D = false;
 static CWidget** g_touchWidgets = nullptr;
 
 static CCamera* pTheCamera = nullptr;
@@ -198,6 +199,29 @@ int GetCurrentWeapon(void* ped)
     if (!ped) return 0;
     int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
     return *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+}
+
+DECL_HOOKv(CFont_SetColor, uint32_t color);
+
+void HookOf_CFont_SetColor(uint32_t color)
+{
+    if (g_pcSettings.enablePCHudColours && g_inRender2D)
+    {
+        // If color is full white or very bright, darken it to PC-like level
+        uint8_t r = color & 0xFF;
+        uint8_t g = (color >> 8) & 0xFF;
+        uint8_t b = (color >> 16) & 0xFF;
+        uint8_t a = (color >> 24) & 0xFF;
+
+        if (r > 200 && g > 200 && b > 200)
+        {
+            r = (uint8_t)(r * 0.75f);
+            g = (uint8_t)(g * 0.75f);
+            b = (uint8_t)(b * 0.75f);
+            color = (a << 24) | (b << 16) | (g << 8) | r;
+        }
+    }
+    CFont_SetColor(color);
 }
 
 void ApplyPCHudColours(void* addr)
@@ -855,6 +879,7 @@ void HookOf_Render2DStuff()
     SAMP::SAMPManager::Get().Process();
     g_internalFrameCount++;
 
+    g_inRender2D = true;
     UpdateMacroShoot();
 
     // Update Timers based on TimeStep
@@ -980,9 +1005,13 @@ void HookOf_Render2DStuff()
     }
 
     if (!g_imguiInitialized || !g_pGUI)
+    {
+        g_inRender2D = false;
         return;
+    }
 
     g_pGUI->render();
+    g_inRender2D = false;
 }
 
 void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
@@ -1127,6 +1156,16 @@ void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
         fRect[3] = centerY - newW * 0.5f; // Wait, this should be height based? centerY - newH * 0.5f
         fRect[1] = centerY + newH * 0.5f;
     }
+
+    if (g_pcSettings.enablePCHudColours && g_inRender2D && !g_inHudCrosshairDraw && rgba)
+    {
+        uint8_t* c = (uint8_t*)rgba;
+        // Darken white sprites (like fist icon)
+        if (c[0] == 255 && c[1] == 255 && c[2] == 255)
+        {
+            c[0] = 180; c[1] = 180; c[2] = 180;
+        }
+    }
     CSprite2d_Draw(self, rect, rgba);
 }
 
@@ -1143,6 +1182,7 @@ void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w,
         // Darken white icons (weapons, etc) and remove mobile glow intensity
         if (r == 255 && g == 255 && b == 255)
         {
+            r = 180; g = 180; b = 180;
             intensity = 0;
         }
     }
@@ -1274,6 +1314,7 @@ extern "C" void OnModLoad()
         HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         HOOK(CHudColours_Constructor, gtasa + 0x43AA00 + 1);
+        HOOK(CFont_SetColor, gtasa + 0x5AAFC8 + 1);
         pHudColours = (void*)aml->GetSym(pGameHandle, "_ZN11CHudColours10m_aColoursE");
         if (g_pcSettings.enablePCHudColours) ApplyPCHudColours(pHudColours);
 
