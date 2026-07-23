@@ -205,7 +205,7 @@ struct PCControlSettings
     bool bpEnabled;
 
     bool enableAutoRun;
-    int weaponSwitchProtectFrames;
+    bool enablePCHudColours;
     int sprintProtectEntryFrames;
     int sprintProtectExitFrames;
     int sprintProtectExitDelayFrames;

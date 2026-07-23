@@ -100,6 +100,8 @@ DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
 DECL_HOOKv(ButtonPanel_OnTouchEvent, void* self, int type, int x, int y);
 DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
 
+DECL_HOOKv(CHudColours_Constructor, void* self);
+
 // Constants
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
 const float Z_DEADZONE = 0.1f;
@@ -138,7 +140,6 @@ static uint32_t g_internalFrameCount = 0;
 
 static int g_sprintProtectExitFrames = 0;
 static int g_sprintProtectExitDelayFrames = 0;
-static int g_aimEntryFrameCount = 0;
 static bool g_sprintProtectJustDownSent = false;
 static int g_sprintReleaseFrames = 0;
 static float g_macroSprintTimer = 0.0f;
@@ -149,6 +150,7 @@ static int g_cachedX = 0;
 static int g_cachedY = 0;
 static void* g_lastPed = nullptr;
 void* pGameHandle = nullptr;
+static void* pHudColours = nullptr;
 static uintptr_t g_gtasa = 0;
 uintptr_t hSAMP = 0;
 uintptr_t hSAMP_ORIG = 0;
@@ -196,6 +198,42 @@ int GetCurrentWeapon(void* ped)
     if (!ped) return 0;
     int activeSlot = *(signed char*)((uintptr_t)ped + 0x71C);
     return *(int*)((uintptr_t)ped + 0x5A4 + (activeSlot * 0x1C));
+}
+
+void ApplyPCHudColours(void* addr)
+{
+    if (!addr) return;
+    struct RGBA { uint8_t r, g, b, a; };
+    RGBA* colours = (RGBA*)addr;
+
+    auto SetColor = [&](int index, uint8_t r, uint8_t g, uint8_t b) {
+        colours[index].r = r;
+        colours[index].g = g;
+        colours[index].b = b;
+        colours[index].a = 255;
+    };
+
+    SetColor(0, 180, 25, 29);    // RED
+    SetColor(1, 54, 104, 44);    // GREEN
+    SetColor(2, 50, 60, 127);    // DARK_BLUE
+    SetColor(3, 172, 203, 241);  // LIGHT_BLUE
+    SetColor(4, 225, 225, 225);  // LIGHT_GRAY
+    SetColor(5, 0, 0, 0);        // BLACK
+    SetColor(6, 144, 98, 16);    // GOLD
+    SetColor(7, 168, 110, 252);  // PURPLE
+    SetColor(8, 150, 150, 150);  // DARK_GRAY
+    SetColor(9, 104, 15, 17);    // DARK_RED
+    SetColor(10, 38, 71, 31);    // DARK_GREEN
+    SetColor(11, 226, 192, 99);  // CREAM
+    SetColor(12, 74, 90, 107);   // NIGHT_BLUE
+    SetColor(13, 20, 25, 200);   // BLUE
+    SetColor(14, 255, 255, 0);   // YELLOW
+}
+
+void HookOf_CHudColours_Constructor(void* self)
+{
+    CHudColours_Constructor(self);
+    if (g_pcSettings.enablePCHudColours) ApplyPCHudColours(self);
 }
 
 void HookOf_ProcessPlayerWeapon(void* self, void* ped)
@@ -697,21 +735,13 @@ bool HookOf_CycleWeaponLeftJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 1 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        // Protection check
-        if (IsAimMode() && g_aimEntryFrameCount < g_pcSettings.weaponSwitchProtectFrames)
-        {
-            // Still in protection window, wait.
-        }
-        else
-        {
-            // Pop and Start
-            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-            g_switchQueueCount--;
+        // Pop and Start
+        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+        g_switchQueueCount--;
 
-            g_prevWeaponFrames = 2;
-            g_switchQueueGap = 3;
-            g_lastWeaponSwitchTime = GetTickCountMs();
-        }
+        g_prevWeaponFrames = 2;
+        g_switchQueueGap = 3;
+        g_lastWeaponSwitchTime = GetTickCountMs();
     }
 
     if (g_prevWeaponFrames > 0)
@@ -739,21 +769,13 @@ bool HookOf_CycleWeaponRightJustDown(void* self)
     // Execute from queue
     if (g_switchQueueCount > 0 && g_switchQueue[0] == 2 && g_prevWeaponFrames == 0 && g_nextWeaponFrames == 0 && g_switchQueueGap == 0)
     {
-        // Protection check
-        if (IsAimMode() && g_aimEntryFrameCount < g_pcSettings.weaponSwitchProtectFrames)
-        {
-            // Still in protection window, wait.
-        }
-        else
-        {
-            // Pop and Start
-            for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
-            g_switchQueueCount--;
+        // Pop and Start
+        for (int i = 0; i < g_switchQueueCount - 1; ++i) g_switchQueue[i] = g_switchQueue[i + 1];
+        g_switchQueueCount--;
 
-            g_nextWeaponFrames = 2;
-            g_switchQueueGap = 3;
-            g_lastWeaponSwitchTime = GetTickCountMs();
-        }
+        g_nextWeaponFrames = 2;
+        g_switchQueueGap = 3;
+        g_lastWeaponSwitchTime = GetTickCountMs();
     }
 
     if (g_nextWeaponFrames > 0)
@@ -878,15 +900,6 @@ void HookOf_Render2DStuff()
     if (aimNow && !g_lastAimState)
     {
         g_sprintHeldAtAimEntry = IsActionTouched(ACTION_SPRINT);
-        g_aimEntryFrameCount = 0;
-    }
-    else if (aimNow)
-    {
-        g_aimEntryFrameCount++;
-    }
-    else
-    {
-        g_aimEntryFrameCount = 0;
     }
 
     if (!aimNow && g_lastAimState)
@@ -897,7 +910,7 @@ void HookOf_Render2DStuff()
     // Detect Aim Entry (Transition to aiming)
     if ((!g_lastTargetState && isTargeting) || (!g_lastAimState && aimNow))
     {
-        // g_switchQueueCount = 0; // Removed to allow weapon switch protection to work with early inputs
+        g_switchQueueCount = 0; // Clear queue on fresh aim
     }
 
     // Reset toggle target saat keluar aim mode (Trigger sprint exit based on INTENT release)
@@ -1124,6 +1137,16 @@ void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w,
         w *= g_pcSettings.chSize;
         h *= g_pcSettings.chSize;
     }
+
+    if (g_pcSettings.enablePCHudColours && !g_inCrosshairRender && !g_inHudCrosshairDraw)
+    {
+        // Darken white icons (weapons, etc) and remove mobile glow intensity
+        if (r == 255 && g == 255 && b == 255)
+        {
+            intensity = 0;
+        }
+    }
+
     RenderOneXLUSprite_Rotate_Aspect(x, y, z, w, h, r, g, b, intensity, rotation, aspect, a);
 }
 
@@ -1148,12 +1171,9 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     // Tentukan apakah kita benar-benar harus memproses switch (dan clear aiming) sekarang
     bool switchRequested = false;
 
-    bool canSwitchNow = !IsAimMode() || g_aimEntryFrameCount >= g_pcSettings.weaponSwitchProtectFrames;
-
-    if (g_prevWeaponFrames > 0 || g_nextWeaponFrames > 0 ||
-        (canSwitchNow && (g_switchQueueCount > 0 ||
-                         (IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
-                         (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState))))
+    if ((IsActionTouched(ACTION_PREV_WEAPON) && !g_prevWeaponPrevState) ||
+        (IsActionTouched(ACTION_NEXT_WEAPON) && !g_nextWeaponPrevState) ||
+        (g_prevWeaponFrames > 0) || (g_nextWeaponFrames > 0) || (g_switchQueueCount > 0))
     {
         switchRequested = true;
     }
@@ -1253,6 +1273,10 @@ extern "C" void OnModLoad()
         HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
+        HOOK(CHudColours_Constructor, gtasa + 0x43AA00 + 1);
+        pHudColours = (void*)aml->GetSym(pGameHandle, "_ZN11CHudColours10m_aColoursE");
+        if (g_pcSettings.enablePCHudColours) ApplyPCHudColours(pHudColours);
+
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
         HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));
         HOOK(CAnimBlendAssociation_UpdateTime, gtasa + 0x38BDB4 + 1);

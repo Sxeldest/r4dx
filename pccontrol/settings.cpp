@@ -84,7 +84,7 @@ PCControlSettings g_pcSettings = {
     false,  // bpEnabled
 
     false,  // enableAutoRun
-    12,     // weaponSwitchProtectFrames
+    true,   // enablePCHudColours
     8,      // sprintProtectEntryFrames
     12,     // sprintProtectExitFrames
     5,      // sprintProtectExitDelayFrames
@@ -184,7 +184,7 @@ static ConfigEntry* s_macroShootMode = nullptr;
 static ConfigEntry* s_bpEnabled = nullptr;
 
 static ConfigEntry* s_enableAutoRun = nullptr;
-static ConfigEntry* s_weaponSwitchProtectFrames = nullptr;
+static ConfigEntry* s_enablePCHudColours = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
@@ -376,7 +376,7 @@ void InitPCControlSettings()
     s_bpEnabled = cfg->Bind("BP_Enabled", false, "ButtonPanel");
 
     s_enableAutoRun = cfg->Bind("EnableAutoRun", false, kSettingsSection);
-    s_weaponSwitchProtectFrames = cfg->Bind("WeaponSwitchProtectFrames", 12, kSettingsSection);
+    s_enablePCHudColours = cfg->Bind("EnablePCHudColours", true, kSettingsSection);
     s_sprintProtectEntryFrames = cfg->Bind("SprintProtectEntryFrames", 8, kSettingsSection);
     s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 12, kSettingsSection);
     s_sprintProtectExitDelayFrames = cfg->Bind("SprintProtectExitDelayFrames", 5, kSettingsSection);
@@ -470,7 +470,7 @@ void InitPCControlSettings()
     g_pcSettings.bpEnabled = s_bpEnabled->GetBool();
 
     g_pcSettings.enableAutoRun = s_enableAutoRun->GetBool();
-    g_pcSettings.weaponSwitchProtectFrames = (int)ClampSetting(s_weaponSwitchProtectFrames->GetInt(), 0, 100);
+    g_pcSettings.enablePCHudColours = s_enablePCHudColours->GetBool();
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
     g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
     g_pcSettings.sprintProtectExitDelayFrames = s_sprintProtectExitDelayFrames->GetInt();
@@ -669,8 +669,7 @@ void SavePCControlSettings()
     s_bpEnabled->SetBool(g_pcSettings.bpEnabled);
 
     s_enableAutoRun->SetBool(g_pcSettings.enableAutoRun);
-    g_pcSettings.weaponSwitchProtectFrames = ClampSetting(g_pcSettings.weaponSwitchProtectFrames, 0, 100);
-    s_weaponSwitchProtectFrames->SetInt(g_pcSettings.weaponSwitchProtectFrames);
+    s_enablePCHudColours->SetBool(g_pcSettings.enablePCHudColours);
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
     s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
     s_sprintProtectExitDelayFrames->SetInt(g_pcSettings.sprintProtectExitDelayFrames);

@@ -346,9 +346,8 @@ void RenderPCControlMenu()
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Controls & Patches");
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Analog WASD Patch", &g_pcSettings.enableAnalogPatch);
-                ImGui::Text("Weapon Switch Protect (Frames)");
-                changed |= SliderIntWithButtons("weaponSwitchProtectFrames", &g_pcSettings.weaponSwitchProtectFrames, 0, 100, "%d f", 1);
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menunda switch senjata saat baru masuk mode aiming untuk mencegah 'feint' yang tidak disengaja.");
+                changed |= ImGui::Checkbox("PC Hud Colours", &g_pcSettings.enablePCHudColours);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Menggunakan palet warna HUD asli dari versi PC (lebih gelap/muted) dan mengurangi intensitas cahaya pada ikon.");
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Macro Shoot 1 Settings");
