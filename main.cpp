@@ -128,6 +128,7 @@ static bool g_customTargetWasHeld = false;
 static bool g_lastAimState = false;
 static bool g_lastTargetState = false;
 static bool g_sprintHeldAtAimEntry = false;
+static bool g_waitingForSwitchToSlide = false;
 
 static uint32_t g_macroStartTimeMs = 0;
 static bool g_macro1Active = false;
@@ -203,11 +204,11 @@ int GetCurrentWeapon(void* ped)
 
 void HookOf_emu_GammaSet(uint8_t gamma)
 {
-    if (g_pcSettings.disableHudGamma && gamma == 1)
-    {
-        gamma = 0;
-    }
-    emu_GammaSet(gamma);
+if (g_pcSettings.disableHudGamma && gamma == 1)
+{
+gamma = 0;
+}
+emu_GammaSet(gamma);
 }
 
 void HookOf_CalculateAspectRatio(void* self)
@@ -503,15 +504,15 @@ int HookOf_IsHeldDown(int widgetId, int a2)
     }
 
     if (
-        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
- || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
- || (widgetId == 2 && IsActionTouched(ACTION_GAS))
- || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
- || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
- || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
- || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
- || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-    )
+            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+            || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+            || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+            || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+            || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+            || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+            || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+            || (widgetId == 7 && IsActionTouched(ACTION_HORN))
+            )
     {
         result = 1;
     }
@@ -540,16 +541,16 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
     }
 
     if (
-        (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
- || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
- || (widgetId == 2 && IsActionTouched(ACTION_GAS))
- || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
- || (widgetId == 4 && ImGui::IsItemActive())
- || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
- || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
- || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
- || (widgetId == 7 && IsActionTouched(ACTION_HORN))
-    )
+            (widgetId == 1 && IsActionTouched(ACTION_MACRO_SHOOT_2))
+            || (widgetId == 0 && IsActionTouched(ACTION_ENTER_CAR))
+            || (widgetId == 2 && IsActionTouched(ACTION_GAS))
+            || (widgetId == 3 && IsActionTouched(ACTION_BRAKE))
+            || (widgetId == 4 && ImGui::IsItemActive())
+            || (widgetId == 4 && IsActionTouched(ACTION_HANDBRAKE))
+            || (widgetId == 5 && IsActionTouched(ACTION_STEER_LEFT))
+            || (widgetId == 6 && IsActionTouched(ACTION_STEER_RIGHT))
+            || (widgetId == 7 && IsActionTouched(ACTION_HORN))
+            )
     {
         result = 1;
     }
@@ -562,14 +563,14 @@ int HookOf_IsReleased(int widgetId, void* a2, int a3)
 {
     int result = IsReleased(widgetId, a2, a3);
     if (
-        (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) == 2)
-        || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) == 2)
-        || (widgetId == 3 && GetActionReleaseFrames(ACTION_BRAKE) == 2)
-        || (widgetId == 4 && GetActionReleaseFrames(ACTION_HANDBRAKE) == 2)
-        || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) == 2)
-        || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) == 2)
-        || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) == 2)
-    )
+            (widgetId == 0 && GetActionReleaseFrames(ACTION_ENTER_CAR) == 2)
+            || (widgetId == 2 && GetActionReleaseFrames(ACTION_GAS) == 2)
+            || (widgetId == 3 && GetActionReleaseFrames(ACTION_BRAKE) == 2)
+            || (widgetId == 4 && GetActionReleaseFrames(ACTION_HANDBRAKE) == 2)
+            || (widgetId == 5 && GetActionReleaseFrames(ACTION_STEER_LEFT) == 2)
+            || (widgetId == 6 && GetActionReleaseFrames(ACTION_STEER_RIGHT) == 2)
+            || (widgetId == 7 && GetActionReleaseFrames(ACTION_HORN) == 2)
+            )
     {
         result = 1;
     }
@@ -585,10 +586,10 @@ static bool IsCustomTargetHeld()
 {
     if (IsActionTouched(ACTION_TARGET))
         return true;
-    
+
     if (g_macroAimTriggered)
         return true;
-    
+
     return false;
 }
 
@@ -901,11 +902,10 @@ void HookOf_Render2DStuff()
     {
         ResetWidgetToggle(ACTION_TARGET);
         g_macroAimTriggered = false;
-
-        g_sprintProtectExitDelayFrames = g_pcSettings.sprintProtectExitDelayFrames;
-        g_sprintProtectExitFrames = g_pcSettings.sprintProtectExitFrames;
-        g_sprintProtectJustDownSent = false;
+        g_waitingForSwitchToSlide = true;
     }
+
+    if (isTargeting) g_waitingForSwitchToSlide = false;
 
     if (g_lastAimState && !aimNow)
     {
@@ -1156,6 +1156,14 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
 
     if (switchRequested)
     {
+        if (IsCustomTargetHeld() || g_waitingForSwitchToSlide)
+        {
+            g_sprintProtectExitDelayFrames = g_pcSettings.sprintProtectExitDelayFrames;
+            g_sprintProtectExitFrames = g_pcSettings.sprintProtectExitFrames;
+            g_sprintProtectJustDownSent = false;
+            g_waitingForSwitchToSlide = false;
+        }
+
         ForceReleaseAction(ACTION_TARGET);
         ForceReleaseAction(ACTION_VC_SHOOT);
         ForceReleaseAction(ACTION_MACRO_SHOOT);
