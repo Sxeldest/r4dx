@@ -20,55 +20,14 @@ static int s_displayX = 0;
 static int s_displayY = 0;
 static int s_activeCameraFinger = -1;
 static bool s_firstInit = true;
-static float s_smoothH = 0.0f;
-static float s_smoothV = 0.0f;
-static float s_velH = 0.0f;
-static float s_velV = 0.0f;
-static float s_stopTimer = 0.0f;
 static float s_fingerDeltaX[15] = {0};
 static float s_fingerDeltaY[15] = {0};
 static float s_lastTouchX[15] = {0};
 static float s_lastTouchY[15] = {0};
 static eCamMode s_prevMode = (eCamMode)0;
 static int s_transitionFrames = 0;
-
-static const float kStopThreshold = 0.05f;
-
-static float NormalizeAngle(float angle)
-{
-    while (angle > M_PI) angle -= (2.0f * M_PI);
-    while (angle < -M_PI) angle += (2.0f * M_PI);
-    return angle;
-}
-
-static float SmoothDampAngle(float current, float target, float& currentVelocity, float smoothTime, float deltaTime)
-{
-    float diff = target - current;
-    diff = atan2f(sinf(diff), cosf(diff));
-
-    float targetSanitized = current + diff;
-    smoothTime = fmaxf(0.0001f, smoothTime);
-    float omega = 2.0f / smoothTime;
-    float x = omega * deltaTime;
-    float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
-    float change = current - targetSanitized;
-    float originalTo = targetSanitized;
-    float maxChange = 10.0f * smoothTime;
-
-    change = fminf(fmaxf(change, -maxChange), maxChange);
-
-    float temp = (currentVelocity + omega * change) * deltaTime;
-    currentVelocity = (currentVelocity - omega * temp) * exp;
-
-    float result = targetSanitized + (change + temp) * exp;
-    if ((originalTo - current > 0.0f) == (result > originalTo))
-    {
-        result = originalTo;
-        currentVelocity = 0.0f;
-    }
-
-    return result;
-}
+static float s_weightedDX = 0.0f;
+static float s_weightedDY = 0.0f;
 
 static bool IsAimMode(eCamMode mode)
 {
@@ -152,79 +111,71 @@ void CameraPatchOnRender2D()
 
     if (s_firstInit)
     {
-        s_smoothH = cam.m_fHorizontalAngle;
-        s_smoothV = cam.Alpha;
         s_firstInit = false;
         s_prevMode = cam.m_nMode;
+        s_weightedDX = 0.0f;
+        s_weightedDY = 0.0f;
     }
 
+    // Skip input during mode transition to prevent jumping
     if (IsAimMode(cam.m_nMode) != IsAimMode(s_prevMode))
     {
         s_transitionFrames = 10;
+        s_weightedDX = 0.0f;
+        s_weightedDY = 0.0f;
     }
     s_prevMode = cam.m_nMode;
 
     if (s_transitionFrames > 0)
     {
-        cam.m_fHorizontalAngle = s_smoothH;
-        cam.Alpha = s_smoothV;
         s_transitionFrames--;
+        ResetTouchDeltas();
+        s_weightedDX = 0.0f;
+        s_weightedDY = 0.0f;
+        return;
     }
 
-    float dt = *s_timeStep * 0.02f;
-    if (dt <= 0.0f) return;
-
-    bool isMoving = false;
-    if (isCurrentlyTouched)
+    if (s_activeCameraFinger != -1 && s_activeCameraFinger < 15)
     {
-        int fingerId = s_activeCameraFinger;
+        float dx = s_fingerDeltaX[s_activeCameraFinger];
+        float dy = s_fingerDeltaY[s_activeCameraFinger];
 
-        if (fingerId >= 0 && fingerId < 15)
+        float speed = sqrtf(dx * dx + dy * dy);
+        float lerpAmount = 0.45f; // Base smoothing (semakin kecil semakin mulus)
+
+        if (speed > 10.0f) lerpAmount = 0.85f;      // Gerakan sangat cepat -> Raw
+        else if (speed > 2.0f) lerpAmount = 0.65f; // Gerakan sedang -> Balanced
+        else if (speed > 0.0f) lerpAmount = 0.35f; // Gerakan halus -> Super Smooth
+
+        float dt = *s_timeStep * 0.02f;
+        float alpha = lerpAmount * (dt / 0.02f);
+        if (alpha > 1.0f) alpha = 1.0f;
+        if (alpha < 0.1f) alpha = 0.1f;
+
+        s_weightedDX = (dx * alpha) + (s_weightedDX * (1.0f - alpha));
+        s_weightedDY = (dy * alpha) + (s_weightedDY * (1.0f - alpha));
+
+        if (fabsf(s_weightedDX) > 0.0001f || fabsf(s_weightedDY) > 0.0001f)
         {
-            float dx = s_fingerDeltaX[fingerId];
-            float dy = s_fingerDeltaY[fingerId];
+            float sensMultiplier = 0.00025f;
+            float sensX = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensX : g_pcSettings.camSensX) * sensMultiplier;
+            float sensY = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensY : g_pcSettings.camSensY) * sensMultiplier;
 
-            if (fabsf(dx) > 0.0f || fabsf(dy) > 0.0f)
-            {
-                isMoving = true;
+            // Direct Application of Weighted Delta
+            float h = cam.m_fHorizontalAngle - (s_weightedDX * sensX);
+            // Normalize H
+            while (h > M_PI) h -= (2.0f * M_PI);
+            while (h < -M_PI) h += (2.0f * M_PI);
+            cam.m_fHorizontalAngle = h;
 
-                float sensMultiplier = 0.00025f;
-                float sensX = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensX : g_pcSettings.camSensX) * sensMultiplier;
-                float sensY = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensY : g_pcSettings.camSensY) * sensMultiplier;
-
-                s_smoothH = NormalizeAngle(s_smoothH - (dx * sensX));
-                s_smoothV = s_smoothV - (dy * sensY);
-
-                if (s_smoothV > 1.5f) s_smoothV = 1.5f;
-                if (s_smoothV < -1.1f) s_smoothV = -1.1f;
-            }
+            cam.Alpha -= (s_weightedDY * sensY);
         }
-    }
-
-    if (isMoving && isCurrentlyTouched)
-    {
-        s_stopTimer = 0.0f;
     }
     else
     {
-        s_stopTimer += dt;
-    }
-
-    if (!isCurrentlyTouched || s_stopTimer >= kStopThreshold)
-    {
-        if (s_transitionFrames == 0)
-        {
-            s_smoothH = cam.m_fHorizontalAngle;
-            s_smoothV = cam.Alpha;
-        }
-        s_velH = 0.0f;
-        s_velV = 0.0f;
-    }
-    else
-    {
-        float dynamicSmoothTime = 0.4f / fmaxf(0.1f, g_pcSettings.smoothness);
-        cam.m_fHorizontalAngle = NormalizeAngle(SmoothDampAngle(cam.m_fHorizontalAngle, s_smoothH, s_velH, dynamicSmoothTime, dt));
-        cam.Alpha = SmoothDampAngle(cam.Alpha, s_smoothV, s_velV, dynamicSmoothTime, dt);
+        // Reset sisa pergerakan saat jari dilepas agar tidak 'hanyut'
+        s_weightedDX = 0.0f;
+        s_weightedDY = 0.0f;
     }
 
     if (cam.Alpha > 1.5f) cam.Alpha = 1.5f;
