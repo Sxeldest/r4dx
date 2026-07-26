@@ -48,10 +48,26 @@ static void ResetTouchDeltas()
 static void ApplyNoopPatches(uintptr_t gtasa)
 {
     unsigned char nop[4] = {0x00, 0xBF, 0x00, 0xBF};
-    aml->Write(gtasa + 0x3C39B8, (uintptr_t)nop, 4);
-    aml->Write(gtasa + 0x3C4090, (uintptr_t)nop, 4);
-    aml->Write(gtasa + 0x3C1A72, (uintptr_t)nop, 4);
-    aml->Write(gtasa + 0x3C1778, (uintptr_t)nop, 4);
+
+    // Existing FollowPed_SA patches
+    aml->Write(gtasa + 0x3C39B8, (uintptr_t)nop, 4); // Alpha
+    aml->Write(gtasa + 0x3C4090, (uintptr_t)nop, 4);   // Horizontal
+    aml->Write(gtasa + 0x3C1A72, (uintptr_t)nop, 4); // Alpha
+    aml->Write(gtasa + 0x3C1778, (uintptr_t)nop, 4);   // Horizontal
+
+    // AimWeapon patches (Disable snap to Ped rotation)
+    aml->Write(gtasa + 0x3C70C0, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
+    aml->Write(gtasa + 0x3C7166, (uintptr_t)nop, 4); // m_fHorizontalAngle reset 2
+    //aml->Write(gtasa + 0x3C708A, (uintptr_t)nop, 4); // Alpha reset
+    //aml->Write(gtasa + 0x3C7128, (uintptr_t)nop, 4); // Alpha reset 2
+
+    // M16_1stPerson patches
+    aml->Write(gtasa + 0x3C4E6A, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
+    //aml->Write(gtasa + 0x3C4E66, (uintptr_t)nop, 4); // Alpha reset
+
+    // Rocket patches
+    aml->Write(gtasa + 0x3C64E2, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
+    //aml->Write(gtasa + 0x3C64D6, (uintptr_t)nop, 4); // Alpha reset
 }
 
 void CameraPatchPreload(void* gameHandle)
@@ -117,23 +133,8 @@ void CameraPatchOnRender2D()
         s_weightedDY = 0.0f;
     }
 
-    // Skip input during mode transition to prevent jumping
-    if (IsAimMode(cam.m_nMode) != IsAimMode(s_prevMode))
-    {
-        s_transitionFrames = 10;
-        s_weightedDX = 0.0f;
-        s_weightedDY = 0.0f;
-    }
+    // Transitions are now smooth thanks to engine patches, no need to lock input
     s_prevMode = cam.m_nMode;
-
-    if (s_transitionFrames > 0)
-    {
-        s_transitionFrames--;
-        ResetTouchDeltas();
-        s_weightedDX = 0.0f;
-        s_weightedDY = 0.0f;
-        return;
-    }
 
     if (s_activeCameraFinger != -1 && s_activeCameraFinger < 15)
     {
