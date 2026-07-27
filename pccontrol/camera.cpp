@@ -58,16 +58,16 @@ static void ApplyNoopPatches(uintptr_t gtasa)
     // AimWeapon patches (Disable snap to Ped rotation)
     aml->Write(gtasa + 0x3C70C0, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
     aml->Write(gtasa + 0x3C7166, (uintptr_t)nop, 4); // m_fHorizontalAngle reset 2
-    //aml->Write(gtasa + 0x3C708A, (uintptr_t)nop, 4); // Alpha reset
-    //aml->Write(gtasa + 0x3C7128, (uintptr_t)nop, 4); // Alpha reset 2
+    aml->Write(gtasa + 0x3C708A, (uintptr_t)nop, 4); // Alpha reset
+    aml->Write(gtasa + 0x3C7128, (uintptr_t)nop, 4); // Alpha reset 2
 
     // M16_1stPerson patches
     aml->Write(gtasa + 0x3C4E6A, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
-    //aml->Write(gtasa + 0x3C4E66, (uintptr_t)nop, 4); // Alpha reset
+    aml->Write(gtasa + 0x3C4E66, (uintptr_t)nop, 4); // Alpha reset
 
     // Rocket patches
     aml->Write(gtasa + 0x3C64E2, (uintptr_t)nop, 4); // m_fHorizontalAngle reset
-    //aml->Write(gtasa + 0x3C64D6, (uintptr_t)nop, 4); // Alpha reset
+    aml->Write(gtasa + 0x3C64D6, (uintptr_t)nop, 4); // Alpha reset
 }
 
 void CameraPatchPreload(void* gameHandle)
