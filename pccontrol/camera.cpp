@@ -142,7 +142,7 @@ void CameraPatchOnRender2D()
         float dy = s_fingerDeltaY[s_activeCameraFinger];
 
         float speed = sqrtf(dx * dx + dy * dy);
-        float lerpAmount = 0.45f; // Base smoothing (semakin kecil semakin mulus)
+        float lerpAmount = 0.65f; // Base smoothing (semakin kecil semakin mulus)
 
         if (speed > 10.0f) lerpAmount = 0.85f;      // Gerakan sangat cepat -> Raw
         else if (speed > 2.0f) lerpAmount = 0.65f; // Gerakan sedang -> Balanced
