@@ -15,7 +15,8 @@ PCControlSettings g_pcSettings = {
     20.0f,  // camSensY
     20.5f,  // aimSensX
     10.5f,  // aimSensY
-    15.0f,  // smoothness
+    0.65f,  // smoothness (sekarang lerpAmount)
+    0.035f, // camAcceleration
     1.0f,    // deathListFontSize
     1500.0f, // deathListPosX
     350.0f,  // deathListPosY
@@ -101,6 +102,7 @@ static ConfigEntry* s_camSensY = nullptr;
 static ConfigEntry* s_aimSensX = nullptr;
 static ConfigEntry* s_aimSensY = nullptr;
 static ConfigEntry* s_smoothness = nullptr;
+static ConfigEntry* s_camAccel = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
 static ConfigEntry* s_analogPatch = nullptr;
 static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
@@ -220,7 +222,8 @@ void InitPCControlSettings()
     s_camSensY = cfg->Bind("CamSensY", 1.0f, kSettingsSection);
     s_aimSensX = cfg->Bind("AimSensX", 0.5f, kSettingsSection);
     s_aimSensY = cfg->Bind("AimSensY", 0.5f, kSettingsSection);
-    s_smoothness = cfg->Bind("CameraSmoothness", 0.5f, kSettingsSection);
+    s_smoothness = cfg->Bind("CameraSmoothness", 0.65f, kSettingsSection);
+    s_camAccel = cfg->Bind("CameraAcceleration", 0.035f, kSettingsSection);
 
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
     s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
@@ -398,6 +401,7 @@ void InitPCControlSettings()
     g_pcSettings.aimSensX = s_aimSensX->GetFloat();
     g_pcSettings.aimSensY = s_aimSensY->GetFloat();
     g_pcSettings.smoothness = s_smoothness->GetFloat();
+    g_pcSettings.camAcceleration = s_camAccel->GetFloat();
 
     g_pcSettings.disableNativeCrouch = s_disableNativeCrouch->GetBool();
     g_pcSettings.disableNativeJump = s_disableNativeJump->GetBool();
@@ -608,6 +612,7 @@ void SavePCControlSettings()
     s_aimSensX->SetFloat(g_pcSettings.aimSensX);
     s_aimSensY->SetFloat(g_pcSettings.aimSensY);
     s_smoothness->SetFloat(g_pcSettings.smoothness);
+    s_camAccel->SetFloat(g_pcSettings.camAcceleration);
 
     s_disableNativeCrouch->SetBool(g_pcSettings.disableNativeCrouch);
     s_disableNativeJump->SetBool(g_pcSettings.disableNativeJump);

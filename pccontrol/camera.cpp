@@ -142,10 +142,19 @@ void CameraPatchOnRender2D()
         float dy = s_fingerDeltaY[s_activeCameraFinger];
 
         float speed = sqrtf(dx * dx + dy * dy);
-        float lerpAmount = 0.65f; // Base smoothing (semakin kecil semakin mulus)
 
-        if (speed > 10.0f) lerpAmount = 1.0f;      // Gerakan sangat cepat -> Raw
-        else if (speed > 2.0f) lerpAmount = 0.75f; // Gerakan sedang -> Balanced
+        // Camera Acceleration: Tiered (Lambat, Sedang, Tinggi)
+        float accelRate = g_pcSettings.camAcceleration;
+        if (speed > 8.0f) accelRate *= 2.0f;      // Tinggi
+        else if (speed > 4.0f) accelRate *= 1.5f; // Sedang
+
+        float accel = 1.0f + (speed * accelRate);
+        if (accel > 3.5f) accel = 3.5f;        // Cap maksimal 3.5x
+
+        float lerpAmount = g_pcSettings.smoothness; // Menggantikan base 0.65f
+
+        if (speed > 8.0f) lerpAmount = 1.0f;      // Gerakan sangat cepat -> Raw
+        else if (speed > 4.0f) lerpAmount = 0.75f; // Gerakan sedang -> Balanced
         else if (speed > 0.0f) lerpAmount = 0.45f; // Gerakan halus -> Super Smooth
 
         float dt = *s_timeStep * 0.02f;
@@ -158,7 +167,7 @@ void CameraPatchOnRender2D()
 
         if (fabsf(s_weightedDX) > 0.0001f || fabsf(s_weightedDY) > 0.0001f)
         {
-            float sensMultiplier = 0.00025f;
+            float sensMultiplier = 0.00025f * accel;
             float sensX = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensX : g_pcSettings.camSensX) * sensMultiplier;
             float sensY = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensY : g_pcSettings.camSensY) * sensMultiplier;
 
