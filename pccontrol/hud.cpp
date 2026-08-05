@@ -77,54 +77,80 @@ void RenderImGuiCrosshair() {
     ImDrawList* drawList = ImGui::GetForegroundDrawList();
     if (!drawList) return;
 
+    // Raw PC scaling: 640x448 base
+    float scaleX = io.DisplaySize.x / 640.0f;
+    float scaleY = io.DisplaySize.y / 448.0f;
+
+    // Raw PC position: 0.53f X, 0.4f Y
     float centerX = io.DisplaySize.x * 0.53f;
-    float centerY = io.DisplaySize.y * 0.50f;
+    float centerY = io.DisplaySize.y * 0.40f;
 
     float gunRadius = 0.2f;
     if (GetWeaponRadiusOnScreen) {
         gunRadius = GetWeaponRadiusOnScreen(player);
     }
 
-    float screenScale = io.DisplaySize.y / 448.0f;
-
     if (gpSiteM16 && gpSiteM16->raster) {
-        float texSize = 64.0f * screenScale * (gunRadius / 0.2f);
-        drawList->AddImage(
-            (ImTextureID)gpSiteM16->raster,
-            ImVec2(centerX - texSize * 0.5f, centerY - texSize * 0.5f),
-            ImVec2(centerX + texSize * 0.5f, centerY + texSize * 0.5f)
-        );
+        // Texture size from PC: stretch(64.0 * gunRadius / 2.0)
+        float sizeX = (64.0f * gunRadius / 2.0f) * scaleX;
+        float sizeY = (64.0f * gunRadius / 2.0f) * scaleY;
+
+        // Top Left: (centerX - size, centerY - size) to (centerX, centerY)
+        drawList->AddImage((ImTextureID)gpSiteM16->raster,
+            ImVec2(centerX - sizeX, centerY - sizeY),
+            ImVec2(centerX, centerY),
+            ImVec2(0, 0), ImVec2(1, 1));
+
+        // Top Right: (centerX, centerY - size) to (centerX + size, centerY)
+        drawList->AddImage((ImTextureID)gpSiteM16->raster,
+            ImVec2(centerX, centerY - sizeY),
+            ImVec2(centerX + sizeX, centerY),
+            ImVec2(1, 0), ImVec2(0, 1));
+
+        // Bottom Left: (centerX - size, centerY) to (centerX, centerY + size)
+        drawList->AddImage((ImTextureID)gpSiteM16->raster,
+            ImVec2(centerX - sizeX, centerY),
+            ImVec2(centerX, centerY + sizeY),
+            ImVec2(0, 1), ImVec2(1, 0));
+
+        // Bottom Right: (centerX, centerY) to (centerX + size, centerY + size)
+        drawList->AddImage((ImTextureID)gpSiteM16->raster,
+            ImVec2(centerX, centerY),
+            ImVec2(centerX + sizeX, centerY + sizeY),
+            ImVec2(1, 1), ImVec2(0, 0));
+
         return;
     }
 
-    float baseSize = 64.0f * screenScale;
-    float gap = (baseSize * gunRadius) / 2.0f;
-    float bracketSize = 12.0f * screenScale;
+    float gapX = (64.0f * gunRadius / 2.0f) * scaleX;
+    float gapY = (64.0f * gunRadius / 2.0f) * scaleY;
+    float bracketSizeX = 12.0f * scaleX;
+    float bracketSizeY = 12.0f * scaleY;
 
     ImU32 color = IM_COL32(255, 255, 255, 255);
-    float thickness = 1.5f * screenScale;
+    float thickness = 1.5f * scaleY;
 
     if (gunRadius <= 0.21f) {
         drawList->AddRectFilled(
-            ImVec2(centerX - screenScale, centerY - screenScale),
-            ImVec2(centerX + screenScale, centerY + screenScale),
+            ImVec2(centerX - scaleX, centerY - scaleY),
+            ImVec2(centerX + scaleX, centerY + scaleY),
             color
         );
     }
 
     // Top Left
-    drawList->AddLine(ImVec2(centerX - gap, centerY - gap), ImVec2(centerX - gap + bracketSize, centerY - gap), color, thickness);
-    drawList->AddLine(ImVec2(centerX - gap, centerY - gap), ImVec2(centerX - gap, centerY - gap + bracketSize), color, thickness);
+    drawList->AddLine(ImVec2(centerX - gapX, centerY - gapY), ImVec2(centerX - gapX + bracketSizeX, centerY - gapY), color, thickness);
+    drawList->AddLine(ImVec2(centerX - gapX, centerY - gapY), ImVec2(centerX - gapX, centerY - gapY + bracketSizeY), color, thickness);
 
     // Top Right
-    drawList->AddLine(ImVec2(centerX + gap, centerY - gap), ImVec2(centerX + gap - bracketSize, centerY - gap), color, thickness);
-    drawList->AddLine(ImVec2(centerX + gap, centerY - gap), ImVec2(centerX + gap, centerY - gap + bracketSize), color, thickness);
+    drawList->AddLine(ImVec2(centerX + gapX, centerY - gapY), ImVec2(centerX + gapX - bracketSizeX, centerY - gapY), color, thickness);
+    drawList->AddLine(ImVec2(centerX + gapX, centerY - gapY), ImVec2(centerX + gapX, centerY - gapY + bracketSizeY), color, thickness);
 
     // Bottom Left
-    drawList->AddLine(ImVec2(centerX - gap, centerY + gap), ImVec2(centerX - gap + bracketSize, centerY + gap), color, thickness);
-    drawList->AddLine(ImVec2(centerX - gap, centerY + gap), ImVec2(centerX - gap, centerY + gap - bracketSize), color, thickness);
+    drawList->AddLine(ImVec2(centerX - gapX, centerY + gapY), ImVec2(centerX - gapX + bracketSizeX, centerY + gapY), color, thickness);
+    drawList->AddLine(ImVec2(centerX - gapX, centerY + gapY), ImVec2(centerX - gapX, centerY + gapY - bracketSizeY), color, thickness);
 
     // Bottom Right
-    drawList->AddLine(ImVec2(centerX + gap, centerY + gap), ImVec2(centerX + gap - bracketSize, centerY + gap), color, thickness);
-    drawList->AddLine(ImVec2(centerX + gap, centerY + gap), ImVec2(centerX + gap, centerY + gap - bracketSize), color, thickness);
+    drawList->AddLine(ImVec2(centerX + gapX, centerY + gapY), ImVec2(centerX + gapX - bracketSizeX, centerY + gapY), color, thickness);
+    drawList->AddLine(ImVec2(centerX + gapX, centerY + gapY), ImVec2(centerX + gapX, centerY + gapY - bracketSizeY), color, thickness);
 }
