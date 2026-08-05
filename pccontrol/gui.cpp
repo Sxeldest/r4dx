@@ -64,7 +64,7 @@ void PCControlGUI::drawList()
 
     RenderCustomNametags();
     RenderCustomDeathWindow();
-    RenderImGuiCrosshair();
+    CHud::DrawCrossHairs();
     RenderCustomWidgets();
     DebugUI_Render();
 }

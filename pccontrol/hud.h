@@ -1,3 +1,6 @@
 #pragma once
 
-void RenderImGuiCrosshair();
+class CHud {
+public:
+    static void DrawCrossHairs();
+};
