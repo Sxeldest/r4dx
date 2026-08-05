@@ -20,6 +20,13 @@ struct RwRaster
     RwInt32             originalHeight;
     RwInt32             originalStride;
 };
+
+typedef struct RwTexture RwTexture;
+struct RwTexture
+{
+    RwRaster           *raster;
+};
+
 typedef struct RwImage RwImage;
 struct RwImage
 {

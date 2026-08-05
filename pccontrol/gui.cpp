@@ -7,6 +7,7 @@
 #include "widgetcustom.h"
 #include "playertags.h"
 #include "debug_ui.h"
+#include "hud.h"
 #include "ImGui/imgui.h"
 #include <mod/amlmod.h>
 
@@ -63,6 +64,7 @@ void PCControlGUI::drawList()
 
     RenderCustomNametags();
     RenderCustomDeathWindow();
+    RenderImGuiCrosshair();
     RenderCustomWidgets();
     DebugUI_Render();
 }

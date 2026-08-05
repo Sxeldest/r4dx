@@ -23,6 +23,7 @@
 #include "pccontrol/timecyc.h"
 #include "pccontrol/widgetcustom.h"
 #include "pccontrol/debug_ui.h"
+#include "pccontrol/hud.h"
 #include "SAMP/SAMPManager.h"
 
 MYMODCFG(dexsocy.gtasa.pc.control, GTASA_PC_CONTROL, 1.1, Dexsociety)
@@ -53,8 +54,6 @@ uintptr_t addrProcessWeaponSwitch = 0x4C58A8;
 uintptr_t addrGetTaskUseGun = 0x4C0566;
 uintptr_t addrSAMP_RenderNametag = 0xF18C8;
 uintptr_t addrGetWeaponRadiusOnScreen = 0x4C6978;
-uintptr_t addrCPlayerCrossHair_Render = 0x40C2C8;
-uintptr_t addrCHud_DrawCrossHairs = 0x4371B0;
 uintptr_t addrGetDuck = 0x3FB9EC;
 uintptr_t addrDuckJustDown = 0x3FBA4C;
 uintptr_t addrGetJump = 0x3FBC08;
@@ -87,11 +86,11 @@ DECL_HOOK(int, IsPinchZooming, int a1, int a2, int a3);
 DECL_HOOK(bool, InitRenderware);
 DECL_HOOKv(Render2DStuff);
 DECL_HOOKv(OnTouchEvent, int type, int fingerId, int x, int y);
-DECL_HOOKv(SAMP_RenderNametag, int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk);
-DECL_HOOK(float, GetWeaponRadiusOnScreen, void* self);
-DECL_HOOKv(CPlayerCrossHair_Render, void* self, int playerIdx);
-DECL_HOOKv(CHud_DrawCrossHairs);
-DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
+extern "C" {
+    DECL_HOOKv(SAMP_RenderNametag, int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk);
+    DECL_HOOK(float, GetWeaponRadiusOnScreen, void* self);
+    DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
+}
 DECL_HOOKv(RenderOneXLUSprite_Rotate_Aspect, float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a);
 DECL_HOOK(int, CAnimBlendAssociation_UpdateTime, void* self, float time1, float time2);
 int (*GetTaskUseGun)(void* self);
@@ -112,8 +111,11 @@ const float Z_WALK_MAX = 80.0f;
 const float Z_VISUAL_RUN = 127.0f;
 
 // Global Variables
-void* (*FindPlayerPed)(int);
-void (*SetMoveState)(void* self, int state);
+extern "C" {
+    void* (*FindPlayerPed)(int) = nullptr;
+    CCamera* pTheCamera = nullptr;
+}
+
 void (*ClearWeaponTarget)(void* self);
 
 static uint32_t g_lastFireTime = 0;
@@ -162,8 +164,6 @@ RwReal* recipNearClip = nullptr;
 void (*SetScissorRect)(float*) = nullptr;
 static bool g_imguiInitialized = false;
 static CWidget** g_touchWidgets = nullptr;
-
-static CCamera* pTheCamera = nullptr;
 
 // Utility Functions
 uint32_t GetTickCountMs()
@@ -1008,7 +1008,7 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
     }
 }
 
-void HookOf_SAMP_RenderNametag(int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk)
+extern "C" void HookOf_SAMP_RenderNametag(int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk)
 {
     if (name) snprintf(g_szDebugNametag, sizeof(g_szDebugNametag), "Name: %s | ID: %d | Dist: %.1f", name, a2, dist);
 
@@ -1040,89 +1040,18 @@ void HookOf_SAMP_RenderNametag(int** a1, int a2, float* pos3D, char* name, int c
     SAMP_RenderNametag(a1, a2, pos3D, name, color, dist, health, armor, afk);
 }
 
-float HookOf_GetWeaponRadiusOnScreen(void* self)
+extern "C" float HookOf_GetWeaponRadiusOnScreen(void* self)
 {
-    float r = GetWeaponRadiusOnScreen(self);
-    if (g_pcSettings.chEnabled)
-    {
-        // GTA SA default min radius is usually 0.2
-        float minR = 0.2f;
-        if (r < minR) r = minR;
-
-        // Apply idle size to the base (minR)
-        // and expansion multiplier to the dynamic part (r - minR)
-        r = (minR * g_pcSettings.chExpansionIdle) + ((r - minR) * g_pcSettings.chExpansionMax);
-
-        // Apply global size
-        r *= g_pcSettings.chSize;
-    }
-    return r;
+    return GetWeaponRadiusOnScreen(self);
 }
 
-static bool g_inCrosshairRender = false;
-void HookOf_CPlayerCrossHair_Render(void* self, int playerIdx)
+extern "C" void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
 {
-    if (g_pcSettings.chEnabled && self)
-    {
-        g_inCrosshairRender = true;
-        float* fSelf = (float*)self;
-        float oldX = fSelf[1]; // Offset 4
-        float oldY = fSelf[2]; // Offset 8
-
-        // The internal crosshair offsets are typically in a small range (-0.9 to 0.9)
-        // We scale our pixel-like offset to this range.
-        fSelf[1] += g_pcSettings.chPosX * 0.002f;
-        fSelf[2] += g_pcSettings.chPosY * 0.002f;
-
-        CPlayerCrossHair_Render(self, playerIdx);
-
-        fSelf[1] = oldX;
-        fSelf[2] = oldY;
-        g_inCrosshairRender = false;
-    }
-    else
-    {
-        CPlayerCrossHair_Render(self, playerIdx);
-    }
-}
-
-static bool g_inHudCrosshairDraw = false;
-void HookOf_CHud_DrawCrossHairs()
-{
-    g_inHudCrosshairDraw = true;
-    CHud_DrawCrossHairs();
-    g_inHudCrosshairDraw = false;
-}
-
-void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
-{
-    if (g_inHudCrosshairDraw && g_pcSettings.chEnabled && rect)
-    {
-        float* fRect = (float*)rect;
-        float w = fRect[2] - fRect[0];
-        float h = fRect[1] - fRect[3];
-        float centerX = (fRect[0] + fRect[2]) * 0.5f;
-        float centerY = (fRect[1] + fRect[3]) * 0.5f;
-        float newW = w * g_pcSettings.chSize;
-        float newH = h * g_pcSettings.chSize;
-        centerX += g_pcSettings.chPosX;
-        centerY += g_pcSettings.chPosY;
-        fRect[0] = centerX - newW * 0.5f;
-        fRect[2] = centerX + newW * 0.5f;
-        fRect[3] = centerY - newW * 0.5f; // Wait, this should be height based? centerY - newH * 0.5f
-        fRect[1] = centerY + newH * 0.5f;
-    }
     CSprite2d_Draw(self, rect, rgba);
 }
 
 void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a)
 {
-    if (g_inCrosshairRender && g_pcSettings.chEnabled)
-    {
-        w *= g_pcSettings.chSize;
-        h *= g_pcSettings.chSize;
-    }
-
     RenderOneXLUSprite_Rotate_Aspect(x, y, z, w, h, r, g, b, intensity, rotation, aspect, a);
 }
 
@@ -1247,16 +1176,12 @@ extern "C" void OnModLoad()
 
         GetTaskUseGun = (int (*)(void*))(gtasa + addrGetTaskUseGun + 1);
         FindPlayerPed = (void* (*)(int))(aml->GetSym(pGameHandle, "_Z13FindPlayerPedi"));
-        SetMoveState = (void (*)(void*, int))(aml->GetSym(pGameHandle, "_ZN4CPed12SetMoveStateE10eMoveState"));
-        if (!SetMoveState) SetMoveState = (void (*)(void*, int))(gtasa + 0x3639A4 + 1);
         ClearWeaponTarget = (void (*)(void*))(aml->GetSym(pGameHandle, "_ZN10CPlayerPed17ClearWeaponTargetEv"));
         if (!ClearWeaponTarget) ClearWeaponTarget = (void (*)(void*))(gtasa + addrClearWeaponTarget + 1);
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
         HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
 
         HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
-        HOOK(CPlayerCrossHair_Render, gtasa + addrCPlayerCrossHair_Render + 1);
-        HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");

@@ -191,14 +191,6 @@ struct PCControlSettings
     bool ntEnableScaling;
     bool ntLuaSource; // Use Lua as data source
 
-    // Crosshair Settings
-    bool chEnabled;
-    float chSize;
-    float chPosX;
-    float chPosY;
-    float chExpansionMax;
-    float chExpansionIdle;
-
     float macroShoot1Delay;
     int macroShootMode; // 0: Auto Exit, 1: Stuck (Toggle)
 

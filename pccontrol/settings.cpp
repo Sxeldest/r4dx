@@ -70,14 +70,6 @@ PCControlSettings g_pcSettings = {
     true,   // ntEnableScaling
     false,  // ntLuaSource
 
-    // Crosshair Settings
-    false,  // chEnabled
-    1.0f,   // chSize
-    0.0f,   // chPosX
-    0.0f,   // chPosY
-    1.0f,   // chExpansionMax
-    1.0f,   // chExpansionIdle
-
     50.0f,  // macroShoot1Delay
     0,      // macroShootMode
 
@@ -173,13 +165,6 @@ static ConfigEntry* s_ntScaleMultiplier = nullptr;
 static ConfigEntry* s_ntDistanceYOffset = nullptr;
 static ConfigEntry* s_ntEnableScaling = nullptr;
 static ConfigEntry* s_ntLuaSource = nullptr;
-
-static ConfigEntry* s_chEnabled = nullptr;
-static ConfigEntry* s_chSize = nullptr;
-static ConfigEntry* s_chPosX = nullptr;
-static ConfigEntry* s_chPosY = nullptr;
-static ConfigEntry* s_chExpansionMax = nullptr;
-static ConfigEntry* s_chExpansionIdle = nullptr;
 
 static ConfigEntry* s_macroShoot1Delay = nullptr;
 static ConfigEntry* s_macroShootMode = nullptr;
@@ -368,13 +353,6 @@ void InitPCControlSettings()
     s_ntEnableScaling = cfg->Bind("EnableScaling", true, kNametagSection);
     s_ntLuaSource = cfg->Bind("LuaSource", false, kNametagSection);
 
-    s_chEnabled = cfg->Bind("Enabled", false, "Crosshair");
-    s_chSize = cfg->Bind("Size", 1.0f, "Crosshair");
-    s_chPosX = cfg->Bind("PosX", 0.0f, "Crosshair");
-    s_chPosY = cfg->Bind("PosY", 0.0f, "Crosshair");
-    s_chExpansionMax = cfg->Bind("ExpansionMax", 1.0f, "Crosshair");
-    s_chExpansionIdle = cfg->Bind("ExpansionIdle", 1.0f, "Crosshair");
-
     s_macroShoot1Delay = cfg->Bind("MacroShoot1Delay", 50.0f, kSettingsSection);
     s_macroShootMode = cfg->Bind("MacroShootMode", 0, kSettingsSection);
 
@@ -463,13 +441,6 @@ void InitPCControlSettings()
     g_pcSettings.ntDistanceYOffset = s_ntDistanceYOffset->GetFloat();
     g_pcSettings.ntEnableScaling = s_ntEnableScaling->GetBool();
     g_pcSettings.ntLuaSource = s_ntLuaSource->GetBool();
-
-    g_pcSettings.chEnabled = s_chEnabled->GetBool();
-    g_pcSettings.chSize = s_chSize->GetFloat();
-    g_pcSettings.chPosX = s_chPosX->GetFloat();
-    g_pcSettings.chPosY = s_chPosY->GetFloat();
-    g_pcSettings.chExpansionMax = s_chExpansionMax->GetFloat();
-    g_pcSettings.chExpansionIdle = s_chExpansionIdle->GetFloat();
 
     g_pcSettings.macroShoot1Delay = s_macroShoot1Delay->GetFloat();
     g_pcSettings.macroShootMode = s_macroShootMode->GetInt();
@@ -664,13 +635,6 @@ void SavePCControlSettings()
     s_ntDistanceYOffset->SetFloat(g_pcSettings.ntDistanceYOffset);
     s_ntEnableScaling->SetBool(g_pcSettings.ntEnableScaling);
     s_ntLuaSource->SetBool(g_pcSettings.ntLuaSource);
-
-    s_chEnabled->SetBool(g_pcSettings.chEnabled);
-    s_chSize->SetFloat(g_pcSettings.chSize);
-    s_chPosX->SetFloat(g_pcSettings.chPosX);
-    s_chPosY->SetFloat(g_pcSettings.chPosY);
-    s_chExpansionMax->SetFloat(g_pcSettings.chExpansionMax);
-    s_chExpansionIdle->SetFloat(g_pcSettings.chExpansionIdle);
 
     s_macroShoot1Delay->SetFloat(g_pcSettings.macroShoot1Delay);
     s_macroShootMode->SetInt(g_pcSettings.macroShootMode);
