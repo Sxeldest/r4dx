@@ -53,6 +53,7 @@ uintptr_t addrCalcTextSize = 0x12B090;
 uintptr_t addrProcessWeaponSwitch = 0x4C58A8;
 uintptr_t addrGetTaskUseGun = 0x4C0566;
 uintptr_t addrSAMP_RenderNametag = 0xF18C8;
+uintptr_t addrCHud_DrawCrossHairs = 0x4371B0;
 uintptr_t addrGetWeaponRadiusOnScreen = 0x4C6978;
 uintptr_t addrGetDuck = 0x3FB9EC;
 uintptr_t addrDuckJustDown = 0x3FBA4C;
@@ -95,6 +96,7 @@ DECL_HOOKv(RenderOneXLUSprite_Rotate_Aspect, float x, float y, float z, float w,
 DECL_HOOK(int, CAnimBlendAssociation_UpdateTime, void* self, float time1, float time2);
 int (*GetTaskUseGun)(void* self);
 DECL_HOOK(int, ProcessWeaponSwitch, void* self, void* pad);
+DECL_HOOKv(CHud_DrawCrossHairs);
 DECL_HOOKv(ButtonPanel_Render, void* self, void* a2);
 DECL_HOOKv(ButtonPanel_OnTouchEvent, void* self, int type, int x, int y);
 DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
@@ -1050,6 +1052,11 @@ extern "C" void HookOf_CSprite2d_Draw(void* self, void* rect, void* rgba)
     CSprite2d_Draw(self, rect, rgba);
 }
 
+void HookOf_CHud_DrawCrossHairs()
+{
+    // Do nothing to disable default crosshair
+}
+
 void HookOf_RenderOneXLUSprite_Rotate_Aspect(float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a)
 {
     RenderOneXLUSprite_Rotate_Aspect(x, y, z, w, h, r, g, b, intensity, rotation, aspect, a);
@@ -1181,6 +1188,7 @@ extern "C" void OnModLoad()
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
         HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
 
+        HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
