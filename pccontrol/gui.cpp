@@ -8,6 +8,7 @@
 #include "playertags.h"
 #include "debug_ui.h"
 #include "hud.h"
+#include "font.h"
 #include "ImGui/imgui.h"
 #include <mod/amlmod.h>
 
@@ -52,6 +53,8 @@ bool PCControlGUI::initialize()
         FindPlayerVehicle = (uintptr_t (*)(int, bool))aml->GetSym(gtasa, "_Z17FindPlayerVehicleib");
     }
 
+    CFont::Initialise();
+
     return true;
 }
 
@@ -64,7 +67,7 @@ void PCControlGUI::drawList()
 
     RenderCustomNametags();
     RenderCustomDeathWindow();
-    CHud::DrawCrossHairs();
+    CHud::Draw();
     RenderCustomWidgets();
     DebugUI_Render();
 }

@@ -6,6 +6,7 @@ LOCAL_MODULE    := PC_Control
 LOCAL_SRC_FILES := \
     main.cpp \
     pccontrol/hud.cpp \
+    pccontrol/font.cpp \
     pccontrol/settings.cpp \
     pccontrol/menu.cpp \
     pccontrol/deathlist.cpp \
