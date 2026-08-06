@@ -89,8 +89,8 @@ uint8_t CFont::FindSubFontCharacter(uint8_t letterId, uint8_t fontStyle) {
             case 14: return 207;
             case 26: return 154;
         }
+        if (letterId >= 16 && letterId <= 25) return letterId + 128;
     }
-    if (letterId >= 16 && letterId <= 25)  return letterId + 128;
     return letterId;
 }
 
@@ -104,7 +104,7 @@ void CFont::GetUVs(uint8_t character, uint8_t fontStyle, float& u1, float& v1, f
 
 float CFont::GetCharacterWidth(uint8_t character, uint8_t fontStyle, float scaleX, bool proportional) {
     uint8_t id = FindSubFontCharacter(character, fontStyle);
-    uint8_t fontIdx = (fontStyle == FONT_PRICEDOWN) ? 1 : 0;
+    uint8_t fontIdx = (fontStyle == FONT_GOTHIC) ? 0 : 1;
     float baseWidth = proportional ? (float)gFontData[fontIdx].m_propValues[id] : (float)gFontData[fontIdx].m_unpropValue;
 
     // gtapc: (m_unpropValue + m_nFontOutlineSize) * m_Scale.x

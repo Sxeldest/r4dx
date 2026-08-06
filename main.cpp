@@ -1220,8 +1220,8 @@ extern "C" void OnModLoad()
     if (hSAMP)
     {
         HOOK(SampOnInputEnd, hSAMP + addrSampOnInputEnd + 1);
-        HOOK(RenderText, hSAMP + addrRenderText + 1);
-        HOOK(CalcTextSize, hSAMP + addrCalcTextSize + 1);
+        //HOOK(RenderText, hSAMP + addrRenderText + 1);
+        //HOOK(CalcTextSize, hSAMP + addrCalcTextSize + 1);
 
         HOOK(SAMP_RenderNametag, hSAMP + addrSAMP_RenderNametag + 1);
         DeathListHookLoad(hSAMP, false);
