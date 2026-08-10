@@ -88,9 +88,9 @@ DECL_HOOK(bool, InitRenderware);
 DECL_HOOKv(Render2DStuff);
 DECL_HOOKv(OnTouchEvent, int type, int fingerId, int x, int y);
 extern "C" {
-    DECL_HOOKv(SAMP_RenderNametag, int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk);
-    DECL_HOOK(float, GetWeaponRadiusOnScreen, void* self);
-    DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
+DECL_HOOKv(SAMP_RenderNametag, int** a1, int a2, float* pos3D, char* name, int color, float dist, float health, float armor, int afk);
+DECL_HOOK(float, GetWeaponRadiusOnScreen, void* self);
+DECL_HOOKv(CSprite2d_Draw, void* self, void* rect, void* rgba);
 }
 DECL_HOOKv(RenderOneXLUSprite_Rotate_Aspect, float x, float y, float z, float w, float h, uint8_t r, uint8_t g, uint8_t b, int16_t intensity, float rotation, float aspect, uint8_t a);
 DECL_HOOK(int, CAnimBlendAssociation_UpdateTime, void* self, float time1, float time2);
@@ -103,6 +103,7 @@ DECL_HOOKv(ProcessPlayerWeapon, void* self, void* ped);
 
 DECL_HOOKv(emu_GammaSet, uint8_t gamma);
 DECL_HOOKv(CalculateAspectRatio, void* self);
+DECL_HOOKv(emu_DistanceFogSetup, float start, float end, float r, float g, float b);
 
 // Constants
 const int Z_SPRINT_DOUBLE_TAP_BOOST = 4;
@@ -114,8 +115,8 @@ const float Z_VISUAL_RUN = 127.0f;
 
 // Global Variables
 extern "C" {
-    void* (*FindPlayerPed)(int) = nullptr;
-    CCamera* pTheCamera = nullptr;
+void* (*FindPlayerPed)(int) = nullptr;
+CCamera* pTheCamera = nullptr;
 }
 
 void (*ClearWeaponTarget)(void* self);
@@ -1132,6 +1133,16 @@ int HookOf_ProcessWeaponSwitch(void* self, void* pad)
     return ProcessWeaponSwitch(self, pad);
 }
 
+void HookOf_emu_DistanceFogSetup(float start, float end, float r, float g, float b)
+{
+    if (g_pcSettings.enableDistanceOverrides)
+    {
+        start = g_pcSettings.fogStart;
+        end = g_pcSettings.fogDistance;
+    }
+    emu_DistanceFogSetup(start, end, r, g, b);
+}
+
 extern "C" void OnModPreLoad()
 {
     g_gtasa = aml->GetLib("libGTASA.so");
@@ -1194,6 +1205,9 @@ extern "C" void OnModLoad()
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
+
+        uintptr_t distanceFogSetup = aml->GetSym(pGameHandle, "_Z20emu_DistanceFogSetupfffff");
+        if (distanceFogSetup) HOOK(emu_DistanceFogSetup, distanceFogSetup);
 
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
         HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));

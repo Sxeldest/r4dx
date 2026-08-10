@@ -5,87 +5,88 @@
 #include <string.h>
 
 PCControlSettings g_pcSettings = {
-    false, // showMenu
-    true,  // enableCameraPatch
-    false, // disableNativeCrouch
-    false, // disableNativeJump
-    true,  // enableAnalogPatch
-    true,  // enableSprintDoubleTapBoost
-    30.0f,  // camSensX
-    20.0f,  // camSensY
-    20.5f,  // aimSensX
-    10.5f,  // aimSensY
-    0.65f,  // smoothness (sekarang lerpAmount)
-    0.035f, // camAcceleration
-    1.0f,    // deathListFontSize
-    1500.0f, // deathListPosX
-    350.0f,  // deathListPosY
-    5.0f,    // deathListSpacing
-    120.0f,  // deathListBoxWidth
-    40.0f,   // deathListBoxHeight
-    30.0f,   // deathListIconSize
-    5.0f,    // deathListIconPadding
-    1.0f,    // customWidgetOpacity
-    {},    // widgets (all false/zero)
-    {},    // widgetSlots
-    0,     // activeWidgetSlot
-    0,     // selectedWidget
-    false, // disableLookBehind
-    false, // disablePinchZoom
-    false, // hideCustomWidgets
+        false, // showMenu
+        true,  // enableCameraPatch
+        false, // disableNativeCrouch
+        false, // disableNativeJump
+        true,  // enableAnalogPatch
+        true,  // enableSprintDoubleTapBoost
+        30.0f,  // camSensX
+        20.0f,  // camSensY
+        20.5f,  // aimSensX
+        10.5f,  // aimSensY
+        0.65f,  // smoothness (sekarang lerpAmount)
+        0.035f, // camAcceleration
+        1.0f,    // deathListFontSize
+        1500.0f, // deathListPosX
+        350.0f,  // deathListPosY
+        5.0f,    // deathListSpacing
+        120.0f,  // deathListBoxWidth
+        40.0f,   // deathListBoxHeight
+        30.0f,   // deathListIconSize
+        5.0f,    // deathListIconPadding
+        1.0f,    // customWidgetOpacity
+        {},    // widgets (all false/zero)
+        {},    // widgetSlots
+        0,     // activeWidgetSlot
+        0,     // selectedWidget
+        false, // disableLookBehind
+        false, // disablePinchZoom
+        false, // hideCustomWidgets
 
-    100.0f, // menuPosX
-    100.0f, // menuPosY
-    650.0f, // menuWidth
-    550.0f, // menuHeight
-    0.85f,  // menuFontScale
-    
-    0.26f,  // accent R
-    0.59f,  // accent G
-    0.98f,  // accent B
-    
-    0.95f,  // bg opacity
-    8.0f,   // rounding
-    false,  // enableCustomNametags
-    false,  // debugObjectId
+        100.0f, // menuPosX
+        100.0f, // menuPosY
+        650.0f, // menuWidth
+        550.0f, // menuHeight
+        0.85f,  // menuFontScale
 
-    // Custom Nametags
-    18.0f,  // ntFontSize
-    60.0f,  // ntBarWidth
-    5.0f,   // ntBarHeight
-    1.0f,   // ntBarOutline
-    2.0f,   // ntBarGap
-    2.0f,   // ntNameBarGap
-    0.0f,   // ntPosXOffset
-    0.0f,   // ntPosYOffset
-    {0.741f, 0.129f, 0.145f, 1.0f}, // ntHPColor
-    {0.803f, 0.803f, 0.803f, 1.0f}, // ntAPColor
-    true,   // ntShowHP
-    true,   // ntShowAP
-    1,      // ntFontOutlineType (Shadow)
-    1.0f,   // ntFontOutlineSize
-    60.0f,  // ntDrawDistance
-    1.0f,   // ntScaleMultiplier
-    1.0f,   // ntDistanceYOffset (3D Height Correction)
-    true,   // ntEnableScaling
-    false,  // ntLuaSource
+        0.26f,  // accent R
+        0.59f,  // accent G
+        0.98f,  // accent B
 
-    50.0f,  // macroShoot1Delay
-    0,      // macroShootMode
+        0.95f,  // bg opacity
+        8.0f,   // rounding
+        false,  // enableCustomNametags
+        false,  // debugObjectId
 
-    // Button Panel Settings
-    false,  // bpEnabled
+        // Custom Nametags
+        18.0f,  // ntFontSize
+        60.0f,  // ntBarWidth
+        5.0f,   // ntBarHeight
+        1.0f,   // ntBarOutline
+        2.0f,   // ntBarGap
+        2.0f,   // ntNameBarGap
+        0.0f,   // ntPosXOffset
+        0.0f,   // ntPosYOffset
+        {0.741f, 0.129f, 0.145f, 1.0f}, // ntHPColor
+        {0.803f, 0.803f, 0.803f, 1.0f}, // ntAPColor
+        true,   // ntShowHP
+        true,   // ntShowAP
+        1,      // ntFontOutlineType (Shadow)
+        1.0f,   // ntFontOutlineSize
+        60.0f,  // ntDrawDistance
+        1.0f,   // ntScaleMultiplier
+        1.0f,   // ntDistanceYOffset (3D Height Correction)
+        true,   // ntEnableScaling
+        false,  // ntLuaSource
 
-    false,  // enableAutoRun
-    true,   // disableHudGamma
-    false,  // enableGepengHud
-    8,      // sprintProtectEntryFrames
-    12,     // sprintProtectExitFrames
-    5,      // sprintProtectExitDelayFrames
-    false,  // enableDistanceOverrides
-    1000.0f, // drawDistance
-    500.0f,  // fogDistance
-    1.0f,    // lodDistance
+        50.0f,  // macroShoot1Delay
+        0,      // macroShootMode
+
+        // Button Panel Settings
+        false,  // bpEnabled
+
+        false,  // enableAutoRun
+        true,   // disableHudGamma
+        false,  // enableGepengHud
+        8,      // sprintProtectEntryFrames
+        12,     // sprintProtectExitFrames
+        5,      // sprintProtectExitDelayFrames
+        false,  // enableDistanceOverrides
+        1000.0f, // drawDistance
+        500.0f,  // fogDistance
+        10.0f,   // fogStart
+        1.0f,    // lodDistance
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -184,6 +185,7 @@ static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
 static ConfigEntry* s_enableDistanceOverrides = nullptr;
 static ConfigEntry* s_drawDistance = nullptr;
 static ConfigEntry* s_fogDistance = nullptr;
+static ConfigEntry* s_fogStart = nullptr;
 static ConfigEntry* s_lodDistance = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
@@ -333,11 +335,11 @@ void InitPCControlSettings()
     s_menuWidth = cfg->Bind("MenuWidth", 650.0f, kSettingsSection);
     s_menuHeight = cfg->Bind("MenuHeight", 550.0f, kSettingsSection);
     s_menuFontScale = cfg->Bind("MenuFontScale", 0.85f, kSettingsSection);
-    
+
     s_menuAccentR = cfg->Bind("MenuAccentR", 0.26f, kSettingsSection);
     s_menuAccentG = cfg->Bind("MenuAccentG", 0.59f, kSettingsSection);
     s_menuAccentB = cfg->Bind("MenuAccentB", 0.98f, kSettingsSection);
-    
+
     s_menuBgOpacity = cfg->Bind("MenuBgOpacity", 0.95f, kSettingsSection);
     s_menuRounding = cfg->Bind("MenuRounding", 8.0f, kSettingsSection);
     s_enableCustomNametags = cfg->Bind("EnableCustomNametags", false, kNametagSection);
@@ -376,6 +378,7 @@ void InitPCControlSettings()
     s_enableDistanceOverrides = cfg->Bind("EnableDistanceOverrides", false, kSettingsSection);
     s_drawDistance = cfg->Bind("DrawDistance", 1000.0f, kSettingsSection);
     s_fogDistance = cfg->Bind("FogDistance", 500.0f, kSettingsSection);
+    s_fogStart = cfg->Bind("FogStart", 10.0f, kSettingsSection);
     s_lodDistance = cfg->Bind("LodDistance", 1.0f, kSettingsSection);
 
     for (int i = 0; i < 4; ++i) {
@@ -427,11 +430,11 @@ void InitPCControlSettings()
     g_pcSettings.menuWidth = s_menuWidth->GetFloat();
     g_pcSettings.menuHeight = s_menuHeight->GetFloat();
     g_pcSettings.menuFontScale = s_menuFontScale->GetFloat();
-    
+
     g_pcSettings.menuAccentR = s_menuAccentR->GetFloat();
     g_pcSettings.menuAccentG = s_menuAccentG->GetFloat();
     g_pcSettings.menuAccentB = s_menuAccentB->GetFloat();
-    
+
     g_pcSettings.menuBgOpacity = s_menuBgOpacity->GetFloat();
     g_pcSettings.menuRounding = s_menuRounding->GetFloat();
     g_pcSettings.enableCustomNametags = s_enableCustomNametags->GetBool();
@@ -470,6 +473,7 @@ void InitPCControlSettings()
     g_pcSettings.enableDistanceOverrides = s_enableDistanceOverrides->GetBool();
     g_pcSettings.drawDistance = s_drawDistance->GetFloat();
     g_pcSettings.fogDistance = s_fogDistance->GetFloat();
+    g_pcSettings.fogStart = s_fogStart->GetFloat();
     g_pcSettings.lodDistance = s_lodDistance->GetFloat();
 
     for (int i = 0; i < MAX_MACROS; ++i)
@@ -626,11 +630,11 @@ void SavePCControlSettings()
     s_menuWidth->SetFloat(g_pcSettings.menuWidth);
     s_menuHeight->SetFloat(g_pcSettings.menuHeight);
     s_menuFontScale->SetFloat(g_pcSettings.menuFontScale);
-    
+
     s_menuAccentR->SetFloat(g_pcSettings.menuAccentR);
     s_menuAccentG->SetFloat(g_pcSettings.menuAccentG);
     s_menuAccentB->SetFloat(g_pcSettings.menuAccentB);
-    
+
     s_menuBgOpacity->SetFloat(g_pcSettings.menuBgOpacity);
     s_menuRounding->SetFloat(g_pcSettings.menuRounding);
     s_enableCustomNametags->SetBool(g_pcSettings.enableCustomNametags);
@@ -669,6 +673,7 @@ void SavePCControlSettings()
     s_enableDistanceOverrides->SetBool(g_pcSettings.enableDistanceOverrides);
     s_drawDistance->SetFloat(g_pcSettings.drawDistance);
     s_fogDistance->SetFloat(g_pcSettings.fogDistance);
+    s_fogStart->SetFloat(g_pcSettings.fogStart);
     s_lodDistance->SetFloat(g_pcSettings.lodDistance);
 
     for (int i = 0; i < MAX_MACROS; ++i)

@@ -160,11 +160,11 @@ struct PCControlSettings
     float menuWidth;
     float menuHeight;
     float menuFontScale;
-    
+
     float menuAccentR;
     float menuAccentG;
     float menuAccentB;
-    
+
     float menuBgOpacity;
     float menuRounding;
     bool enableCustomNametags;
@@ -207,6 +207,7 @@ struct PCControlSettings
     bool enableDistanceOverrides;
     float drawDistance;
     float fogDistance;
+    float fogStart;
     float lodDistance;
 
     CustomMacro macros[MAX_MACROS];

@@ -297,12 +297,13 @@ void ApplyTimecycOverrides()
     {
         if (pCurrentColours)
         {
+            // Set FarClip to draw distance so objects are not culled by RW
             pCurrentColours->m_fFarClip = g_pcSettings.drawDistance;
-            pCurrentColours->m_fFogStart = g_pcSettings.fogDistance;
             pCurrentColours->m_fLodDistMult = g_pcSettings.lodDistance;
         }
         if (pFarClipPlane)
         {
+            // Set Renderer far clip for software culling
             *pFarClipPlane = g_pcSettings.drawDistance;
         }
         if (pTheCamera)

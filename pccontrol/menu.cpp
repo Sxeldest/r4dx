@@ -31,9 +31,9 @@ static void SetupModernStyle()
     style.WindowRounding = g_pcSettings.menuRounding;
 
     style.ChildRounding =
-        (g_pcSettings.menuRounding > 2.0f)
-        ? g_pcSettings.menuRounding - 2.0f
-        : 0.0f;
+            (g_pcSettings.menuRounding > 2.0f)
+            ? g_pcSettings.menuRounding - 2.0f
+            : 0.0f;
 
     style.FrameRounding = 8.0f;
     style.TabRounding = 6.0f;
@@ -54,49 +54,49 @@ static void SetupModernStyle()
     style.SelectableTextAlign = ImVec2(0.0f, 0.5f);
 
     colors[ImGuiCol_WindowBg] =
-        ImVec4(0.11f, 0.11f, 0.14f, g_pcSettings.menuBgOpacity);
+            ImVec4(0.11f, 0.11f, 0.14f, g_pcSettings.menuBgOpacity);
 
     colors[ImGuiCol_ChildBg] =
-        ImVec4(0.14f, 0.14f, 0.17f, 0.60f);
+            ImVec4(0.14f, 0.14f, 0.17f, 0.60f);
 
     colors[ImGuiCol_Button] =
-        ImVec4(r, g, b, 0.40f);
+            ImVec4(r, g, b, 0.40f);
 
     colors[ImGuiCol_ButtonHovered] =
-        ImVec4(r, g, b, 1.00f);
+            ImVec4(r, g, b, 1.00f);
 
     colors[ImGuiCol_ButtonActive] =
-        ImVec4(r, g, b, 0.80f);
+            ImVec4(r, g, b, 0.80f);
 
     colors[ImGuiCol_CheckMark] =
-        ImVec4(r, g, b, 1.00f);
+            ImVec4(r, g, b, 1.00f);
 
     colors[ImGuiCol_Header] =
-        ImVec4(r, g, b, 0.31f);
+            ImVec4(r, g, b, 0.31f);
 
     colors[ImGuiCol_HeaderHovered] =
-        ImVec4(r, g, b, 0.80f);
+            ImVec4(r, g, b, 0.80f);
 
     colors[ImGuiCol_HeaderActive] =
-        ImVec4(r, g, b, 1.00f);
+            ImVec4(r, g, b, 1.00f);
 
     colors[ImGuiCol_Tab] =
-        ImVec4(r * 0.7f, g * 0.7f, b * 0.7f, 0.86f);
+            ImVec4(r * 0.7f, g * 0.7f, b * 0.7f, 0.86f);
 
     colors[ImGuiCol_TabHovered] =
-        ImVec4(r, g, b, 0.80f);
+            ImVec4(r, g, b, 0.80f);
 
     colors[ImGuiCol_TabActive] =
-        ImVec4(r * 0.8f, g * 0.8f, b * 0.8f, 1.00f);
+            ImVec4(r * 0.8f, g * 0.8f, b * 0.8f, 1.00f);
 
     colors[ImGuiCol_FrameBg] =
-        ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+            ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
 
     colors[ImGuiCol_FrameBgHovered] =
-        ImVec4(0.24f, 0.24f, 0.30f, 1.00f);
+            ImVec4(0.24f, 0.24f, 0.30f, 1.00f);
 
     colors[ImGuiCol_FrameBgActive] =
-        ImVec4(0.28f, 0.28f, 0.35f, 1.00f);
+            ImVec4(0.28f, 0.28f, 0.35f, 1.00f);
 
     // Apply scaling to all sizes and global font scale
     style.ScaleAllSizes(safeScale);
@@ -295,13 +295,13 @@ void RenderPCControlMenu()
     g_isWidgetsTabActive = false; // Reset every frame
     bool changed = false;
     ImGui::SetNextWindowPos(
-        ImVec2(g_pcSettings.menuPosX, g_pcSettings.menuPosY),
-        ImGuiCond_FirstUseEver
+            ImVec2(g_pcSettings.menuPosX, g_pcSettings.menuPosY),
+            ImGuiCond_FirstUseEver
     );
-    
+
     ImGui::SetNextWindowSize(
-        ImVec2(g_pcSettings.menuWidth, g_pcSettings.menuHeight),
-        ImGuiCond_FirstUseEver
+            ImVec2(g_pcSettings.menuWidth, g_pcSettings.menuHeight),
+            ImGuiCond_FirstUseEver
     );
     // Add NoNav flag to prevent issues with focus in some environments
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
@@ -309,20 +309,20 @@ void RenderPCControlMenu()
     if (ImGui::Begin("Dexsociety Menu", &g_pcSettings.showMenu, flags))
     {
         float safeScale = g_pcSettings.menuFontScale;
-        
+
         if (safeScale < 0.6f)
             safeScale = 0.6f;
-        
+
         if (safeScale > 1.5f)
             safeScale = 1.5f;
-        
+
         // Font scale is now handled globally via FontGlobalScale in SetupModernStyle
         ImVec2 winPos = ImGui::GetWindowPos();
         ImVec2 winSize = ImGui::GetWindowSize();
-        
+
         g_pcSettings.menuPosX = winPos.x;
         g_pcSettings.menuPosY = winPos.y;
-        
+
         g_pcSettings.menuWidth = winSize.x;
         g_pcSettings.menuHeight = winSize.y; // Slightly larger for better readability
 
@@ -412,10 +412,10 @@ void RenderPCControlMenu()
             {
                 g_isWidgetsTabActive = true;
                 ImGui::BeginChild(
-                    "WidgetsScroll",
-                    ImVec2(0, 0),
-                    false,
-                    ImGuiWindowFlags_AlwaysVerticalScrollbar
+                        "WidgetsScroll",
+                        ImVec2(0, 0),
+                        false,
+                        ImGuiWindowFlags_AlwaysVerticalScrollbar
                 );
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Widget Manager");
                 ImGui::Separator();
@@ -650,8 +650,8 @@ void RenderPCControlMenu()
                     ImGui::Spacing();
                     ImGui::Separator();
                     if (ImGui::Button(
-                        "Delete This Button",
-                        ImVec2(-1, GetButtonHeight())
+                            "Delete This Button",
+                            ImVec2(-1, GetButtonHeight())
                     ))
                     {
                         g_pcSettings.widgets[idx].enabled = false;
@@ -767,7 +767,8 @@ void RenderPCControlMenu()
                 ImGui::Separator();
                 changed |= ImGui::Checkbox("Enable Distance Overrides", &g_pcSettings.enableDistanceOverrides);
                 changed |= SliderFloatWithButtons("drawDistance", &g_pcSettings.drawDistance, 50.0f, 5000.0f, "Draw Distance: %.0f", 50.0f);
-                changed |= SliderFloatWithButtons("fogDistance", &g_pcSettings.fogDistance, 0.0f, 2000.0f, "Fog Distance: %.0f", 20.0f);
+                changed |= SliderFloatWithButtons("fogStart", &g_pcSettings.fogStart, -100.0f, 1000.0f, "Fog Start: %.0f", 10.0f);
+                changed |= SliderFloatWithButtons("fogDistance", &g_pcSettings.fogDistance, 10.0f, 3000.0f, "Fog Final: %.0f", 20.0f);
                 changed |= SliderFloatWithButtons("lodDistance", &g_pcSettings.lodDistance, 0.1f, 10.0f, "LOD Distance Mult: %.2f", 0.05f);
 
                 ImGui::Spacing();
@@ -840,20 +841,20 @@ void RenderPCControlMenu()
             if (ImGui::BeginTabItem("Settings"))
             {
                 ImGui::BeginChild("UIScroll");
-            
+
                 ImGui::TextColored(
-                    ImVec4(0.4f, 0.7f, 1.0f, 1.0f),
-                    "Menu Style"
+                        ImVec4(0.4f, 0.7f, 1.0f, 1.0f),
+                        "Menu Style"
                 );
-            
+
                 ImGui::Separator();
-            
+
                 ImGui::Text("Font Scale");
                 changed |= SliderFloatWithButtons("menuFontScale", &g_pcSettings.menuFontScale, 0.5f, 2.0f, "%.2f", 0.05f);
-            
+
                 ImGui::Text("Background Opacity");
                 changed |= SliderFloatWithButtons("menuBgOpacity", &g_pcSettings.menuBgOpacity, 0.1f, 1.0f, "%.2f", 0.05f);
-            
+
                 ImGui::Text("Menu Rounding");
                 changed |= SliderFloatWithButtons("menuRounding", &g_pcSettings.menuRounding, 0.0f, 20.0f, "%.1f", 0.5f);
 
@@ -863,7 +864,7 @@ void RenderPCControlMenu()
                 changed |= ImGui::Checkbox("Debug Object ID Overlay", &g_pcSettings.debugObjectId);
 
                 ImGui::Spacing();
-            
+
                 ImGui::Text("Accent Color");
                 ImGui::Text("Red");
                 changed |= SliderFloatWithButtons("accentR", &g_pcSettings.menuAccentR, 0.0f, 1.0f, "%.2f", 0.01f);
@@ -1005,7 +1006,7 @@ void RenderPCControlMenu()
                 }
 
                 SetupModernStyle();
-            
+
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
