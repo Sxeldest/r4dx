@@ -82,6 +82,10 @@ PCControlSettings g_pcSettings = {
     8,      // sprintProtectEntryFrames
     12,     // sprintProtectExitFrames
     5,      // sprintProtectExitDelayFrames
+    false,  // enableDistanceOverrides
+    1000.0f, // drawDistance
+    500.0f,  // fogDistance
+    1.0f,    // lodDistance
 };
 
 static const char* kSettingsSection = "PCControl";
@@ -177,6 +181,10 @@ static ConfigEntry* s_enableGepengHud = nullptr;
 static ConfigEntry* s_sprintProtectEntryFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitFrames = nullptr;
 static ConfigEntry* s_sprintProtectExitDelayFrames = nullptr;
+static ConfigEntry* s_enableDistanceOverrides = nullptr;
+static ConfigEntry* s_drawDistance = nullptr;
+static ConfigEntry* s_fogDistance = nullptr;
+static ConfigEntry* s_lodDistance = nullptr;
 
 static ConfigEntry* s_macroEnabled[MAX_MACROS];
 static ConfigEntry* s_macroName[MAX_MACROS];
@@ -365,6 +373,11 @@ void InitPCControlSettings()
     s_sprintProtectExitFrames = cfg->Bind("SprintProtectExitFrames", 12, kSettingsSection);
     s_sprintProtectExitDelayFrames = cfg->Bind("SprintProtectExitDelayFrames", 5, kSettingsSection);
 
+    s_enableDistanceOverrides = cfg->Bind("EnableDistanceOverrides", false, kSettingsSection);
+    s_drawDistance = cfg->Bind("DrawDistance", 1000.0f, kSettingsSection);
+    s_fogDistance = cfg->Bind("FogDistance", 500.0f, kSettingsSection);
+    s_lodDistance = cfg->Bind("LodDistance", 1.0f, kSettingsSection);
+
     for (int i = 0; i < 4; ++i) {
         char key[32];
         sprintf(key, "HPColor_%d", i);
@@ -453,6 +466,11 @@ void InitPCControlSettings()
     g_pcSettings.sprintProtectEntryFrames = s_sprintProtectEntryFrames->GetInt();
     g_pcSettings.sprintProtectExitFrames = s_sprintProtectExitFrames->GetInt();
     g_pcSettings.sprintProtectExitDelayFrames = s_sprintProtectExitDelayFrames->GetInt();
+
+    g_pcSettings.enableDistanceOverrides = s_enableDistanceOverrides->GetBool();
+    g_pcSettings.drawDistance = s_drawDistance->GetFloat();
+    g_pcSettings.fogDistance = s_fogDistance->GetFloat();
+    g_pcSettings.lodDistance = s_lodDistance->GetFloat();
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {
@@ -647,6 +665,11 @@ void SavePCControlSettings()
     s_sprintProtectEntryFrames->SetInt(g_pcSettings.sprintProtectEntryFrames);
     s_sprintProtectExitFrames->SetInt(g_pcSettings.sprintProtectExitFrames);
     s_sprintProtectExitDelayFrames->SetInt(g_pcSettings.sprintProtectExitDelayFrames);
+
+    s_enableDistanceOverrides->SetBool(g_pcSettings.enableDistanceOverrides);
+    s_drawDistance->SetFloat(g_pcSettings.drawDistance);
+    s_fogDistance->SetFloat(g_pcSettings.fogDistance);
+    s_lodDistance->SetFloat(g_pcSettings.lodDistance);
 
     for (int i = 0; i < MAX_MACROS; ++i)
     {

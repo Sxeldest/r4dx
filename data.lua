@@ -5,7 +5,7 @@ local gtaSaLib = ffi.load('GTASA')
 -- Load PC_Control (AML) library
 local pcControl = nil
 pcall(function()
-    pcControl = ffi.load("PC_Control")
+    pcControl = ffi.load("...")
     ffi.cdef[[
         void PushCustomNametag(const char* name, int id, float x, float y, float z, int color, float dist, float health, float armor);
     ]]

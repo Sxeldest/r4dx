@@ -763,6 +763,14 @@ void RenderPCControlMenu()
                 changed |= SliderFloatWithButtons("KillfeedY", &g_pcSettings.deathListPosY, 0.0f, 2000.0f, "%.0f", 1.0f);
 
                 ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "World Distances");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Enable Distance Overrides", &g_pcSettings.enableDistanceOverrides);
+                changed |= SliderFloatWithButtons("drawDistance", &g_pcSettings.drawDistance, 50.0f, 5000.0f, "Draw Distance: %.0f", 50.0f);
+                changed |= SliderFloatWithButtons("fogDistance", &g_pcSettings.fogDistance, 0.0f, 2000.0f, "Fog Distance: %.0f", 20.0f);
+                changed |= SliderFloatWithButtons("lodDistance", &g_pcSettings.lodDistance, 0.1f, 10.0f, "LOD Distance Mult: %.2f", 0.05f);
+
+                ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "TimeCycle Overrides");
                 ImGui::Separator();
                 RenderTimecycEditorTab();

@@ -204,6 +204,11 @@ struct PCControlSettings
     int sprintProtectExitFrames;
     int sprintProtectExitDelayFrames;
 
+    bool enableDistanceOverrides;
+    float drawDistance;
+    float fogDistance;
+    float lodDistance;
+
     CustomMacro macros[MAX_MACROS];
 
     MemoryPatch patches[MAX_MEMORY_PATCHES];

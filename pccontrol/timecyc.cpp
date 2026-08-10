@@ -1,11 +1,16 @@
 #include "timecyc.h"
 #include "menu.h"
+#include "settings.h"
+#include "game/Camera.h"
 #include "ImGui/imgui.h"
 #include <mod/amlmod.h>
 #include <mod/config.h>
 #include <string.h>
 
 CColourSet* pCurrentColours = nullptr;
+float* pFarClipPlane = nullptr;
+extern "C" CCamera* pTheCamera;
+
 bool g_bOverrideTimecyc = false;
 CColourSet g_TimecycOverride;
 bool g_bTimecycInitialized = false;
@@ -265,6 +270,7 @@ void LoadTimecycConfig()
 void InitTimecycEditor(void* pHandle)
 {
     pCurrentColours = (CColourSet*)aml->GetSym(pHandle, "_ZN10CTimeCycle16m_CurrentColoursE");
+    pFarClipPlane = (float*)aml->GetSym(pHandle, "_ZN9CRenderer16ms_fFarClipPlaneE");
     LoadTimecycConfig();
     g_bTimecycInitialized = true;
 }
@@ -284,6 +290,26 @@ void ApplyTimecycOverrides()
     else
     {
         s_firstSyncDone = false;
+    }
+
+    // Global Distance Overrides (Applied after timecycle interpolation)
+    if (g_pcSettings.enableDistanceOverrides)
+    {
+        if (pCurrentColours)
+        {
+            pCurrentColours->m_fFarClip = g_pcSettings.drawDistance;
+            pCurrentColours->m_fFogStart = g_pcSettings.fogDistance;
+            pCurrentColours->m_fLodDistMult = g_pcSettings.lodDistance;
+        }
+        if (pFarClipPlane)
+        {
+            *pFarClipPlane = g_pcSettings.drawDistance;
+        }
+        if (pTheCamera)
+        {
+            // TheCamera->m_fLODDistMultiplier is at offset 0xEC in libGTASA
+            *(float*)((uintptr_t)pTheCamera + 0xEC) = g_pcSettings.lodDistance;
+        }
     }
 }
 

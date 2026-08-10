@@ -979,7 +979,6 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
 
     if (HandleWidgetDragging(type, fingerId, x, y)) return;
     if (HandleCustomWidgetTouch(type, fingerId, x, y)) return;
-    CameraPatchOnTouchEvent(type, fingerId, x, y);
 
     if (g_imguiInitialized && IsPCControlMenuVisible())
     {
@@ -1000,6 +999,8 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
         // Block game input if menu is open
         return;
     }
+
+    CameraPatchOnTouchEvent(type, fingerId, x, y);
 
     // Original game and SAMP often have a hard limit of 4-5 fingers.
     // To prevent crash, we only pass the first 4 fingers to the original OnTouchEvent.

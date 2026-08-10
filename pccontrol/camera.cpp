@@ -107,9 +107,10 @@ void CameraPatchOnRender2D()
         return;
     }
 
-    if (*s_menuOpened != 0 || *s_userPause)
+    if (*s_menuOpened != 0 || *s_userPause || g_pcSettings.showMenu)
     {
         ResetTouchDeltas();
+        s_activeCameraFinger = -1;
         return;
     }
 
