@@ -410,8 +410,16 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
                 // Dynamic position for Area Widgets
                 if (isAreaWidget)
                 {
-                    state.currentPosX = (float)x;
-                    state.currentPosY = (float)y;
+                    if (w.dpadFixed)
+                    {
+                        state.currentPosX = w.posX + w.areaW * 0.5f;
+                        state.currentPosY = w.posY + w.areaH * 0.5f;
+                    }
+                    else
+                    {
+                        state.currentPosX = (float)x;
+                        state.currentPosY = (float)y;
+                    }
                 }
 
                 if (!isPassType) blocked = true;
@@ -462,13 +470,21 @@ bool HandleCustomWidgetTouch(int type, int fingerId, int x, int y)
             float dy = y - state.currentPosY;
             float mag = sqrtf(dx * dx + dy * dy);
 
+            bool isAiming = IsActionTouched(ACTION_TARGET);
+
             // Agar tidak "tiba-tiba berhenti", kita hilangkan reset ke 0 di titik tengah (deadzone).
             // Arah akan tetap di nilai terakhir sampai jari bergerak cukup jauh ke arah lain.
             if (mag > 10.0f)
             {
                 float angle = atan2f(dy, dx);
-                // PC-Style: 8 arah (45 derajat)
+
+                // DPAD Logic: Default 8-way (45 deg), if aiming can choose 4-way
                 float step = (3.14159265f / 4.0f);
+                if (isAiming && w.dpadAimLogic == 1)
+                {
+                    step = (3.14159265f / 2.0f); // 4-way (90 deg)
+                }
+
                 float snapped = roundf(angle / step) * step;
 
                 float tx = cosf(snapped) * 127.0f;

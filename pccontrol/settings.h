@@ -82,6 +82,8 @@ struct CustomWidget
     float iconPosY;   // Visual icon Y (for Voice)
     float iconSize;   // Visual icon size (for Voice)
     int macroIndex;   // Which macro to trigger if action is ACTION_MACRO
+    bool dpadFixed;
+    int dpadAimLogic; // 0: 8-way, 1: 4-way
 };
 
 #define MAX_CUSTOM_WIDGETS 30

@@ -129,6 +129,8 @@ static ConfigEntry* s_slotWidgetIconPosX[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetIconPosY[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetIconSize[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 static ConfigEntry* s_slotWidgetMacroIndex[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
+static ConfigEntry* s_slotWidgetDpadFixed[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
+static ConfigEntry* s_slotWidgetDpadAimLogic[MAX_WIDGET_SLOTS][MAX_CUSTOM_WIDGETS];
 
 static ConfigEntry* s_disableLookBehind = nullptr;
 static ConfigEntry* s_disablePinchZoom = nullptr;
@@ -305,6 +307,14 @@ void InitPCControlSettings()
             if (s > 0) sprintf(key, "Slot%d_%s", s, buf); else strcpy(key, buf);
             s_slotWidgetMacroIndex[s][i] = cfg->Bind(key, 0, kSettingsSection);
 
+            sprintf(buf, "Widget%d_DpadFixed", i);
+            if (s > 0) sprintf(key, "Slot%d_%s", s, buf); else strcpy(key, buf);
+            s_slotWidgetDpadFixed[s][i] = cfg->Bind(key, false, kSettingsSection);
+
+            sprintf(buf, "Widget%d_DpadAimLogic", i);
+            if (s > 0) sprintf(key, "Slot%d_%s", s, buf); else strcpy(key, buf);
+            s_slotWidgetDpadAimLogic[s][i] = cfg->Bind(key, 0, kSettingsSection);
+
             g_pcSettings.widgetSlots[s][i].enabled = s_slotWidgetEnabled[s][i]->GetBool();
             g_pcSettings.widgetSlots[s][i].action = s_slotWidgetAction[s][i]->GetInt();
             g_pcSettings.widgetSlots[s][i].type = s_slotWidgetType[s][i]->GetInt();
@@ -320,6 +330,8 @@ void InitPCControlSettings()
             g_pcSettings.widgetSlots[s][i].iconPosY = s_slotWidgetIconPosY[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].iconSize = s_slotWidgetIconSize[s][i]->GetFloat();
             g_pcSettings.widgetSlots[s][i].macroIndex = s_slotWidgetMacroIndex[s][i]->GetInt();
+            g_pcSettings.widgetSlots[s][i].dpadFixed = s_slotWidgetDpadFixed[s][i]->GetBool();
+            g_pcSettings.widgetSlots[s][i].dpadAimLogic = s_slotWidgetDpadAimLogic[s][i]->GetInt();
         }
     }
 
@@ -594,6 +606,8 @@ void SavePCControlSettings()
             s_slotWidgetIconPosY[s][i]->SetFloat(g_pcSettings.widgetSlots[s][i].iconPosY);
             s_slotWidgetIconSize[s][i]->SetFloat(g_pcSettings.widgetSlots[s][i].iconSize);
             s_slotWidgetMacroIndex[s][i]->SetInt(g_pcSettings.widgetSlots[s][i].macroIndex);
+            s_slotWidgetDpadFixed[s][i]->SetBool(g_pcSettings.widgetSlots[s][i].dpadFixed);
+            s_slotWidgetDpadAimLogic[s][i]->SetInt(g_pcSettings.widgetSlots[s][i].dpadAimLogic);
         }
     }
 

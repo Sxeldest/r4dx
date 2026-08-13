@@ -633,6 +633,16 @@ void RenderPCControlMenu()
 
                         ImGui::Text("Analog Size");
                         changed |= SliderFloatWithButtons("AnalogSize", &g_pcSettings.widgets[idx].size, 20.0f, 800.0f);
+
+                        ImGui::Spacing();
+                        changed |= ImGui::Checkbox("Fixed Position (Diam)", &g_pcSettings.widgets[idx].dpadFixed);
+                        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Titik tengah analog tetap diam (tidak mengikuti sentuhan pertama).");
+
+                        const char* logicNames[] = { "8-Way (Diagonal)", "4-Way (Lurus)" };
+                        ImGui::Text("Aiming Logic");
+                        ImGui::SetNextItemWidth(-1.0f);
+                        changed |= ImGui::Combo("##AimLogic", &g_pcSettings.widgets[idx].dpadAimLogic, logicNames, 2);
+                        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Logika gerakan analog khusus saat sedang membidik (Aiming).");
                     }
                     else
                     {
