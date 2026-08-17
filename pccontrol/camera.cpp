@@ -29,6 +29,101 @@ static int s_transitionFrames = 0;
 static float s_weightedDX = 0.0f;
 static float s_weightedDY = 0.0f;
 
+// Raw Accel Logic Implementation
+static float rawaccel_base_fn(float x, float accel_raised, const AccelArgs& args) {
+    if (x <= 0) return 0;
+    return accel_raised * powf(x - args.inputOffset, args.exponent) / x;
+}
+
+static float rawaccel_gain(float x, float accel, float power, float offset) {
+    return power * powf(accel * (x - offset), power - 1);
+}
+
+static float rawaccel_gain_inverse(float y, float accel, float power, float offset) {
+    return (accel * offset + powf(y / power, 1.0f / (power - 1.0f))) / accel;
+}
+
+struct RawAccelImpl {
+    float accel_raised;
+    float capX = 1e30f;
+    float capY = 1e30f;
+    float constant = 0;
+    float sign = 1;
+
+    void init(const AccelArgs& args) {
+        if (args.mode == ACCEL_MODE_OFF) return;
+
+        accel_raised = powf(args.acceleration, args.exponent - 1.0f);
+
+        if (args.gain) {
+            switch (args.capMode) {
+                case CAP_MODE_IO:
+                    capX = args.capX;
+                    capY = args.capY - 1.0f;
+                    if (capY < 0) { capY = -capY; sign = -sign; }
+                    {
+                        float a = -powf(capY / args.exponent, 1.0f / (args.exponent - 1.0f)) / (args.inputOffset - capX);
+                        accel_raised = powf(a, args.exponent - 1.0f);
+                    }
+                    constant = (rawaccel_base_fn(capX, accel_raised, args) - capY) * capX;
+                    break;
+                case CAP_MODE_IN:
+                    if (args.capX > 0) {
+                        capX = args.capX;
+                        capY = rawaccel_gain(capX, args.acceleration, args.exponent, args.inputOffset);
+                        constant = (rawaccel_base_fn(capX, accel_raised, args) - capY) * capX;
+                    }
+                    break;
+                case CAP_MODE_OUT:
+                    if (args.capY > 0) {
+                        capY = args.capY - 1.0f;
+                        if (capY == 0) capX = 0;
+                        else {
+                            if (capY < 0) { capY = -capY; sign = -sign; }
+                            capX = rawaccel_gain_inverse(capY, args.acceleration, args.exponent, args.inputOffset);
+                            constant = (rawaccel_base_fn(capX, accel_raised, args) - capY) * capX;
+                        }
+                    }
+                    break;
+            }
+        } else {
+            // Legacy mode
+            switch (args.capMode) {
+                case CAP_MODE_IO:
+                    capY = args.capY - 1.0f;
+                    if (capY < 0) { capY = -capY; sign = -sign; }
+                    {
+                        float a = powf(args.capX * capY * powf(args.capX - args.inputOffset, -args.exponent), 1.0f / (args.exponent - 1.0f));
+                        accel_raised = powf(a, args.exponent - 1.0f);
+                    }
+                    break;
+                case CAP_MODE_IN:
+                    if (args.capX > 0) capY = rawaccel_base_fn(args.capX, accel_raised, args);
+                    break;
+                case CAP_MODE_OUT:
+                    if (args.capY > 0) {
+                        capY = args.capY - 1.0f;
+                        if (capY < 0) { capY = -capY; sign = -sign; }
+                    }
+                    break;
+            }
+        }
+    }
+
+    float calculate(float x, const AccelArgs& args) const {
+        if (args.mode == ACCEL_MODE_OFF || x <= args.inputOffset) return 1.0f;
+        float output;
+        if (args.gain) {
+            if (x < capX) output = rawaccel_base_fn(x, accel_raised, args);
+            else output = constant / x + capY;
+        } else {
+            output = rawaccel_base_fn(x, accel_raised, args);
+            if (output > capY) output = capY;
+        }
+        return sign * output + 1.0f;
+    }
+};
+
 static bool IsAimMode(eCamMode mode)
 {
     int m = (int)mode;
@@ -141,50 +236,85 @@ void CameraPatchOnRender2D()
     {
         float dx = s_fingerDeltaX[s_activeCameraFinger];
         float dy = s_fingerDeltaY[s_activeCameraFinger];
+        float dt = *s_timeStep;
+        float timeMs = dt * 20.0f;
+        if (timeMs < 1.0f) timeMs = 1.0f;
 
-        float speed = sqrtf(dx * dx + dy * dy);
+        float halfLife = (1.0f - g_pcSettings.smoothness) * 80.0f;
 
-        // Camera Acceleration: Tiered (Lambat, Sedang, Tinggi)
-        float accelRate = g_pcSettings.camAcceleration;
-        if (speed > 8.0f) accelRate *= 2.0f;      // Tinggi
-        else if (speed > 4.0f) accelRate *= 1.5f; // Sedang
+        float alpha;
+        if (g_pcSettings.smoothness >= 1.0f)
+        {
+            alpha = 1.0f;
+        }
+        else
+        {
+            float windowCoeff = powf(0.5f, 1.0f / (halfLife + 0.001f));
+            alpha = 1.0f - powf(windowCoeff, timeMs);
+        }
 
-        float accel = 1.0f + (speed * accelRate);
-        if (accel > 3.5f) accel = 3.5f;        // Cap maksimal 3.5x
-
-        float lerpAmount = g_pcSettings.smoothness; // Menggantikan base 0.65f
-
-        if (speed > 8.0f) lerpAmount = 1.0f;      // Gerakan sangat cepat -> Raw
-        else if (speed > 4.0f) lerpAmount = 0.75f; // Gerakan sedang -> Balanced
-        else if (speed > 0.0f) lerpAmount = 0.45f; // Gerakan halus -> Super Smooth
-
-        float dt = *s_timeStep * 0.02f;
-        float alpha = lerpAmount * (dt / 0.02f);
         if (alpha > 1.0f) alpha = 1.0f;
-        if (alpha < 0.1f) alpha = 0.1f;
+        if (alpha < 0.01f) alpha = 0.01f;
 
         s_weightedDX = (dx * alpha) + (s_weightedDX * (1.0f - alpha));
         s_weightedDY = (dy * alpha) + (s_weightedDY * (1.0f - alpha));
 
         if (fabsf(s_weightedDX) > 0.0001f || fabsf(s_weightedDY) > 0.0001f)
         {
-            float sensMultiplier = 0.00025f * accel;
+            float finalDX = s_weightedDX;
+            float finalDY = s_weightedDY;
+
+            if (g_pcSettings.enableRawAccel)
+            {
+                // Raw Accel Transformation
+                float rot = g_pcSettings.accelRotation * M_PI / 180.0f;
+                float cosR = cosf(rot);
+                float sinR = sinf(rot);
+
+                float rx = finalDX * cosR - finalDY * sinR;
+                float ry = finalDX * sinR + finalDY * cosR;
+                finalDX = rx;
+                finalDY = ry;
+
+                float ips_factor = 1.0f / timeMs; // Treating pixels as counts, 1000 DPI normalization?
+                // In RawAccel: ips_factor = (device_dpi / normal_dpi) / time
+                // Let's just use 1/time for now, users can adjust acceleration parameter.
+
+                float vx = finalDX * ips_factor * g_pcSettings.accelWeightX;
+                float vy = finalDY * ips_factor * g_pcSettings.accelWeightY;
+
+                float speed = sqrtf(vx * vx + vy * vy);
+
+                RawAccelImpl implX, implY;
+                implX.init(g_pcSettings.accelX);
+                implY.init(g_pcSettings.accelY);
+
+                float outputDPIAdjustment = 1.0f; // Could be a setting
+
+                // Directional weight (Simplified)
+                float reference_angle = (finalDX == 0) ? (M_PI / 2.0f) : atanf(fabsf(finalDY / finalDX));
+                float weight = g_pcSettings.accelWeightX + (2.0f / M_PI) * reference_angle * (g_pcSettings.accelWeightY - g_pcSettings.accelWeightX);
+
+                float multiplier = 1.0f + (implX.calculate(speed, g_pcSettings.accelX) - 1.0f) * weight;
+
+                finalDX *= multiplier * outputDPIAdjustment;
+                finalDY *= multiplier * outputDPIAdjustment;
+            }
+
+            float sensMultiplier = 0.00025f;
             float sensX = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensX : g_pcSettings.camSensX) * sensMultiplier;
             float sensY = (IsAimMode(cam.m_nMode) ? g_pcSettings.aimSensY : g_pcSettings.camSensY) * sensMultiplier;
 
-            // Direct Application of Weighted Delta
-            float h = cam.m_fHorizontalAngle - (s_weightedDX * sensX);
-            // Normalize H
+            float h = cam.m_fHorizontalAngle - (finalDX * sensX);
             while (h > M_PI) h -= (2.0f * M_PI);
             while (h < -M_PI) h += (2.0f * M_PI);
             cam.m_fHorizontalAngle = h;
 
-            cam.Alpha -= (s_weightedDY * sensY);
+            cam.Alpha -= (finalDY * sensY);
         }
     }
     else
     {
-        // Reset sisa pergerakan saat jari dilepas agar tidak 'hanyut'
         s_weightedDX = 0.0f;
         s_weightedDY = 0.0f;
     }

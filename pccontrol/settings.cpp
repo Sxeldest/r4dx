@@ -15,8 +15,7 @@ PCControlSettings g_pcSettings = {
         20.0f,  // camSensY
         20.5f,  // aimSensX
         10.5f,  // aimSensY
-        0.65f,  // smoothness (sekarang lerpAmount)
-        0.035f, // camAcceleration
+        0.65f,  // smoothness
         1.0f,    // deathListFontSize
         1500.0f, // deathListPosX
         350.0f,  // deathListPosY
@@ -48,6 +47,14 @@ PCControlSettings g_pcSettings = {
         8.0f,   // rounding
         false,  // enableCustomNametags
         false,  // debugObjectId
+
+        // Raw Accel
+        false, // enableRawAccel
+        { 0, true, 0.0f, 0.0f, 0.005f, 2.0f, 1.5f, 15.0f, 1.5f, 2 }, // accelX
+        { 0, true, 0.0f, 0.0f, 0.005f, 2.0f, 1.5f, 15.0f, 1.5f, 2 }, // accelY
+        1.0f, // accelWeightX
+        1.0f, // accelWeightY
+        0.0f, // accelRotation
 
         // Custom Nametags
         18.0f,  // ntFontSize
@@ -99,7 +106,6 @@ static ConfigEntry* s_camSensY = nullptr;
 static ConfigEntry* s_aimSensX = nullptr;
 static ConfigEntry* s_aimSensY = nullptr;
 static ConfigEntry* s_smoothness = nullptr;
-static ConfigEntry* s_camAccel = nullptr;
 static ConfigEntry* s_disableNativeJump = nullptr;
 static ConfigEntry* s_analogPatch = nullptr;
 static ConfigEntry* s_sprintDoubleTapBoost = nullptr;
@@ -152,6 +158,33 @@ static ConfigEntry* s_menuBgOpacity = nullptr;
 static ConfigEntry* s_menuRounding = nullptr;
 static ConfigEntry* s_enableCustomNametags = nullptr;
 static ConfigEntry* s_debugObjectId = nullptr;
+
+static ConfigEntry* s_enableRawAccel = nullptr;
+static ConfigEntry* s_accelModeX = nullptr;
+static ConfigEntry* s_accelGainX = nullptr;
+static ConfigEntry* s_accelInputOffsetX = nullptr;
+static ConfigEntry* s_accelOutputOffsetX = nullptr;
+static ConfigEntry* s_accelAccelerationX = nullptr;
+static ConfigEntry* s_accelExponentX = nullptr;
+static ConfigEntry* s_accelLimitX = nullptr;
+static ConfigEntry* s_accelCapXX = nullptr;
+static ConfigEntry* s_accelCapYX = nullptr;
+static ConfigEntry* s_accelCapModeX = nullptr;
+
+static ConfigEntry* s_accelModeY = nullptr;
+static ConfigEntry* s_accelGainY = nullptr;
+static ConfigEntry* s_accelInputOffsetY = nullptr;
+static ConfigEntry* s_accelOutputOffsetY = nullptr;
+static ConfigEntry* s_accelAccelerationY = nullptr;
+static ConfigEntry* s_accelExponentY = nullptr;
+static ConfigEntry* s_accelLimitY = nullptr;
+static ConfigEntry* s_accelCapXY = nullptr;
+static ConfigEntry* s_accelCapYY = nullptr;
+static ConfigEntry* s_accelCapModeY = nullptr;
+
+static ConfigEntry* s_accelWeightX = nullptr;
+static ConfigEntry* s_accelWeightY = nullptr;
+static ConfigEntry* s_accelRotation = nullptr;
 
 static ConfigEntry* s_ntFontSize = nullptr;
 static ConfigEntry* s_ntBarWidth = nullptr;
@@ -220,7 +253,6 @@ void InitPCControlSettings()
     s_aimSensX = cfg->Bind("AimSensX", 0.5f, kSettingsSection);
     s_aimSensY = cfg->Bind("AimSensY", 0.5f, kSettingsSection);
     s_smoothness = cfg->Bind("CameraSmoothness", 0.65f, kSettingsSection);
-    s_camAccel = cfg->Bind("CameraAcceleration", 0.035f, kSettingsSection);
 
     s_disableNativeCrouch = cfg->Bind("DisableNativeCrouch", false, kSettingsSection);
     s_disableNativeJump = cfg->Bind("DisableNativeJump", false, kSettingsSection);
@@ -357,6 +389,33 @@ void InitPCControlSettings()
     s_enableCustomNametags = cfg->Bind("EnableCustomNametags", false, kNametagSection);
     s_debugObjectId = cfg->Bind("DebugObjectId", false, kSettingsSection);
 
+    s_enableRawAccel = cfg->Bind("RawAccel_Enable", false, "RawAccel");
+    s_accelModeX = cfg->Bind("RawAccel_ModeX", 0, "RawAccel");
+    s_accelGainX = cfg->Bind("RawAccel_GainX", true, "RawAccel");
+    s_accelInputOffsetX = cfg->Bind("RawAccel_InputOffsetX", 0.0f, "RawAccel");
+    s_accelOutputOffsetX = cfg->Bind("RawAccel_OutputOffsetX", 0.0f, "RawAccel");
+    s_accelAccelerationX = cfg->Bind("RawAccel_AccelX", 0.005f, "RawAccel");
+    s_accelExponentX = cfg->Bind("RawAccel_ExponentX", 2.0f, "RawAccel");
+    s_accelLimitX = cfg->Bind("RawAccel_LimitX", 1.5f, "RawAccel");
+    s_accelCapXX = cfg->Bind("RawAccel_CapXX", 15.0f, "RawAccel");
+    s_accelCapYX = cfg->Bind("RawAccel_CapYX", 1.5f, "RawAccel");
+    s_accelCapModeX = cfg->Bind("RawAccel_CapModeX", 2, "RawAccel");
+
+    s_accelModeY = cfg->Bind("RawAccel_ModeY", 0, "RawAccel");
+    s_accelGainY = cfg->Bind("RawAccel_GainY", true, "RawAccel");
+    s_accelInputOffsetY = cfg->Bind("RawAccel_InputOffsetY", 0.0f, "RawAccel");
+    s_accelOutputOffsetY = cfg->Bind("RawAccel_OutputOffsetY", 0.0f, "RawAccel");
+    s_accelAccelerationY = cfg->Bind("RawAccel_AccelY", 0.005f, "RawAccel");
+    s_accelExponentY = cfg->Bind("RawAccel_ExponentY", 2.0f, "RawAccel");
+    s_accelLimitY = cfg->Bind("RawAccel_LimitY", 1.5f, "RawAccel");
+    s_accelCapXY = cfg->Bind("RawAccel_CapXY", 15.0f, "RawAccel");
+    s_accelCapYY = cfg->Bind("RawAccel_CapYY", 1.5f, "RawAccel");
+    s_accelCapModeY = cfg->Bind("RawAccel_CapModeY", 2, "RawAccel");
+
+    s_accelWeightX = cfg->Bind("RawAccel_WeightX", 1.0f, "RawAccel");
+    s_accelWeightY = cfg->Bind("RawAccel_WeightY", 1.0f, "RawAccel");
+    s_accelRotation = cfg->Bind("RawAccel_Rotation", 0.0f, "RawAccel");
+
     s_ntFontSize = cfg->Bind("FontSize", 18.0f, kNametagSection);
     s_ntBarWidth = cfg->Bind("BarWidth", 60.0f, kNametagSection);
     s_ntBarHeight = cfg->Bind("BarHeight", 5.0f, kNametagSection);
@@ -407,7 +466,6 @@ void InitPCControlSettings()
     g_pcSettings.aimSensX = s_aimSensX->GetFloat();
     g_pcSettings.aimSensY = s_aimSensY->GetFloat();
     g_pcSettings.smoothness = s_smoothness->GetFloat();
-    g_pcSettings.camAcceleration = s_camAccel->GetFloat();
 
     g_pcSettings.disableNativeCrouch = s_disableNativeCrouch->GetBool();
     g_pcSettings.disableNativeJump = s_disableNativeJump->GetBool();
@@ -451,6 +509,33 @@ void InitPCControlSettings()
     g_pcSettings.menuRounding = s_menuRounding->GetFloat();
     g_pcSettings.enableCustomNametags = s_enableCustomNametags->GetBool();
     g_pcSettings.debugObjectId = s_debugObjectId->GetBool();
+
+    g_pcSettings.enableRawAccel = s_enableRawAccel->GetBool();
+    g_pcSettings.accelX.mode = s_accelModeX->GetInt();
+    g_pcSettings.accelX.gain = s_accelGainX->GetBool();
+    g_pcSettings.accelX.inputOffset = s_accelInputOffsetX->GetFloat();
+    g_pcSettings.accelX.outputOffset = s_accelOutputOffsetX->GetFloat();
+    g_pcSettings.accelX.acceleration = s_accelAccelerationX->GetFloat();
+    g_pcSettings.accelX.exponent = s_accelExponentX->GetFloat();
+    g_pcSettings.accelX.limit = s_accelLimitX->GetFloat();
+    g_pcSettings.accelX.capX = s_accelCapXX->GetFloat();
+    g_pcSettings.accelX.capY = s_accelCapYX->GetFloat();
+    g_pcSettings.accelX.capMode = s_accelCapModeX->GetInt();
+
+    g_pcSettings.accelY.mode = s_accelModeY->GetInt();
+    g_pcSettings.accelY.gain = s_accelGainY->GetBool();
+    g_pcSettings.accelY.inputOffset = s_accelInputOffsetY->GetFloat();
+    g_pcSettings.accelY.outputOffset = s_accelOutputOffsetY->GetFloat();
+    g_pcSettings.accelY.acceleration = s_accelAccelerationY->GetFloat();
+    g_pcSettings.accelY.exponent = s_accelExponentY->GetFloat();
+    g_pcSettings.accelY.limit = s_accelLimitY->GetFloat();
+    g_pcSettings.accelY.capX = s_accelCapXY->GetFloat();
+    g_pcSettings.accelY.capY = s_accelCapYY->GetFloat();
+    g_pcSettings.accelY.capMode = s_accelCapModeY->GetInt();
+
+    g_pcSettings.accelWeightX = s_accelWeightX->GetFloat();
+    g_pcSettings.accelWeightY = s_accelWeightY->GetFloat();
+    g_pcSettings.accelRotation = s_accelRotation->GetFloat();
 
     g_pcSettings.ntFontSize = s_ntFontSize->GetFloat();
     g_pcSettings.ntBarWidth = s_ntBarWidth->GetFloat();
@@ -619,7 +704,6 @@ void SavePCControlSettings()
     s_aimSensX->SetFloat(g_pcSettings.aimSensX);
     s_aimSensY->SetFloat(g_pcSettings.aimSensY);
     s_smoothness->SetFloat(g_pcSettings.smoothness);
-    s_camAccel->SetFloat(g_pcSettings.camAcceleration);
 
     s_disableNativeCrouch->SetBool(g_pcSettings.disableNativeCrouch);
     s_disableNativeJump->SetBool(g_pcSettings.disableNativeJump);
@@ -653,6 +737,33 @@ void SavePCControlSettings()
     s_menuRounding->SetFloat(g_pcSettings.menuRounding);
     s_enableCustomNametags->SetBool(g_pcSettings.enableCustomNametags);
     s_debugObjectId->SetBool(g_pcSettings.debugObjectId);
+
+    s_enableRawAccel->SetBool(g_pcSettings.enableRawAccel);
+    s_accelModeX->SetInt(g_pcSettings.accelX.mode);
+    s_accelGainX->SetBool(g_pcSettings.accelX.gain);
+    s_accelInputOffsetX->SetFloat(g_pcSettings.accelX.inputOffset);
+    s_accelOutputOffsetX->SetFloat(g_pcSettings.accelX.outputOffset);
+    s_accelAccelerationX->SetFloat(g_pcSettings.accelX.acceleration);
+    s_accelExponentX->SetFloat(g_pcSettings.accelX.exponent);
+    s_accelLimitX->SetFloat(g_pcSettings.accelX.limit);
+    s_accelCapXX->SetFloat(g_pcSettings.accelX.capX);
+    s_accelCapYX->SetFloat(g_pcSettings.accelX.capY);
+    s_accelCapModeX->SetInt(g_pcSettings.accelX.capMode);
+
+    s_accelModeY->SetInt(g_pcSettings.accelY.mode);
+    s_accelGainY->SetBool(g_pcSettings.accelY.gain);
+    s_accelInputOffsetY->SetFloat(g_pcSettings.accelY.inputOffset);
+    s_accelOutputOffsetY->SetFloat(g_pcSettings.accelY.outputOffset);
+    s_accelAccelerationY->SetFloat(g_pcSettings.accelY.acceleration);
+    s_accelExponentY->SetFloat(g_pcSettings.accelY.exponent);
+    s_accelLimitY->SetFloat(g_pcSettings.accelY.limit);
+    s_accelCapXY->SetFloat(g_pcSettings.accelY.capX);
+    s_accelCapYY->SetFloat(g_pcSettings.accelY.capY);
+    s_accelCapModeY->SetInt(g_pcSettings.accelY.capMode);
+
+    s_accelWeightX->SetFloat(g_pcSettings.accelWeightX);
+    s_accelWeightY->SetFloat(g_pcSettings.accelWeightY);
+    s_accelRotation->SetFloat(g_pcSettings.accelRotation);
 
     s_ntFontSize->SetFloat(g_pcSettings.ntFontSize);
     s_ntBarWidth->SetFloat(g_pcSettings.ntBarWidth);

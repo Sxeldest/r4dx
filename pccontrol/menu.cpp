@@ -276,6 +276,50 @@ bool SliderIntWithButtons(const char* label, int* v, int v_min, int v_max, const
     return changed;
 }
 
+static void RenderRawAccelAxis(const char* label, AccelArgs& args, bool& changed)
+{
+    if (ImGui::CollapsingHeader(label))
+    {
+        ImGui::Indent();
+        const char* modes[] = { "Off", "Classic", "Jump", "Natural", "Power" };
+        ImGui::Text("Mode");
+        if (ImGui::Combo("##Mode", &args.mode, modes, IM_ARRAYSIZE(modes))) changed = true;
+
+        if (args.mode != ACCEL_MODE_OFF)
+        {
+            if (ImGui::Checkbox("Gain Logic", &args.gain)) changed = true;
+
+            ImGui::Text("Acceleration");
+            changed |= SliderFloatWithButtons("Accel", &args.acceleration, 0.0f, 0.5f, "%.4f", 0.0001f);
+
+            ImGui::Text("Exponent");
+            changed |= SliderFloatWithButtons("Exponent", &args.exponent, 0.1f, 10.0f, "%.2f", 0.01f);
+
+            ImGui::Text("Input Offset");
+            changed |= SliderFloatWithButtons("InputOffset", &args.inputOffset, 0.0f, 100.0f, "%.2f", 0.1f);
+
+            const char* capModes[] = { "Off", "Input Cap", "Output Cap", "Both (IO)" };
+            ImGui::Text("Cap Mode");
+            if (ImGui::Combo("##CapMode", &args.capMode, capModes, IM_ARRAYSIZE(capModes))) changed = true;
+
+            if (args.capMode != CAP_MODE_OFF)
+            {
+                if (args.capMode == CAP_MODE_IN || args.capMode == CAP_MODE_IO)
+                {
+                    ImGui::Text("Cap Input (Speed)");
+                    changed |= SliderFloatWithButtons("CapX", &args.capX, 0.0f, 500.0f, "%.1f", 1.0f);
+                }
+                if (args.capMode == CAP_MODE_OUT || args.capMode == CAP_MODE_IO)
+                {
+                    ImGui::Text("Cap Output (Limit)");
+                    changed |= SliderFloatWithButtons("CapY", &args.capY, 1.0f, 20.0f, "%.2f", 0.05f);
+                }
+            }
+        }
+        ImGui::Unindent();
+    }
+}
+
 void RenderPCControlMenu()
 {
     static float lastScale = -1.0f;
@@ -340,8 +384,7 @@ void RenderPCControlMenu()
                 changed |= SliderFloatWithButtons("camSensY", &g_pcSettings.camSensY, 0.1f, 100.0f, "Vert Sens: %.2f", 0.05f);
                 changed |= SliderFloatWithButtons("aimSensX", &g_pcSettings.aimSensX, 0.1f, 100.0f, "Aim Sens X: %.2f", 0.05f);
                 changed |= SliderFloatWithButtons("aimSensY", &g_pcSettings.aimSensY, 0.1f, 100.0f, "Aim Sens Y: %.2f", 0.05f);
-                changed |= SliderFloatWithButtons("camSmoothness", &g_pcSettings.smoothness, 0.05f, 1.0f, "Smoothness (Base Lerp): %.2f", 0.01f);
-                changed |= SliderFloatWithButtons("camAccel", &g_pcSettings.camAcceleration, 0.0f, 0.2f, "Acceleration Rate: %.3f", 0.001f);
+                changed |= SliderFloatWithButtons("camSmoothness", &g_pcSettings.smoothness, 0.05f, 1.0f, "Smoothness: %.2f", 0.01f);
 
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Controls & Patches");
@@ -785,6 +828,29 @@ void RenderPCControlMenu()
                 ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "TimeCycle Overrides");
                 ImGui::Separator();
                 RenderTimecycEditorTab();
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
+
+            // TAB: Raw Accel
+            if (ImGui::BeginTabItem("Raw Accel"))
+            {
+                ImGui::BeginChild("RawAccelScroll");
+
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "Raw Accel Implementation");
+                ImGui::Separator();
+                changed |= ImGui::Checkbox("Enable Raw Accel", &g_pcSettings.enableRawAccel);
+
+                ImGui::Spacing();
+                ImGui::Text("Combined Settings");
+                changed |= SliderFloatWithButtons("Rotation", &g_pcSettings.accelRotation, -180.0f, 180.0f, "%.1f deg", 1.0f);
+                changed |= SliderFloatWithButtons("Weight X", &g_pcSettings.accelWeightX, 0.0f, 2.0f, "%.2f", 0.05f);
+                changed |= SliderFloatWithButtons("Weight Y", &g_pcSettings.accelWeightY, 0.0f, 2.0f, "%.2f", 0.05f);
+
+                ImGui::Spacing();
+                RenderRawAccelAxis("Horizontal Axis (X)", g_pcSettings.accelX, changed);
+                RenderRawAccelAxis("Vertical Axis (Y)", g_pcSettings.accelY, changed);
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();

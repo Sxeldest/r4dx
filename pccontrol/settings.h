@@ -65,6 +65,37 @@ enum eWidgetStyle
     WSTYLE_ROUND_RECT
 };
 
+enum eAccelMode
+{
+    ACCEL_MODE_OFF = 0,
+    ACCEL_MODE_CLASSIC,
+    ACCEL_MODE_JUMP,
+    ACCEL_MODE_NATURAL,
+    ACCEL_MODE_POWER,
+};
+
+enum eCapMode
+{
+    CAP_MODE_OFF = 0,
+    CAP_MODE_IN,
+    CAP_MODE_OUT,
+    CAP_MODE_IO
+};
+
+struct AccelArgs
+{
+    int mode; // eAccelMode
+    bool gain;
+    float inputOffset;
+    float outputOffset;
+    float acceleration;
+    float exponent;
+    float limit;
+    float capX;
+    float capY;
+    int capMode; // eCapMode
+};
+
 struct CustomWidget
 {
     bool enabled;
@@ -137,7 +168,6 @@ struct PCControlSettings
     float aimSensX;
     float aimSensY;
     float smoothness;
-    float camAcceleration;
     float deathListFontSize;
     float deathListPosX;
     float deathListPosY;
@@ -171,6 +201,14 @@ struct PCControlSettings
     float menuRounding;
     bool enableCustomNametags;
     bool debugObjectId;
+
+    // Raw Accel
+    bool enableRawAccel;
+    AccelArgs accelX;
+    AccelArgs accelY;
+    float accelWeightX;
+    float accelWeightY;
+    float accelRotation;
 
     // Custom Nametags
     float ntFontSize;
