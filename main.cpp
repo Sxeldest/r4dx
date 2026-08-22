@@ -1247,5 +1247,5 @@ extern "C" void OnModLoad()
 
         SAMP::SAMPManager::Get().Init();
     }
-    if (hSAMP_ORIG) //DeathListHookLoad(hSAMP_ORIG, true);
+    if (hSAMP_ORIG) DeathListHookLoad(hSAMP_ORIG, true);
 }
