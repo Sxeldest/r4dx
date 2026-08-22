@@ -830,7 +830,7 @@ bool HookOf_InitRenderware()
 {
     if (!InitRenderware()) return false;
     InitRenderWareFunctions();
-    CameraPatchOnInitRenderware();
+    //CameraPatchOnInitRenderware();
     g_pGUI = new PCControlGUI();
     if (!g_pGUI->initialize()) logger->Error("Failed to initialize GUI");
     g_imguiInitialized = true;
@@ -840,7 +840,7 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     SAMP::SAMPManager::Get().Process();
-    g_internalFrameCount++;
+    /*g_internalFrameCount++;
 
     UpdateMacroShoot();
 
@@ -863,11 +863,11 @@ void HookOf_Render2DStuff()
     else if (g_sprintProtectExitFrames > 0)
     {
         g_sprintProtectExitFrames--;
-    }
+    }*/
 
     Render2DStuff();
     //CameraPatchOnRender2D();
-    UpdateWidgetReleaseFrames();
+    /*UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
 
     if (g_switchQueueGap > 0) g_switchQueueGap--;
@@ -919,8 +919,8 @@ void HookOf_Render2DStuff()
 
             if (playerData)
             {
-                *(uint16_t*)(playerData + 0x34) &= ~0x0008;
-                *(uint8_t*)(playerData + 0x85) = 0;
+                //*(uint16_t*)(playerData + 0x34) &= ~0x0008;
+                //*(uint8_t*)(playerData + 0x85) = 0;
 
                 // FIX: Isi sprint buffer agar Step 2 (Release-then-Exit)
                 // memiliki momentum yang sama dengan Step 1 (Hold-then-Exit).
@@ -937,13 +937,13 @@ void HookOf_Render2DStuff()
         // PROTECTION: Jika keluar aiming karena jatuh/terdorong/apapun,
         // RESET status makro agar tidak memaksa masuk mode aiming lagi secara otomatis.
         g_macroAimTriggered = false;
-    }
+    }*/
 
     g_lastAimState = aimNow;
     g_lastTargetState = isTargeting;
 
     // Existing custom target release logic
-    if (g_customTargetWasHeld && !IsCustomTargetHeld())
+    /*if (g_customTargetWasHeld && !IsCustomTargetHeld())
     {
         void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
 
@@ -963,7 +963,7 @@ void HookOf_Render2DStuff()
         }
 
         g_customTargetWasHeld = false;
-    }
+    }*/
 
     if (!g_imguiInitialized || !g_pGUI)
     {
