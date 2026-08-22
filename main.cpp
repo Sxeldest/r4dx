@@ -866,7 +866,7 @@ void HookOf_Render2DStuff()
     }
 
     Render2DStuff();
-    CameraPatchOnRender2D();
+    //CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
 
@@ -1170,7 +1170,7 @@ extern "C" void OnModLoad()
         if (!g_touchWidgets) g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
         DebugUI_Init(pGameHandle);
-        //CameraPatchLoad(pGameHandle, gtasa);
+        CameraPatchLoad(pGameHandle, gtasa);
 
         
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);
@@ -1188,7 +1188,7 @@ extern "C" void OnModLoad()
         HOOK(JumpJustDown, gtasa + addrJumpJustDown + 1);
         HOOK(GetSprint, gtasa + addrGetSprint + 1);
         HOOK(SprintJustDown, gtasa + addrSprintJustDown + 1);
-        //HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
+        HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
         HOOK(CycleWeaponLeftJustDown, gtasa + addrCycleWeaponLeft + 1);
         HOOK(CycleWeaponRightJustDown, gtasa + addrCycleWeaponRight + 1);
         
