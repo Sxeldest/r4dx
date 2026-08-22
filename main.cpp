@@ -939,8 +939,8 @@ void HookOf_Render2DStuff()
         g_macroAimTriggered = false;
     }*/
 
-    g_lastAimState = aimNow;
-    g_lastTargetState = isTargeting;
+    //g_lastAimState = aimNow;
+    //g_lastTargetState = isTargeting;
 
     // Existing custom target release logic
     /*if (g_customTargetWasHeld && !IsCustomTargetHeld())
