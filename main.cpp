@@ -1170,8 +1170,9 @@ extern "C" void OnModLoad()
         if (!g_touchWidgets) g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
         DebugUI_Init(pGameHandle);
-        CameraPatchLoad(pGameHandle, gtasa);
+        //CameraPatchLoad(pGameHandle, gtasa);
 
+        /*
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);
         HOOK(GetPedWalkUpDown, gtasa + addrUpDown + 1);
         HOOK(WidgetUpdate, gtasa + addrWidgetUpdate + 1);
@@ -1190,18 +1191,21 @@ extern "C" void OnModLoad()
         HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
         HOOK(CycleWeaponLeftJustDown, gtasa + addrCycleWeaponLeft + 1);
         HOOK(CycleWeaponRightJustDown, gtasa + addrCycleWeaponRight + 1);
+        */
+        
         BlendAnimation = (void* (*)(void*, int, int, float))aml->GetSym(pGameHandle, "_ZN12CAnimManager14BlendAnimationEP7RpClump12AssocGroupId11AnimationIdf");
         if (BlendAnimation) HOOK(BlendAnimation, (uintptr_t)BlendAnimation);
 
+        /*
         GetTaskUseGun = (int (*)(void*))(gtasa + addrGetTaskUseGun + 1);
         FindPlayerPed = (void* (*)(int))(aml->GetSym(pGameHandle, "_Z13FindPlayerPedi"));
         ClearWeaponTarget = (void (*)(void*))(aml->GetSym(pGameHandle, "_ZN10CPlayerPed17ClearWeaponTargetEv"));
         if (!ClearWeaponTarget) ClearWeaponTarget = (void (*)(void*))(gtasa + addrClearWeaponTarget + 1);
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
-        HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
-
+        OOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
+        */
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
-        HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
+        //HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
@@ -1215,7 +1219,7 @@ extern "C" void OnModLoad()
 
         if (hSAMP_ORIG)
         {
-            HOOK(ButtonPanel_Render, hSAMP_ORIG + 0x7D0F4 + 1);
+            //HOOK(ButtonPanel_Render, hSAMP_ORIG + 0x7D0F4 + 1);
             // HOOK(ButtonPanel_OnTouchEvent, hSAMP_ORIG + 0x7D700 + 1);
         }
 
@@ -1238,10 +1242,10 @@ extern "C" void OnModLoad()
         //HOOK(RenderText, hSAMP + addrRenderText + 1);
         //HOOK(CalcTextSize, hSAMP + addrCalcTextSize + 1);
 
-        HOOK(SAMP_RenderNametag, hSAMP + addrSAMP_RenderNametag + 1);
-        DeathListHookLoad(hSAMP, false);
+        //HOOK(SAMP_RenderNametag, hSAMP + addrSAMP_RenderNametag + 1);
+        //DeathListHookLoad(hSAMP, false);
 
         SAMP::SAMPManager::Get().Init();
     }
-    if (hSAMP_ORIG) DeathListHookLoad(hSAMP_ORIG, true);
+    if (hSAMP_ORIG) //DeathListHookLoad(hSAMP_ORIG, true);
 }
