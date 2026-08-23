@@ -13,7 +13,6 @@
 #include "game/World.h"
 #include "game/Sprite.h"
 #include "game/Widget.h"
-#include "pccontrol/camera.h"
 #include "pccontrol/playertags.h"
 #include "pccontrol/command.h"
 #include "pccontrol/menu.h"
@@ -558,7 +557,6 @@ int HookOf_IsTouched(int widgetId, void* a2, int a3)
         result = 1;
     }
 
-    CameraPatchOnIsTouched(widgetId, result);
     return result;
 }
 
@@ -830,7 +828,6 @@ bool HookOf_InitRenderware()
 {
     if (!InitRenderware()) return false;
     InitRenderWareFunctions();
-    CameraPatchOnInitRenderware();
     g_pGUI = new PCControlGUI();
     if (!g_pGUI->initialize()) logger->Error("Failed to initialize GUI");
     g_imguiInitialized = true;
@@ -866,7 +863,6 @@ void HookOf_Render2DStuff()
     }
 
     Render2DStuff();
-    CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
 
@@ -1000,8 +996,6 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
         // Block game input if menu is open
         return;
     }
-
-    CameraPatchOnTouchEvent(type, fingerId, x, y);
 
     // Original game and SAMP often have a hard limit of 4-5 fingers.
     // To prevent crash, we only pass the first 4 fingers to the original OnTouchEvent.
@@ -1152,8 +1146,7 @@ extern "C" void OnModPreLoad()
     recipNearClip = (RwReal*)aml->GetSym(pGameHandle, "_ZN9CSprite2d13RecipNearClipE");
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
-    pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer12ms_fTimeStepE");
-    CameraPatchPreload(pGameHandle);
+    pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer12ms_fTimeStepE");;
 }
 
 extern "C" void OnModLoad()
@@ -1170,8 +1163,6 @@ extern "C" void OnModLoad()
         if (!g_touchWidgets) g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
         DebugUI_Init(pGameHandle);
-        CameraPatchLoad(pGameHandle, gtasa);
-
         
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);
         HOOK(GetPedWalkUpDown, gtasa + addrUpDown + 1);
@@ -1191,11 +1182,9 @@ extern "C" void OnModLoad()
         HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
         HOOK(CycleWeaponLeftJustDown, gtasa + addrCycleWeaponLeft + 1);
         HOOK(CycleWeaponRightJustDown, gtasa + addrCycleWeaponRight + 1);
-        
-        
+
         BlendAnimation = (void* (*)(void*, int, int, float))aml->GetSym(pGameHandle, "_ZN12CAnimManager14BlendAnimationEP7RpClump12AssocGroupId11AnimationIdf");
         if (BlendAnimation) HOOK(BlendAnimation, (uintptr_t)BlendAnimation);
-
         
         GetTaskUseGun = (int (*)(void*))(gtasa + addrGetTaskUseGun + 1);
         FindPlayerPed = (void* (*)(int))(aml->GetSym(pGameHandle, "_Z13FindPlayerPedi"));
