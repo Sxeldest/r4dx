@@ -1001,7 +1001,7 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
         return;
     }
 
-    CameraPatchOnTouchEvent(type, fingerId, x, y);
+    //CameraPatchOnTouchEvent(type, fingerId, x, y);
 
     // Original game and SAMP often have a hard limit of 4-5 fingers.
     // To prevent crash, we only pass the first 4 fingers to the original OnTouchEvent.
@@ -1153,7 +1153,7 @@ extern "C" void OnModPreLoad()
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
     pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer12ms_fTimeStepE");
-    CameraPatchPreload(pGameHandle);
+    //CameraPatchPreload(pGameHandle);
 }
 
 extern "C" void OnModLoad()
@@ -1170,7 +1170,7 @@ extern "C" void OnModLoad()
         if (!g_touchWidgets) g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
         DebugUI_Init(pGameHandle);
-        CameraPatchLoad(pGameHandle, gtasa);
+        //CameraPatchLoad(pGameHandle, gtasa);
 
         
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);
