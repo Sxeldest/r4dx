@@ -830,7 +830,7 @@ bool HookOf_InitRenderware()
 {
     if (!InitRenderware()) return false;
     InitRenderWareFunctions();
-    //CameraPatchOnInitRenderware();
+    CameraPatchOnInitRenderware();
     g_pGUI = new PCControlGUI();
     if (!g_pGUI->initialize()) logger->Error("Failed to initialize GUI");
     g_imguiInitialized = true;
@@ -866,7 +866,7 @@ void HookOf_Render2DStuff()
     }
 
     Render2DStuff();
-    //CameraPatchOnRender2D();
+    CameraPatchOnRender2D();
     UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
 
@@ -1153,7 +1153,7 @@ extern "C" void OnModPreLoad()
     SetScissorRect = (void (*)(float*))aml->GetSym(pGameHandle, "_ZN7CWidget10SetScissorER5CRect");
     g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
     pgTimeStep = (float*)aml->GetSym(pGameHandle, "_ZN6CTimer12ms_fTimeStepE");
-    //CameraPatchPreload(pGameHandle);
+    CameraPatchPreload(pGameHandle);
 }
 
 extern "C" void OnModLoad()
