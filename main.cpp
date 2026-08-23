@@ -840,7 +840,7 @@ bool HookOf_InitRenderware()
 void HookOf_Render2DStuff()
 {
     SAMP::SAMPManager::Get().Process();
-    /*g_internalFrameCount++;
+    g_internalFrameCount++;
 
     UpdateMacroShoot();
 
@@ -863,11 +863,11 @@ void HookOf_Render2DStuff()
     else if (g_sprintProtectExitFrames > 0)
     {
         g_sprintProtectExitFrames--;
-    }*/
+    }
 
     Render2DStuff();
     //CameraPatchOnRender2D();
-    /*UpdateWidgetReleaseFrames();
+    UpdateWidgetReleaseFrames();
     UpdateMacroExecution();
 
     if (g_switchQueueGap > 0) g_switchQueueGap--;
@@ -937,13 +937,13 @@ void HookOf_Render2DStuff()
         // PROTECTION: Jika keluar aiming karena jatuh/terdorong/apapun,
         // RESET status makro agar tidak memaksa masuk mode aiming lagi secara otomatis.
         g_macroAimTriggered = false;
-    }*/
+    }
 
     //g_lastAimState = aimNow;
     //g_lastTargetState = isTargeting;
 
     // Existing custom target release logic
-    /*if (g_customTargetWasHeld && !IsCustomTargetHeld())
+    if (g_customTargetWasHeld && !IsCustomTargetHeld())
     {
         void* player = FindPlayerPed ? FindPlayerPed(-1) : nullptr;
 
@@ -963,7 +963,7 @@ void HookOf_Render2DStuff()
         }
 
         g_customTargetWasHeld = false;
-    }*/
+    }
 
     if (!g_imguiInitialized || !g_pGUI)
     {
@@ -1001,7 +1001,7 @@ void HookOf_OnTouchEvent(int type, int fingerId, int x, int y)
         return;
     }
 
-    //CameraPatchOnTouchEvent(type, fingerId, x, y);
+    CameraPatchOnTouchEvent(type, fingerId, x, y);
 
     // Original game and SAMP often have a hard limit of 4-5 fingers.
     // To prevent crash, we only pass the first 4 fingers to the original OnTouchEvent.
@@ -1170,7 +1170,7 @@ extern "C" void OnModLoad()
         if (!g_touchWidgets) g_touchWidgets = (CWidget**)aml->GetSym(pGameHandle, "_ZN15CTouchInterface10m_pWidgetsE");
         InitTimecycEditor(pGameHandle);
         DebugUI_Init(pGameHandle);
-        //CameraPatchLoad(pGameHandle, gtasa);
+        CameraPatchLoad(pGameHandle, gtasa);
 
         
         HOOK(GetPedWalkLeftRight, gtasa + addrLeftRight + 1);
