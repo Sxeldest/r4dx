@@ -3,7 +3,6 @@
 #include "menu.h"
 #include "deathlist.h"
 #include "settings.h"
-#include "camera.h"
 #include "widgetcustom.h"
 #include "playertags.h"
 #include "debug_ui.h"
