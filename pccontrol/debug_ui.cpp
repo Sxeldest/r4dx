@@ -1,6 +1,5 @@
 #include "debug_ui.h"
 #include "settings.h"
-#include "camera.h"
 #include "game/Camera.h"
 #include "game/Entity/CEntityGTA.h"
 #include "game/Sprite.h"
