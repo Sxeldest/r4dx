@@ -1,6 +1,5 @@
 #include "widgetcustom.h"
 #include "settings.h"
-#include "camera.h"
 #include "menu.h"
 #include "../ImGui/imgui.h"
 #include "../ImGui/RW/RenderWare.h"
