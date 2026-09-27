@@ -1199,7 +1199,7 @@ extern "C" void OnModLoad()
         //HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
 
-        //uintptr_t distanceFogSetup = aml->GetSym(pGameHandle, "_Z20emu_DistanceFogSetupfffff");
+        uintptr_t distanceFogSetup = aml->GetSym(pGameHandle, "_Z20emu_DistanceFogSetupfffff");
         if (distanceFogSetup) HOOK(emu_DistanceFogSetup, distanceFogSetup);
 
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
