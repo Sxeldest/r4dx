@@ -1193,14 +1193,14 @@ extern "C" void OnModLoad()
         HOOK(ProcessWeaponSwitch, gtasa + addrProcessWeaponSwitch + 1);
         HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
         
-        //HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
+        HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
         //HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         //HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
 
         //uintptr_t distanceFogSetup = aml->GetSym(pGameHandle, "_Z20emu_DistanceFogSetupfffff");
-        //if (distanceFogSetup) HOOK(emu_DistanceFogSetup, distanceFogSetup);
+        if (distanceFogSetup) HOOK(emu_DistanceFogSetup, distanceFogSetup);
 
         HOOK(CSprite2d_Draw, aml->GetSym(pGameHandle, "_ZN9CSprite2d4DrawERK5CRectRK5CRGBA"));
         HOOK(RenderOneXLUSprite_Rotate_Aspect, aml->GetSym(pGameHandle, "_ZN7CSprite32RenderOneXLUSprite_Rotate_AspectEfffffhhhsffh"));
