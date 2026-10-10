@@ -1179,7 +1179,7 @@ extern "C" void OnModLoad()
         HOOK(JumpJustDown, gtasa + addrJumpJustDown + 1);
         HOOK(GetSprint, gtasa + addrGetSprint + 1);
         HOOK(SprintJustDown, gtasa + addrSprintJustDown + 1);
-        HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
+        //HOOK(GetEnterTargeting, gtasa + addrGetEnterTargeting + 1);
         HOOK(CycleWeaponLeftJustDown, gtasa + addrCycleWeaponLeft + 1);
         HOOK(CycleWeaponRightJustDown, gtasa + addrCycleWeaponRight + 1);
 
@@ -1194,7 +1194,7 @@ extern "C" void OnModLoad()
         HOOK(ProcessPlayerWeapon, aml->GetSym(pGameHandle, "_ZN23CTaskSimplePlayerOnFoot19ProcessPlayerWeaponEP10CPlayerPed"));
         
         HOOK(CHud_DrawCrossHairs, gtasa + addrCHud_DrawCrossHairs + 1);
-        //HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
+        HOOK(GetWeaponRadiusOnScreen, gtasa + addrGetWeaponRadiusOnScreen + 1);
         HOOK(emu_GammaSet, gtasa + 0x1C07D0 + 1);
         //HOOK(CalculateAspectRatio, gtasa + 0x5A61CC + 1);
         pfAspectRatio = (float*)aml->GetSym(pGameHandle, "_ZN5CDraw15ms_fAspectRatioE");
