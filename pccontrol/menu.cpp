@@ -122,7 +122,7 @@ static size_t GetInstructionSize(uintptr_t addr)
 
 static char* g_vkTargetBuf = nullptr;
 static size_t g_vkTargetSize = 0;
-static bool g_vkShow = false;
+static bool g_vkShow = true;
 
 static void RenderVirtualKeyboardOverlay()
 {
