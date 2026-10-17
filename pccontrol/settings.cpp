@@ -5,7 +5,7 @@
 #include <string.h>
 
 PCControlSettings g_pcSettings = {
-        false, // showMenu
+        true, // showMenu
         true,  // enableCameraPatch
         false, // disableNativeCrouch
         false, // disableNativeJump
